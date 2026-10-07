@@ -21,13 +21,25 @@
   var cloudUser = null;
   var libPromise = null;
 
+  /* Proyecto por defecto (clave anon PÚBLICA: diseñada para ir en frontend).
+     El panel permite sobrescribirla por navegador; si se vacía, se vuelve aquí. */
+  var DEFAULT_CFG = {
+    url: 'https://vlhidhlnarhbkygauobp.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsaGlkaGxuYXJoYmt5Z2F1b2JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMDczMjUsImV4cCI6MjEwNTU4MzMyNX0.NpYRgJA5YJl9T0RDXto_Hb2t63U61RtzbEKomMJ4hKI'
+  };
+
   /* --- Configuración --- */
   function getCfg() {
+    var saved = {};
     try {
-      return JSON.parse(LS.getItem(CFG_KEY) || '{}') || {};
+      saved = JSON.parse(LS.getItem(CFG_KEY) || '{}') || {};
     } catch (e) {
-      return {};
+      saved = {};
     }
+    return {
+      url: saved.url || DEFAULT_CFG.url,
+      anonKey: saved.anonKey || DEFAULT_CFG.anonKey
+    };
   }
 
   function saveCfg(cfg) {
@@ -216,6 +228,7 @@
       '<hr style="border:none;border-top:1px solid var(--line);margin:10px 0;">' +
 
       '<label>Sincronización Supabase (opcional)</label>' +
+      '<div class="hint" style="margin:4px 0 6px;">Proyecto ya incluido: solo entra con tu correo. Solo cambia esto si usas otro proyecto.</div>' +
       '<label style="margin-top:6px;">Project URL</label>' +
       '<input id="cfgUrl" placeholder="https://tu-proyecto.supabase.co" value="' + escAttr(cfg.url || '') + '">' +
       '<label style="margin-top:6px;">Clave anon pública</label>' +
