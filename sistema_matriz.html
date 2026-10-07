@@ -1,0 +1,337 @@
+﻿<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sistema Matriz POD</title><style>
+body{font-family:Arial,sans-serif;background:#101216;color:#eee;max-width:1000px;margin:auto;padding:24px;line-height:1.5}section{background:#181b21;border:1px solid #30343d;border-radius:14px;padding:20px;margin:16px 0}h1{font-size:30px}h2{font-size:21px}p{color:#b9bec8}.route{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.step{background:#242832;padding:9px 12px;border-radius:8px;font-weight:bold}.arrow{color:#9b7cff}textarea{width:100%;min-height:180px;background:#0b0d10;color:#eee;border:1px solid #363b45;border-radius:9px;padding:12px;box-sizing:border-box;font:14px monospace}button{background:#8b5cf6;color:white;border:0;border-radius:8px;padding:10px 14px;margin-top:8px;font-weight:bold;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.box{border-left:3px solid #8b5cf6;padding-left:12px}code{background:#292e38;padding:2px 5px;border-radius:4px}</style></head><body>
+<style>
+  .pod-nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:#0E1016;border-bottom:1px solid #2A2E38;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:13px}
+  .pod-nav .pod-nav-title{color:#8A90A0;margin-right:4px}
+  .pod-nav a{color:#B9C0CF;text-decoration:none;padding:6px 12px;border:1px solid #2A2E38;border-radius:6px;background:#161920}
+  .pod-nav a:hover{color:#fff;border-color:#5B8DEF}
+  .pod-nav a[aria-current="page"]{color:#fff;background:rgba(91,141,239,.16);border-color:#5B8DEF}
+</style>
+<nav class="pod-nav" aria-label="Herramientas POD">
+  <span class="pod-nav-title">Taller POD ·</span>
+  <a href="index.html">Taller</a>
+  <a href="editor-bancos.html">Editor de bancos</a>
+  <a href="motor-lenguajes-visuales.html">Motor de lenguajes</a>
+  <a href="sistema_matriz.html" aria-current="page">Sistema matriz</a>
+</nav>
+<h1>Sistema Matriz POD — Copiar y pegar</h1>
+<section><h2>¿Qué quiero hacer?</h2><p>No necesitas conocer todo el sistema. Busca tu situación, copia el comando y pégalo en el chat.</p><div class="route"><b class="step">ARCHITECT</b><span class="arrow">→</span><b class="step">SERIE</b><span class="arrow">→</span><b class="step">EXPLORE</b><span class="arrow">→</span><b class="step">DEVELOP</b><span class="arrow">→</span><b class="step">MARKET</b><span class="arrow">→</span><b class="step">MASTER</b></div></section>
+
+<section><h2>1. Inicializar un chat nuevo</h2><p>Pégalo una sola vez al comenzar un chat.</p><textarea id="init">/INIT-SISTEMA-MATRIZ-POD
+
+Activa el SISTEMA MATRIZ POD CRISTIANO.
+
+ROL:
+Director de Arte + Diseñador Gráfico + Ilustrador + Estratega Visual + Director de Producción POD.
+
+PRINCIPIO:
+TEOLOGÍA → MENSAJE → FUNCIÓN → CONCEPTO → SÍMBOLO/METÁFORA → ARQUETIPO → RAMA → DIRECCIÓN → LENGUAJE → TRATAMIENTO → TÉCNICA → COMPOSICIÓN → TIPOGRAFÍA → PALETA → PRODUCTO → PRODUCCIÓN → QA.
+
+REGLA:
+MISMO ADN CONCEPTUAL ≠ MISMO ARTE ≠ MISMA SOLUCIÓN VISUAL.
+
+ANTI-REPETICIÓN:
+Detecta y evita repetir arquetipos, composiciones, símbolos, motivos, jerarquías y técnicas entre piezas y series. No uses paisajes/montañas/caminos/horizontes como solución automática salvo que el concepto los exija.
+
+CONTACTSHEET:
+5 TERRITORIOS × 4 DIRECCIONES = 20 posibilidades reales. No clones con estilos diferentes.
+
+MARKET:
+MEN, WOMEN y KIDS son artes independientes. Comparten concepto, mensaje, verdad bíblica y ADN, pero NO son recolores ni el mismo diseño.
+
+VECTOR:
+VECTOR-PREP → VECTORIZE → VECTOR-CHECK → MASTER ARTWORK.
+
+PRODUCTO:
+CAMISETA ≠ HOODIE ≠ CAP ≠ DISPLATE ≠ POSTER ≠ TOTE.
+
+ABC:
+A = HEAVY | B = SOFT | C = MODERN.
+
+TEOLOGÍA:
+Respeta la tradición indicada. No inventes elementos teológicos. Evita gore, ocultismo, glorificación del mal y blasfemia/heresia. No añadas santos/ángeles si no corresponden.
+
+COMANDOS:
+ /ARCHITECT = construir la arquitectura creativa.
+ /SERIE = crear una serie desde cero.
+ /EXPLORE = explorar 20 direcciones y CONTACTSHEET.
+ /DEVELOP = desarrollar lo seleccionado.
+ /MARKET = crear artes independientes MEN/WOMEN/KIDS.
+ /MASTER = producción final + vector + QA.
+
+No diseñes automáticamente hasta recibir mi siguiente comando.
+ESTADO: SISTEMA MATRIZ ACTIVADO.</textarea><button onclick="cp('init',this)">COPIAR</button></section>
+
+<section><h2>2. Tengo una idea, pero no tengo estructura</h2><p>Usa <code>/ARCHITECT</code>.</p><textarea id="architect">/ARCHITECT
+
+IDEA / TEMA:
+[Escribe aquí]
+
+BASE BÍBLICA:
+[Si existe]
+
+PRODUCTO:
+[CAMISETA SOFT / HOODIE / CAP / DISPLATE / etc.]
+
+AUDIENCIA:
+[Hombre / mujer / general / kids / anglo / español]
+
+IDIOMA:
+[Idioma]
+
+OBJETIVO:
+[Comercial / serie / pieza única / etc.]
+
+Construye:
+teología → mensaje → concepto → ADN → función → arquetipo visual → rama → dirección → lenguaje → tratamiento → técnica → composición → tipografía → paleta → estrategia anti-repetición.
+
+NO diseñes todavía. Primero construye la arquitectura creativa.</textarea><button onclick="cp('architect',this)">COPIAR /ARCHITECT</button></section>
+
+<section><h2>3. NO tengo una serie y quiero crear una</h2><p>Este es el comando que faltaba: <code>/SERIE</code>.</p><textarea id="serie">/SERIE
+
+QUIERO CREAR UNA SERIE DESDE CERO.
+
+TEMA / IDEA:
+[Escribe aquí]
+
+BASE BÍBLICA:
+[Escribe aquí si existe]
+
+PRODUCTO PRINCIPAL:
+[Producto]
+
+AUDIENCIA:
+[Audiencia]
+
+IDIOMA:
+[Idioma]
+
+OBJETIVO:
+[Qué quiero conseguir]
+
+CREA:
+1. fundamento teológico
+2. mensaje central
+3. nombre de la serie
+4. ADN conceptual
+5. cantidad recomendada de artes
+6. título y función de cada arte
+7. fundamento bíblico de cada pieza
+8. diferenciación entre piezas
+9. arquitectura visual de la serie
+10. territorios creativos iniciales
+
+NO diseñes todavía.
+Deja la serie preparada para /EXPLORE.</textarea><button onclick="cp('serie',this)">COPIAR /SERIE</button></section>
+
+<section><h2>4. Ya tengo una serie y quiero explorar diseños</h2><p>Usa <code>/EXPLORE</code>.</p><textarea id="explore">/EXPLORE
+
+SERIE:
+[Nombre]
+
+CONCEPTO / MENSAJE:
+[Concepto]
+
+PRODUCTO:
+[Producto]
+
+AUDIENCIA:
+[Audiencia]
+
+IDIOMA:
+[Idioma]
+
+EXPLORA:
+5 TERRITORIOS × 4 DIRECCIONES = 20 posibilidades.
+
+OBLIGATORIO:
+- seleccionar primero arquetipos visuales
+- variar composición
+- variar peso del texto
+- variar símbolos y motivos
+- evitar repetir soluciones de series anteriores
+- bloquear paisaje como solución automática
+- mantener el mismo ADN conceptual
+- NO crear clones
+
+ENTREGA:
+Matriz de 20 direcciones + CONTACTSHEET.</textarea><button onclick="cp('explore',this)">COPIAR /EXPLORE</button></section>
+
+<section><h2>5. Ya elegí una dirección y quiero desarrollarla</h2><textarea id="develop">/DEVELOP
+
+SERIE:
+[Nombre]
+
+DIRECCIÓN:
+[01 / 02 / 03...]
+
+PRODUCTO:
+[Producto]
+
+REFERENCIA:
+[Adjuntar si existe]
+
+Desarrolla:
+concepto + arquetipo + composición + jerarquía + tipografía + elementos + técnica + tratamiento + paleta + producción POD.
+
+REGLA:
+MISMO ADN ≠ CLON.
+No cambies el concepto aprobado ni inventes elementos teológicos.</textarea><button onclick="cp('develop',this)">COPIAR /DEVELOP</button></section>
+
+<section><h2>6. Quiero MEN / WOMEN / KIDS</h2><p>Son tres artes nuevos, no tres mockups.</p><textarea id="market">/MARKET
+
+SERIE:
+[Nombre]
+
+CONCEPTO:
+[Concepto]
+
+MENSAJE:
+[Mensaje]
+
+VERDAD BÍBLICA:
+[Fundamento]
+
+PRODUCTO:
+[Producto]
+
+CREA 3 ARTES INDEPENDIENTES:
+
+MEN:
+Arte completamente nuevo construido para hombre.
+
+WOMEN:
+Arte completamente nuevo construido para mujer.
+
+KIDS:
+Arte completamente nuevo construido para niños.
+
+COMPARTEN:
+concepto + mensaje + verdad bíblica + ADN.
+
+PUEDEN CAMBIAR:
+arquetipo + composición + elementos + tipografía + tratamiento + técnica + paleta + proporciones + recursos gráficos.
+
+REGLA:
+MISMO ADN CONCEPTUAL ≠ MISMO ARTE ≠ MISMA SOLUCIÓN VISUAL.</textarea><button onclick="cp('market',this)">COPIAR /MARKET</button></section>
+
+<section><h2>7. Ya tengo el arte aprobado y quiero producirlo</h2><textarea id="master">/MASTER
+
+ARTE APROBADO:
+[Adjuntar imagen]
+
+PRODUCTO:
+[Producto]
+
+FORMATO:
+[PNG / SVG / PDF / etc.]
+
+Ejecuta:
+1. VECTOR-PREP
+2. VECTORIZE
+3. VECTOR-CHECK
+4. MASTER ARTWORK
+5. QA DE PRODUCCIÓN
+
+REGLAS:
+conservar identidad, no rediseñar, no reinterpretar, no sustituir el símbolo principal, revisar curvas/nodos/cierres/líneas/colores/legibilidad y preparar para impresión.</textarea><button onclick="cp('master',this)">COPIAR /MASTER</button></section>
+
+<section><h2>8. Tengo una imagen de referencia</h2><p>Adjunta la imagen y usa <code>/ARCHITECT</code>.</p><textarea id="ref">/ARCHITECT
+
+MODO:
+TRABAJAR DESDE IMAGEN DE REFERENCIA.
+
+IMAGEN:
+[ADJUNTAR]
+
+PRODUCTO:
+[Producto]
+
+OBJETIVO:
+[Qué quiero conseguir]
+
+ANALIZA:
+ADN visual + concepto + composición + jerarquía + arquetipo + lenguaje + tratamiento + técnica + tipografía + paleta.
+
+REGLA:
+La imagen es la fuente visual principal. No rediseñar ni reinterpretar hasta que yo lo indique.
+
+Después deja la propuesta preparada para /DEVELOP.</textarea><button onclick="cp('ref',this)">COPIAR</button></section>
+
+<section><h2>9. Quiero A / B / C del mismo arte</h2><textarea id="abc">/VARIATION-FROM-IMAGE
+
+IMAGEN DE REFERENCIA:
+[ADJUNTAR]
+
+MASTER DE IDENTIDAD:
+[Arte aprobado]
+
+PRODUCTO:
+[Producto]
+
+CREA:
+01A = HEAVY
+01B = SOFT
+01C = MODERN
+
+REGLA:
+THE SAME ART EVOLVED.
+
+NO:
+rediseñar, cambiar concepto, sustituir símbolo principal, cambiar arquitectura o inventar textos/elementos teológicos.
+
+SÍ:
+modificar el tratamiento solicitado manteniendo la identidad del MASTER.</textarea><button onclick="cp('abc',this)">COPIAR A/B/C</button></section>
+
+<section><h2>10. Opcional: optimizar el arte para DTF</h2><p><code>/DTF-CHECK</code> solo se usa cuando tú lo pidas. No se aplica automáticamente.</p><textarea id="dtf">/DTF-CHECK
+
+ARTE:
+[Adjuntar / indicar arte aprobado]
+
+PRODUCTO:
+[Producto]
+
+OBJETIVO:
+Optimizar para DTF sin perder calidad artística.
+
+REVISA:
+1. cobertura de tinta
+2. peso del estampado
+3. zonas que pueden respirar mediante espacio negativo
+4. masas sólidas innecesarias
+5. posibilidad de usar halftone, linework, tramas o formas abiertas
+6. conservación de detalles
+7. contraste
+8. legibilidad
+9. comportamiento a tamaño real
+10. viabilidad para producción DTF
+
+REGLA PRINCIPAL:
+NO convertir automáticamente el diseño en halftone.
+NO reducir cobertura si perjudica el arte.
+La técnica debe elegirse según el lenguaje visual del diseño.
+
+PROPÓN:
+- qué zonas optimizar
+- qué técnica conviene en cada zona
+- qué zonas deben permanecer sólidas
+- qué detalles no deben tocarse
+
+IMPORTANTE:
+No rediseñes el arte. No cambies concepto, símbolo principal, composición ni identidad.
+Si el arte ya está optimizado, dilo y no fuerces cambios.
+
+SALIDA:
+Diagnóstico + recomendaciones concretas + versión DTF recomendada.</textarea><button onclick="cp('dtf',this)">COPIAR /DTF-CHECK</button></section>
+<section><h2>Mapa rápido</h2><div class="grid">
+<div class="box"><b>No sé por dónde empezar</b><p>/ARCHITECT</p></div>
+<div class="box"><b>No tengo serie</b><p>/SERIE</p></div>
+<div class="box"><b>Tengo serie, quiero ideas</b><p>/EXPLORE</p></div>
+<div class="box"><b>Elegí una dirección</b><p>/DEVELOP</p></div>
+<div class="box"><b>Quiero mercados</b><p>/MARKET</p></div>
+<div class="box"><b>Arte terminado</b><p>/MASTER</p></div>
+</div></section>
+
+<section><h2>Ruta completa desde cero</h2><div class="route"><b class="step">/ARCHITECT</b><span>→</span><b class="step">/SERIE</b><span>→</span><b class="step">/EXPLORE</b><span>→</span><b class="step">/DEVELOP</b><span>→</span><b class="step">/MARKET</b><span>→</span><b class="step">/MASTER</b></div><p>No tienes que usar todos los pasos. Entra directamente en el que corresponda. <b>/DTF-CHECK es opcional.</b></p></section>
+<script>function cp(id,b){let x=document.getElementById(id);navigator.clipboard.writeText(x.value).then(()=>{let t=b.textContent;b.textContent='✓ COPIADO';setTimeout(()=>b.textContent=t,1200)}).catch(()=>{x.select();document.execCommand('copy')})}</script>
+</body></html>

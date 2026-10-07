@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taller POD — Dirección de Arte Comercial</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <style>
+    .pod-nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:#0E1016;border-bottom:1px solid #2A2E38;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:13px}
+    .pod-nav .pod-nav-title{color:#8A90A0;margin-right:4px}
+    .pod-nav a{color:#B9C0CF;text-decoration:none;padding:6px 12px;border:1px solid #2A2E38;border-radius:6px;background:#161920}
+    .pod-nav a:hover{color:#fff;border-color:#5B8DEF}
+    .pod-nav a[aria-current="page"]{color:#fff;background:rgba(91,141,239,.16);border-color:#5B8DEF}
+  </style>
+  <nav class="pod-nav" aria-label="Herramientas POD">
+    <span class="pod-nav-title">Taller POD ·</span>
+    <a href="index.html" aria-current="page">Taller</a>
+    <a href="editor-bancos.html">Editor de bancos</a>
+    <a href="motor-lenguajes-visuales.html">Motor de lenguajes</a>
+    <a href="sistema_matriz.html">Sistema matriz</a>
+  </nav>
+
+  <div class="shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+          <span>Taller POD</span>
+          <span class="logo-sub">Dirección de Arte Comercial</span>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <button id="btnMemory" class="ghost icon-btn" type="button" title="Memoria portable">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17.5 19a4.5 4.5 0 1 0 0-9h-1.8A7 7 0 1 0 4 14.9"></path>
+            <path d="M12 12v9"></path>
+            <path d="m8 17 4 4 4-4"></path>
+          </svg>
+        </button>
+
+        <button id="btnAI" class="ghost icon-btn" type="button" title="Configurar IA">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+    </header>
+  </div>
+
+  <div class="shell">
+    <div class="main-grid">
+
+      <div class="left-col">
+
+        <section class="panel">
+          <div class="panel-title">
+            <span class="step-num">1</span>
+            <span>Mercado y Producto</span>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="market">1. Dónde se vende — Mercado</label>
+              <select id="market">
+                <optgroup label="Prioritarios">
+                  <option value="colombia" selected>Colombia — español regional</option>
+                  <option value="global_en">Global English — USA/EU</option>
+                  <option value="global_es">Global Español — neutro</option>
+                  <option value="gospel_es">Gospel ES — universal</option>
+                  <option value="gospel_en">Gospel EN — universal</option>
+                </optgroup>
+                <optgroup label="Otros (legacy)">
+                  <option value="anglo">Anglo US/UK/CA/AU</option>
+                  <option value="latam">LATAM Español</option>
+                  <option value="spain">España</option>
+                  <option value="diaspora_col">Diáspora Colombia</option>
+                  <option value="custom">Personalizado</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="language">Idioma del diseño</label>
+              <select id="language">
+                <option value="auto" selected>Auto — según mercado</option>
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="spanglish">Spanglish</option>
+              </select>
+            </div>
+          </div>
+          <div class="hint" id="marketHelp">
+            Colombia = humor e identidad por región. Global EN/ES = neutro sin región. Gospel = universal, sin región, trinitario y cristocéntrico.
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="product">Producto</label>
+              <select id="product">
+                <option selected>CAMISETA SOFT</option>
+                <option>CAMISETA APPAREL</option>
+                <option>HOODIE</option>
+                <option>GORRA</option>
+                <option>ILUSTRACION PREMIUM APPAREL</option>
+                <option>DISPLATE</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="marketplace">Marketplace / Uso</label>
+              <select id="marketplace">
+                <option value="generic" selected>Generic</option>
+                <option value="etsy">Etsy</option>
+                <option value="amazon">Amazon Merch</option>
+                <option value="redbubble">Redbubble</option>
+                <option value="teepublic">TeePublic</option>
+                <option value="displate">Displate</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="workflowMode">Modo</label>
+            <select id="workflowMode">
+              <option value="new" selected>Nuevo trabajo</option>
+              <option value="variation">Variación desde imagen</option>
+            </select>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="region">2. A quién le habla — Región (siempre visible, nunca se oculta)</label>
+              <select id="region">
+                <option value="global" selected>Global</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="subniche">3. De qué habla — Subnicho / Banco</label>
+              <select id="subniche">
+                <option value="auto" selected>Auto</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="hint">
+            Colombia: Barranquilla propia, Paisa, Rolo, Nacional. Gospel: Universal sin región. Global: sin región. El subnicho no desaparece, solo se filtra.
+          </div>
+
+          <div class="field-row" style="margin-top: 12px;">
+            <div class="field">
+              <label for="serie">Serie</label>
+              <input id="serie" type="text" placeholder="Ej: CART-001" />
+            </div>
+
+            <div class="field">
+              <label for="set">Nombre del set</label>
+              <input id="set" type="text" placeholder="Opcional" />
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <span class="step-num">2</span>
+            <span>La idea</span>
+          </div>
+
+          <div class="field">
+            <label for="concept">Concepto central</label>
+            <input id="concept" type="text" placeholder="Ej: El calor que une al barrio" />
+          </div>
+
+          <div class="field">
+            <label for="message">Mensaje visible</label>
+            <input id="message" type="text" placeholder="Texto que aparece en el diseño" />
+            <div class="actions" style="margin-top: 6px;">
+              <button id="btnUseBankPhrase" type="button" class="ghost">Cargar una frase guardada para este subnicho</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="support">Frase de apoyo / dato extra</label>
+            <input id="support" type="text" placeholder="Ej: Cartagena · Barrio San Diego" />
+          </div>
+
+          <div class="field">
+            <label for="dominio">4. Dominio / Familia — visible y elegible (Auto = detecta del concepto)</label>
+            <select id="dominio">
+              <option value="auto" selected>Auto — detectar del concepto y mensaje</option>
+            </select>
+          </div>
+          <div class="hint" id="dominioHelp">Gospel 12: PROCESS, BATTLE, GROWTH, LIGHT, COVENANT, IDENTITY, REST, CROSS, KINGDOM, PERSON, PLACE, SYMBOL. Comercial 5: OFICIO, METAS, COMUNIDAD, VIAJE, CELEBRACION. Street 4: CALLE, RESISTENCIA, SONIDO, CONCRETO. Tú eliges, Auto solo sugiere.</div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="audienceSet">Audiencia del set</label>
+              <select id="audienceSet">
+                <option value="Auto" selected>Auto</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="audienceMulti">Explorar 3 audiencias</label>
+              <select id="audienceMulti">
+                <option value="no" selected>No — solo la fijada</option>
+                <option value="si">Sí — cada Auto con la suya</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <details class="panel" id="varPanel">
+          <summary class="panel-title">
+            <span class="step-num">3</span>
+            <span>Variación desde imagen</span>
+            <span class="panel-summary-note">Opcional</span>
+          </summary>
+
+          <div class="panel-body">
+            <div class="upload-zone" id="uploadZone">
+              <input id="imageUpload" type="file" accept="image/*" />
+              <div class="upload-text">
+                Sube una imagen de referencia. La IA puede analizarla y llenar campos automáticamente.
+              </div>
+            </div>
+
+            <div class="actions" style="margin-top: 10px;">
+              <button id="btnAnalyzeImage" class="ghost" type="button">Analizar imagen con IA</button>
+            </div>
+
+            <div id="imageAnalysisStatus" class="hint" style="margin-top: 8px;"></div>
+
+            <img id="imagePreview" alt="Vista previa de la imagen cargada" />
+
+            <div class="field" style="margin-top: 14px;">
+              <label for="essence">Esencia visible a conservar</label>
+              <textarea id="essence" rows="3" placeholder="Se llena automáticamente tras el análisis o se escribe manualmente."></textarea>
+            </div>
+
+            <div class="field-row-3">
+              <div class="field">
+                <label for="domImagen">Familia de la imagen</label>
+                <select id="domImagen">
+                  <option value="Auto" selected>Auto</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="simboloVar">Símbolo</label>
+                <select id="simboloVar">
+                  <option value="conservar">Conservarlo, redibujado</option>
+                  <option value="sustituir" selected>Sustituirlo por 3 objetos nuevos</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="paletaVar">Color</label>
+                <select id="paletaVar">
+                  <option value="renovar" selected>Renovarlo</option>
+                  <option value="conservar">Conservar el de la imagen</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="textosVar">Textos</label>
+              <select id="textosVar">
+                <option value="conservar_palabras" selected>Conservar mismas palabras</option>
+                <option value="mismo_mensaje">Mismo mensaje, nueva redacción</option>
+                <option value="nuevo_texto">Nuevo texto desde concepto</option>
+              </select>
+            </div>
+          </div>
+        </details>
+
+        <details class="panel" id="mixPanel">
+          <summary class="panel-title">
+            <span class="step-num">4</span>
+            <span>Mezclas y banco</span>
+            <span class="panel-summary-note">Opcional</span>
+          </summary>
+
+          <div class="panel-body">
+            <label>Estilos</label>
+            <div id="modeToggle" class="pills"></div>
+
+            <label style="margin-top: 14px;">Objetos</label>
+            <div id="objectModeToggle" class="pills"></div>
+
+            <div class="field" style="margin-top: 16px;">
+              <label for="pbText">Banco personal — objetos nuevos, uno por línea</label>
+              <textarea id="pbText" rows="4" placeholder="Ej: ventilador de techo como testigo de todas las verdades"></textarea>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="pbDom">Dominio / subnicho destino</label>
+                <select id="pbDom"></select>
+              </div>
+
+              <div class="field">
+                <label>&nbsp;</label>
+                <div class="actions">
+                  <button id="btnSavePB" class="ghost" type="button">Guardar en banco</button>
+                  <a class="btn ghost" href="editor-bancos.html" target="_blank" rel="noopener">Abrir editor de bancos</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="hint" id="pbCount">
+              Todavía no hay objetos guardados en el banco personal.
+            </div>
+
+            <div class="field" style="margin-top: 12px;">
+              <label>Banco de dirección aprobado</label>
+              <div id="approvedDirectionsList" class="approved-list">
+                Todavía no hay propuestas guardadas.
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <div class="actions-primary">
+          <button id="btnDirector" class="primary" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="6 3 20 12 6 21 6 3"></polygon>
+            </svg>
+            Crear los 3 diseños
+          </button>
+        </div>
+
+        <div class="actions">
+          <button id="btnBuild" class="ghost" type="button">Validar y generar</button>
+          <button id="btnNewSet" class="ghost" type="button">Limpiar fichas</button>
+          <button id="btnReset" class="ghost" type="button">Borrar memoria</button>
+        </div>
+
+      </div>
+
+      <div class="right-col">
+
+        <div id="status" class="status info">
+          Listo. Define mercado, subnicho y concepto, luego pulsa Crear los 3 diseños.
+        </div>
+
+        <section class="panel">
+          <div class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path>
+            </svg>
+            <span>Control de calidad</span>
+          </div>
+
+          <div id="gate" class="gates">
+            <span class="badge">Aún no hay diseños</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <span>Fichas 01A · 01B · 01C</span>
+          </div>
+
+          <div id="cards" class="card-grid">
+            <div class="empty-state">
+              Genera los 3 diseños para ver las fichas aquí.
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <span>Matriz comparativa</span>
+          </div>
+
+          <div id="matrix" class="table-wrap">
+            <div class="empty-state">
+              La matriz aparecerá después de crear los diseños.
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <span>Prompt final</span>
+          </div>
+
+          <textarea id="out" rows="12" placeholder="El prompt denso aparecerá aquí después de crear los 3 diseños."></textarea>
+
+          <div class="actions" style="margin-top: 12px;">
+            <button id="btnCopy" class="primary" type="button">Copiar el prompt</button>
+            <button id="btnFmt" class="ghost" type="button">Ver formato extenso</button>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="aiBar" class="ai-bar"></div>
+
+  <script src="js/data-mercados.js" defer></script>
+  <script src="js/data-audiencias.js" defer></script>
+  <script src="js/data-bancos.js" defer></script>
+  <script src="js/banco-gospel-es.js" defer></script>
+  <script src="js/banco-gospel-en.js" defer></script>
+  <script src="js/banco-global.js" defer></script>
+  <script src="js/dominios.js" defer></script>
+  <script src="js/data-estilos.js" defer></script>
+  <script src="js/data-productos.js" defer></script>
+  <script src="js/pod-nav.js" defer></script>
+  <script src="js/memoria-local.js" defer></script>
+  <script src="js/motor-nucleo.js" defer></script>
+  <script src="js/ia-analisis.js" defer></script>
+  <script src="js/ia-revisor.js" defer></script>
+  <script src="js/sync-supabase.js" defer></script>
+</body>
+</html>

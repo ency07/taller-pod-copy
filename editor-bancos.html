@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editor de Bancos — Taller POD</title>
+  <style>
+    :root {
+      --bg: #0E1016;
+      --panel: #161920;
+      --panel-alt: #1A1E26;
+      --line: #2A2E38;
+      --line2: #3A3E48;
+      --text: #E0E4EC;
+      --mut: #8A90A0;
+      --mut2: #5A6070;
+      --acc: #5B8DEF;
+      --acc-dim: rgba(91, 141, 239, 0.12);
+      --good: #34D399;
+      --bad: #F87171;
+      --warn: #FBBF24;
+      --r: 6px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .shell {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--mut);
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--mut);
+      margin-bottom: 6px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    select, input, textarea {
+      width: 100%;
+      min-height: 40px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    select:focus, input:focus, textarea:focus {
+      border-color: var(--acc);
+    }
+
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 32px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%238A90A0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 5 3 3 3-3'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      cursor: pointer;
+    }
+
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+      font-family: "SFMono-Regular", "Fira Code", ui-monospace, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.3;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--line2);
+      border-radius: var(--r);
+      padding: 9px 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    button:hover { border-color: var(--acc); }
+
+    button.primary {
+      background: var(--acc);
+      border-color: var(--acc);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    button.primary:hover { background: #4A7DE0; }
+
+    button.ghost {
+      background: transparent;
+      border-color: var(--line2);
+      color: var(--mut);
+    }
+
+    button.ghost:hover {
+      color: var(--text);
+      background: var(--panel);
+      border-color: var(--acc);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--mut2);
+      margin-top: 6px;
+      line-height: 1.45;
+    }
+
+    .status {
+      padding: 10px 12px;
+      border-radius: var(--r);
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--mut);
+      font-size: 13px;
+      line-height: 1.45;
+      margin-top: 12px;
+    }
+
+    .status.good {
+      background: rgba(52, 211, 153, 0.08);
+      border-color: rgba(52, 211, 153, 0.22);
+      color: var(--good);
+    }
+
+    .status.bad {
+      background: rgba(248, 113, 113, 0.08);
+      border-color: rgba(248, 113, 113, 0.22);
+      color: var(--bad);
+    }
+
+    .status.info {
+      background: rgba(91, 141, 239, 0.08);
+      border-color: rgba(91, 141, 239, 0.22);
+      color: var(--acc);
+    }
+
+    .bank-display {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 14px;
+      font-family: "SFMono-Regular", "Fira Code", ui-monospace, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--mut);
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--mut);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .count-badge.good {
+      color: var(--good);
+      border-color: rgba(52, 211, 153, 0.3);
+      background: rgba(52, 211, 153, 0.06);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .back-link {
+      font-size: 13px;
+      color: var(--acc);
+      text-decoration: none;
+    }
+
+    .back-link:hover { text-decoration: underline; }
+
+    @media (max-width: 700px) {
+      .field-row { grid-template-columns: 1fr; }
+      .shell { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <style>
+    .pod-nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:#0E1016;border-bottom:1px solid #2A2E38;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:13px}
+    .pod-nav .pod-nav-title{color:#8A90A0;margin-right:4px}
+    .pod-nav a{color:#B9C0CF;text-decoration:none;padding:6px 12px;border:1px solid #2A2E38;border-radius:6px;background:#161920}
+    .pod-nav a:hover{color:#fff;border-color:#5B8DEF}
+    .pod-nav a[aria-current="page"]{color:#fff;background:rgba(91,141,239,.16);border-color:#5B8DEF}
+  </style>
+  <nav class="pod-nav" aria-label="Herramientas POD">
+    <span class="pod-nav-title">Taller POD ·</span>
+    <a href="index.html">Taller</a>
+    <a href="editor-bancos.html" aria-current="page">Editor de bancos</a>
+    <a href="motor-lenguajes-visuales.html">Motor de lenguajes</a>
+    <a href="sistema_matriz.html">Sistema matriz</a>
+  </nav>
+
+  <div class="shell">
+    <div class="topbar">
+      <h1>Editor de Bancos</h1>
+    </div>
+    <p class="subtitle">
+      Amplía bancos personales de objetos y frases por mercado y subnicho, sin tocar código. Los objetos alimentan las ilustraciones y las frases se pueden cargar en Mensaje visible.
+    </p>
+
+    <div class="card">
+      <div class="field-row">
+        <div class="field">
+          <label for="selMarket">Mercado</label>
+          <select id="selMarket"></select>
+        </div>
+        <div class="field">
+          <label for="selSubniche">Subnicho</label>
+          <select id="selSubniche"></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="bankDisplayLabel">Objetos del subnicho seleccionado</label>
+        <div id="bankDisplay" class="bank-display">Selecciona un mercado y subnicho para ver el contenido.</div>
+        <div style="margin-top: 8px;">
+          <span id="objCount" class="count-badge">0 entradas</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label for="entryType">Tipo de entrada</label>
+        <select id="entryType">
+          <option value="objects">Objeto o metáfora visual</option>
+          <option value="phrases">Frase para usar como texto visible</option>
+        </select>
+        <div class="hint">Objetos describen qué ilustrar. Frases son palabras que podrían aparecer impresas en el diseño.</div>
+      </div>
+      <div class="field">
+        <label id="entryLabel" for="newObjects">Agregar objetos (uno por línea)</label>
+        <textarea id="newObjects" placeholder="Ej: hamaca que sostiene tres generaciones y una mentira"></textarea>
+        <div id="entryHint" class="hint">Una entrada por línea. Se detectan duplicados exactos normalizados en este subnicho.</div>
+      </div>
+      <div class="actions">
+        <button id="btnSave" class="primary">Guardar en este mercado y subnicho</button>
+        <button id="btnClearInput" class="ghost">Limpiar campo</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>Importar / Exportar</label>
+      <div class="actions" style="margin-top: 0;">
+        <button id="btnExport" class="ghost">Descargar JSON del banco personal</button>
+        <button id="btnCopyJSON" class="ghost">Copiar JSON</button>
+      </div>
+
+      <div class="field" style="margin-top: 14px;">
+        <label for="importTxt">Pega un JSON para importar y fusionar</label>
+        <textarea id="importTxt" rows="4" placeholder='{"humor_costeno": ["objeto"], "__phrase__humor_costeno": ["frase"]}'></textarea>
+      </div>
+
+      <div class="actions">
+        <button id="btnImport" class="primary">Importar y fusionar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>Zona de peligro</label>
+      <div class="actions" style="margin-top: 0;">
+        <button id="btnClearSubniche" class="ghost" style="color: var(--bad); border-color: rgba(248,113,113,0.3);">Vaciar banco de este subnicho</button>
+        <button id="btnClearAll" class="ghost" style="color: var(--bad); border-color: rgba(248,113,113,0.3);">Vaciar todo el banco personal</button>
+      </div>
+      <div class="hint" style="margin-top: 8px;">
+Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan al banco base de objetos.
+      </div>
+    </div>
+
+    <div id="status" class="status">Listo. Selecciona mercado y subnicho para empezar.</div>
+  </div>
+
+  <script src="js/data-mercados.js"></script>
+  <script src="js/data-bancos.js"></script>
+  <script src="js/memoria-local.js"></script>
+  <script src="js/pod-nav.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var LS = window.POD_LS || {
+        getItem: function () { return null; },
+        setItem: function () { },
+        removeItem: function () { }
+      };
+
+      var PB_KEY_PREFIX = 'POD2|personalBank|';
+
+      function $(id) { return document.getElementById(id); }
+
+      function tell(msg, type) {
+        var el = $('status');
+        if (el) {
+          el.textContent = msg;
+          el.className = 'status' + (type ? ' ' + type : '');
+        }
+      }
+
+      /* --- Cargar mercados --- */
+      function fillMarkets() {
+        var sel = $('selMarket');
+        if (!sel) return;
+
+        var markets = (typeof POD_MARKETS !== 'undefined') ? POD_MARKETS : {};
+        var order = (typeof POD_MARKET_ORDER !== 'undefined') ? POD_MARKET_ORDER : Object.keys(markets);
+
+        var html = '';
+        order.forEach(function (id) {
+          if (markets[id]) {
+            html += '<option value="' + id + '">' + markets[id].label + '</option>';
+          }
+        });
+        sel.innerHTML = html;
+      }
+
+      /* --- Cargar subnichos según mercado --- */
+      function fillSubniches() {
+        var marketId = $('selMarket') ? $('selMarket').value : 'global_en';
+        var sel = $('selSubniche');
+        if (!sel) return;
+
+        var html = '<option value="comun">Común (todos los subnichos)</option>';
+
+        if (typeof getSubnicheIdsForMarket === 'function') {
+          var ids = getSubnicheIdsForMarket(marketId, 'evergreen', 'todas');
+          ids.forEach(function (id) {
+            var label = (typeof getSubnicheLabel === 'function')
+              ? getSubnicheLabel(id, marketId)
+              : id;
+            html += '<option value="' + id + '">' + label + '</option>';
+          });
+
+          var tempIds = getSubnicheIdsForMarket(marketId, 'temporada', 'todas');
+          tempIds.forEach(function (id) {
+            var label = (typeof getSubnicheLabel === 'function')
+              ? getSubnicheLabel(id, marketId)
+              : id;
+            html += '<option value="' + id + '">' + label + '</option>';
+          });
+        }
+
+        sel.innerHTML = html;
+      }
+
+      /* --- Banco personal: lectura/escritura --- */
+      function loadPersonalBank(market) {
+        try {
+          var raw = LS.getItem(PB_KEY_PREFIX + market);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function savePersonalBank(market, bank) {
+        LS.setItem(PB_KEY_PREFIX + market, JSON.stringify(bank || {}));
+      }
+
+      function entryKey(subniche, type) {
+        return type === 'phrases' ? '__phrase__' + subniche : subniche;
+      }
+
+      function getPersonalEntries(market, subniche, type) {
+        var bank = loadPersonalBank(market);
+        var key = entryKey(subniche, type);
+        return Array.isArray(bank[key]) ? bank[key] : [];
+      }
+
+      function getBaseObjects(market, subniche) {
+        try {
+          if (typeof window.getBankForSubniche === 'function') {
+            return window.getBankForSubniche(subniche, 'todas', market) || [];
+          }
+        } catch (e) {}
+        return [];
+      }
+
+      function normalizeEntry(value) {
+        return String(value || '').normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, ' ')
+          .trim()
+          .replace(/\s+/g, ' ');
+      }
+
+      function currentType() {
+        return $('entryType') ? $('entryType').value : 'objects';
+      }
+
+      function updateEntryUI() {
+        var isPhrase = currentType() === 'phrases';
+        var label = $('entryLabel');
+        var input = $('newObjects');
+        var hint = $('entryHint');
+        var bankLabel = $('bankDisplayLabel');
+        if (label) label.textContent = isPhrase ? 'Agregar frases visibles (una por línea)' : 'Agregar objetos o metáforas visuales (uno por línea)';
+        if (input) input.placeholder = isPhrase ? 'Ej: La brisa también sabe llegar tarde' : 'Ej: hamaca que sostiene tres generaciones y una mentira';
+        if (hint) hint.textContent = isPhrase
+          ? 'Escribe texto que sí podría imprimirse en el diseño. Se guardará separado de los objetos.'
+          : 'Describe algo que se pueda ilustrar. No escribas aquí el slogan que irá impreso.';
+        if (bankLabel) bankLabel.textContent = isPhrase ? 'Frases guardadas en este subnicho' : 'Objetos del subnicho (banco base y aportes personales)';
+      }
+
+      function displayBank() {
+        var market = $('selMarket') ? $('selMarket').value : 'global_en';
+        var subniche = $('selSubniche') ? $('selSubniche').value : 'comun';
+        var type = currentType();
+        var personal = getPersonalEntries(market, subniche, type);
+        var base = type === 'objects' ? getBaseObjects(market, subniche) : [];
+        var display = $('bankDisplay');
+        var count = $('objCount');
+
+        if (display) {
+          var lines = [];
+          if (base.length) {
+            lines.push('BANCO BASE · solo lectura');
+            base.forEach(function (entry, i) { lines.push((i + 1) + '. ' + entry); });
+          }
+          if (personal.length) {
+            if (lines.length) lines.push('');
+            lines.push(type === 'phrases' ? 'TUS FRASES' : 'TUS OBJETOS');
+            personal.forEach(function (entry, i) { lines.push((i + 1) + '. ' + entry); });
+          }
+          display.textContent = lines.length ? lines.join('\n')
+            : (type === 'phrases' ? '(todavía no hay frases guardadas aquí)' : '(todavía no hay objetos para este subnicho)');
+        }
+        if (count) {
+          count.textContent = type === 'phrases'
+            ? personal.length + ' frase' + (personal.length !== 1 ? 's' : '')
+            : base.length + ' de base · ' + personal.length + ' tuyos';
+          count.className = 'count-badge' + (personal.length > 0 ? ' good' : '');
+        }
+      }
+
+      function saveNewObjects() {
+        var market = $('selMarket') ? $('selMarket').value : 'global_en';
+        var subniche = $('selSubniche') ? $('selSubniche').value : 'comun';
+        var type = currentType();
+        var textarea = $('newObjects');
+        if (!textarea || !textarea.value.trim()) {
+          tell('Escribe al menos una entrada antes de guardar.', 'bad');
+          return;
+        }
+        var lines = textarea.value.split('\n').map(function (line) { return line.trim(); }).filter(function (line) { return line.length >= 2; });
+        if (!lines.length) {
+          tell('Ninguna entrada válida. Escribe al menos 2 caracteres.', 'bad');
+          return;
+        }
+
+        var bank = loadPersonalBank(market);
+        var key = entryKey(subniche, type);
+        var current = Array.isArray(bank[key]) ? bank[key] : [];
+        var known = type === 'objects' ? getBaseObjects(market, subniche).concat(current) : current.slice();
+        var signatures = new Set(known.map(normalizeEntry).filter(Boolean));
+        var added = 0;
+        var duplicates = 0;
+        lines.forEach(function (line) {
+          var signature = normalizeEntry(line);
+          if (!signature || signatures.has(signature)) { duplicates++; return; }
+          current.push(line);
+          signatures.add(signature);
+          added++;
+        });
+        if (added > 0) {
+          bank[key] = current;
+          savePersonalBank(market, bank);
+        }
+        textarea.value = '';
+        displayBank();
+        var noun = type === 'phrases' ? 'frase(s)' : 'objeto(s)';
+        var msg = added + ' ' + noun + ' guardado(s) en ' + subniche + '.';
+        if (duplicates > 0) msg += ' ' + duplicates + ' repetida(s) descartada(s).';
+        tell(msg, added > 0 ? 'good' : 'info');
+      }
+
+      /* --- Exportar --- */
+      function exportBank() {
+        var market = $('selMarket') ? $('selMarket').value : 'global_en';
+        var bank = loadPersonalBank(market);
+        var json = JSON.stringify(bank, null, 2);
+
+        try {
+          var blob = new Blob([json], { type: 'application/json' });
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'banco-personal-' + market + '.json';
+          a.click();
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 800);
+          tell('Archivo descargado.', 'good');
+        } catch (e) {
+          tell('Error al descargar: ' + e.message, 'bad');
+        }
+      }
+
+      function copyBankJSON() {
+        var market = $('selMarket') ? $('selMarket').value : 'global_en';
+        var bank = loadPersonalBank(market);
+        var json = JSON.stringify(bank, null, 2);
+
+        try {
+          navigator.clipboard.writeText(json).then(function () {
+            tell('JSON copiado al portapapeles.', 'good');
+          });
+        } catch (e) {
+          tell('No se pudo copiar. Usa descargar.', 'bad');
+        }
+      }
+
+      /* --- Importar --- */
+      function importBank() {
+        var market = $('selMarket') ? $('selMarket').value : 'global_en';
+        var textarea = $('importTxt');
+        if (!textarea || !textarea.value.trim()) {
+          tell('Pega un JSON antes de importar.', 'bad');
+          return;
+        }
+        try {
+          var incoming = JSON.parse(textarea.value);
+          var bank = loadPersonalBank(market);
+          var totalAdded = 0;
+          var duplicates = 0;
+
+          function mergeEntries(subniche, type, values) {
+            if (!Array.isArray(values)) return;
+            var key = entryKey(subniche, type);
+            var current = Array.isArray(bank[key]) ? bank[key] : [];
+            var known = type === 'objects' ? getBaseObjects(market, subniche).concat(current) : current.slice();
+            var signatures = new Set(known.map(normalizeEntry).filter(Boolean));
+            values.forEach(function (value) {
+              if (typeof value !== 'string' || value.trim().length < 2) return;
+              var clean = value.trim();
+              var signature = normalizeEntry(clean);
+              if (!signature || signatures.has(signature)) { duplicates++; return; }
+              current.push(clean);
+              signatures.add(signature);
+              totalAdded++;
+            });
+            if (current.length) bank[key] = current;
+          }
+
+          Object.keys(incoming).forEach(function (subniche) {
+            if (subniche.indexOf('__phrase__') === 0) {
+              mergeEntries(subniche.slice('__phrase__'.length), 'phrases', incoming[subniche]);
+            } else {
+              mergeEntries(subniche, 'objects', incoming[subniche]);
+            }
+          });
+          if (totalAdded > 0) {
+            savePersonalBank(market, bank);
+            displayBank();
+            tell(totalAdded + ' entrada(s) importada(s) y fusionada(s).' + (duplicates ? ' ' + duplicates + ' repetida(s) descartada(s).' : ''), 'good');
+          } else {
+            tell('No se añadieron entradas nuevas.' + (duplicates ? ' Se descartaron ' + duplicates + ' repetidas.' : ''), 'info');
+          }
+          textarea.value = '';
+        } catch (e) {
+          tell('JSON inválido: ' + e.message, 'bad');
+        }
+      }
+      /* --- Zona de peligro --- */
+      function clearSubnicheBank() {
+        var market = $('selMarket') ? $('selMarket').value : 'global_en';
+        var subniche = $('selSubniche') ? $('selSubniche').value : 'comun';
+        if (!confirm('¿Vaciar el banco personal de objetos y frases del subnicho "' + subniche + '" en el mercado "' + market + '"?')) return;
+        var bank = loadPersonalBank(market);
+        delete bank[subniche];
+        delete bank['__phrase__' + subniche];
+        savePersonalBank(market, bank);
+        displayBank();
+        tell('Entradas personales del subnicho eliminadas.', 'info');
+      }
+      function clearAllBank() {
+        var market = $('selMarket') ? $('selMarket').value : 'global_en';
+
+        if (!confirm('¿Vaciar TODO el banco personal del mercado "' + market + '"? Esta acción no se puede deshacer.')) return;
+        if (!confirm('Confirmación final: se eliminarán todos los objetos y frases personales de este mercado. ¿Continuar?')) return;
+
+        LS.removeItem(PB_KEY_PREFIX + market);
+        displayBank();
+        tell('Todo el banco personal del mercado fue vaciado.', 'info');
+      }
+
+      /* --- Wire --- */
+      function init() {
+        fillMarkets();
+        if (window.PODNav) {
+          try {
+            var navCtx = window.PODNav.loadContext() || {};
+            var sm = $('selMarket');
+            if (navCtx.market && sm) {
+              for (var oi = 0; oi < sm.options.length; oi++) {
+                if (sm.options[oi].value === navCtx.market) { sm.value = navCtx.market; break; }
+              }
+            }
+            window.PODNav.prefill();
+          } catch (e) { /* sincronización no crítica */ }
+        }
+        fillSubniches();
+        displayBank();
+
+        $('selMarket').addEventListener('change', function () {
+          if (window.PODNav) {
+            try { window.PODNav.saveContext({ market: this.value }); } catch (e) {}
+          }
+          fillSubniches();
+          displayBank();
+        });
+
+        $('selSubniche').addEventListener('change', displayBank);
+        $('entryType').addEventListener('change', function () {
+          updateEntryUI();
+          displayBank();
+        });
+        updateEntryUI();
+
+        $('btnSave').addEventListener('click', saveNewObjects);
+        $('btnClearInput').addEventListener('click', function () {
+          var t = $('newObjects');
+          if (t) t.value = '';
+        });
+
+        $('btnExport').addEventListener('click', exportBank);
+        $('btnCopyJSON').addEventListener('click', copyBankJSON);
+        $('btnImport').addEventListener('click', importBank);
+
+        $('btnClearSubniche').addEventListener('click', clearSubnicheBank);
+        $('btnClearAll').addEventListener('click', clearAllBank);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>

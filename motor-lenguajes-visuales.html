@@ -1,0 +1,253 @@
+﻿<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Motor de Lenguajes Visuales — POD Gospel v3</title>
+<style>
+:root{--bg:#0d0f12;--panel:#15181d;--p2:#1b1f25;--line:#2b3038;--text:#f3f4f6;--muted:#9da4af;--ac:#d8ff3e;--ac2:#8ea81f}
+*{box-sizing:border-box}body{margin:0;background:#0b0d10;color:var(--text);font:14px/1.45 Inter,system-ui,sans-serif}
+button,input,textarea,select{font:inherit}button{cursor:pointer}
+.app{max-width:1450px;margin:auto;padding:22px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:18px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.03em}.sub,.note{color:var(--muted)}.note{font-size:12px;margin-top:7px}
+.badge{border:1px solid var(--line);padding:7px 11px;border-radius:99px;color:var(--ac);font-size:12px}
+.grid{display:grid;grid-template-columns:370px 1fr;gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px}
+.controls{padding:14px;position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);overflow:auto}.ws{padding:16px}
+.section{padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--p2);margin-bottom:12px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;margin:0}
+.ah{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+label{display:block;color:var(--muted);font-size:12px;margin:9px 0 5px}
+input:not([type=checkbox]),textarea,select{width:100%;background:#0d1014;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px 10px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--ac)}textarea{min-height:70px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.fh{font-size:11px;color:var(--ac);font-weight:800;letter-spacing:.08em;margin:10px 0 5px}
+.chip{position:relative;margin:0}.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip span{display:flex;align-items:center;gap:5px;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:#101318;color:#c7ccd3;font-size:12px}
+.chip input:checked+span{border-color:var(--ac);background:rgba(216,255,62,.09);color:#fff}
+.sw{width:11px;height:11px;border-radius:3px;border:1px solid #444;display:inline-block}
+.btn,.ib{border:1px solid var(--line);background:#20252c;color:#fff;border-radius:9px;padding:9px 12px}
+.ib{padding:3px 7px;margin-left:3px;font-size:12px}.ib.on{border-color:var(--ac)}
+.btn.pri{background:var(--ac);border-color:var(--ac);color:#0a0c0e;font-weight:800}.btn:hover,.ib:hover{filter:brightness(1.15)}
+.acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.mode{display:flex;background:#0e1115;border:1px solid var(--line);border-radius:10px;padding:3px}
+.mode button{flex:1;border:0;background:none;color:var(--muted);padding:8px;border-radius:7px}.mode .active{background:var(--ac);color:#0b0d10;font-weight:800}
+.chk{display:flex;align-items:center;gap:7px;margin:10px 0 0;color:#ddd}
+.hero{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.formula{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:11px;padding:11px;font-size:13px}
+.card b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ac);margin-bottom:5px}
+.out{background:#080a0d;border:1px solid #31363e;border-radius:12px;padding:14px;white-space:pre-wrap;font:12px/1.55 Consolas,monospace;min-height:380px;max-height:640px;overflow:auto}
+.h{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px;background:var(--panel);font-size:12px}
+.h div{flex:1;min-width:0}.h small{color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toast{position:fixed;right:20px;bottom:20px;background:#e8ff8a;color:#0a0c0e;padding:10px 14px;border-radius:9px;font-weight:700;opacity:0;transition:.2s;pointer-events:none}.toast.show{opacity:1}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:9px;max-height:540px;overflow:auto}
+.dc{border:1px solid var(--line);background:var(--panel);border-radius:11px;padding:10px;font-size:12px}.dc:first-child{border-color:var(--ac)}
+.dh{display:flex;justify-content:space-between;align-items:center;color:var(--ac);font-size:11px;letter-spacing:.08em}
+.dl{font-weight:800;font-size:13px;margin:6px 0}.dm span{display:block;color:#c7ccd3}.dm em{font-style:normal;color:var(--muted);margin-right:6px}
+.dp{margin-top:8px;color:var(--muted);display:flex;gap:4px;align-items:center}
+.section.fold .bd{display:none}.section.fold .ah{margin-bottom:0}
+@media(max-width:980px){.grid{grid-template-columns:1fr}.controls{position:static;max-height:none}.formula{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<style>
+  .pod-nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:#0E1016;border-bottom:1px solid #2A2E38;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:13px}
+  .pod-nav .pod-nav-title{color:#8A90A0;margin-right:4px}
+  .pod-nav a{color:#B9C0CF;text-decoration:none;padding:6px 12px;border:1px solid #2A2E38;border-radius:6px;background:#161920}
+  .pod-nav a:hover{color:#fff;border-color:#5B8DEF}
+  .pod-nav a[aria-current="page"]{color:#fff;background:rgba(91,141,239,.16);border-color:#5B8DEF}
+</style>
+<nav class="pod-nav" aria-label="Herramientas POD">
+  <span class="pod-nav-title">Taller POD ·</span>
+  <a href="index.html">Taller</a>
+  <a href="editor-bancos.html">Editor de bancos</a>
+  <a href="motor-lenguajes-visuales.html" aria-current="page">Motor de lenguajes</a>
+  <a href="sistema_matriz.html">Sistema matriz</a>
+</nav>
+<div class="app">
+<header><div><h1>Motor de Lenguajes Visuales</h1><div class="sub">POD Gospel — MISMO ADN ≠ MISMA IMAGEN</div></div><div class="badge">v3.0 · CONTACTSHEET · <span id="cnt"></span> · guardado local</div></header>
+<div class="grid">
+<aside class="panel controls">
+ <input id="flt" placeholder="🔎 Filtrar estilos, símbolos, paletas…" style="margin-bottom:12px">
+ <div class="section"><div class="ah"><h2>01 · ADN de la serie</h2></div>
+  <div class="row"><select id="presets"></select><div class="acts" style="margin:0"><button class="btn" data-a="psave">Guardar</button><button class="btn" data-a="pload">Cargar</button><button class="btn" data-a="pdel">✕</button></div></div>
+  <label>Serie</label><input id="serie" placeholder="Ej. GRACE / GUERRERO / ADORACIÓN">
+  <div class="row"><div><label>Concepto</label><input id="concepto" placeholder="Ej. Gracia"></div><div><label>Audiencia</label><input id="audiencia" list="aud" placeholder="Ej. Gospel streetwear"></div></div>
+  <datalist id="aud"><option>Gospel streetwear<option>Jóvenes cristianos urbanos<option>Mujeres cristianas<option>Hombres de fe / guerreros<option>Familias<option>Iglesia tradicional heritage<option>Hispanos en EE.UU.<option>Colombia / LATAM<option>Alternativos / skaters<option>Minimalistas premium</datalist>
+  <label>Mensaje / verdad</label><textarea id="mensaje" placeholder="¿Qué debe comunicar la serie?"></textarea>
+  <div class="row"><div><label>Producto</label><select id="producto"></select></div><div><label>Idioma</label><select id="idioma"><option>ESPAÑOL<option>INGLÉS</select></div></div>
+ </div>
+ <div class="section"><div class="ah"><h2>02 · Modo</h2></div>
+  <div class="mode"><button id="manualBtn" data-a="manual">MANUAL</button><button id="creativeBtn" data-a="creative">SELECCIÓN CREATIVA</button></div>
+  <div class="note">Manual: la matriz usa solo lo que marques (vacío = libre; las fusiones salen solo de lo marcado). Creativa: 01 es la fórmula base y 02–N exploran el resto; 🔒 fija un eje.</div>
+  <div class="row"><div><label>Direcciones</label><select id="n"><option>3<option>6<option selected>9<option>12<option>18</select></div><div><label>Semilla (opcional)</label><input id="seed" placeholder="vacía = azar"></div></div>
+  <div class="row"><div><label>Mezcla de lenguajes</label><select id="mix"><option value="1">Puro (1 estilo)<option value="2">Fusión de 2<option value="3">Fusión de 3<option value="R">Variable 1–3 🎲</select></div><div><label>Mezcla de técnicas</label><select id="mixT"><option value="1">Una técnica<option value="2">Híbrida (2)<option value="R">Variable 1–2 🎲</select></div></div>
+  <label class="chk"><input type="checkbox" id="cross"> Cruzar familias (fusiones más inesperadas)</label>
+  <label class="chk"><input type="checkbox" id="anti"> Anti-repetición (penaliza lo usado en tu historial)</label>
+ </div>
+ <div id="axes"></div>
+ <div class="section"><div class="ah"><h2><span id="rn">10</span> · Reglas</h2></div><textarea id="rules" style="min-height:150px"></textarea>
+  <div class="acts"><button class="btn pri" data-a="gen">GENERAR</button><button class="btn" data-a="dall">🎲 TODO</button><button class="btn" data-a="reset">REINICIAR</button></div></div>
+</aside>
+<main class="panel ws">
+ <div class="hero"><div><h2 style="font-size:17px;text-transform:none;letter-spacing:0">Dirección visual generada</h2><div class="note" id="info">Brief de arte antes del CONTACTSHEET.</div></div>
+  <div class="acts" style="margin:0"><button class="btn pri" data-a="copy">COPIAR PROMPT</button><button class="btn" data-a="txt">DESCARGAR .TXT</button></div></div>
+ <div class="section"><div class="ah"><h2>Fórmula base</h2></div><div class="formula" id="formula"></div></div>
+ <div class="section"><div class="ah"><h2>Matriz de direcciones</h2><span class="note" style="margin:0">🎲 re-tira una sola dirección · ⧉ copia su línea</span></div><div class="dgrid" id="dirs"></div></div>
+ <div class="section"><div class="ah"><h2>Prompt listo para /CONTACTSHEET</h2></div><div class="out" id="out"></div></div>
+ <div class="section"><div class="ah"><h2>Historial (<span id="hc">0</span>)</h2><span><button class="ib" data-a="exp">Exportar</button><button class="ib" data-a="imp">Importar</button><button class="ib" data-a="hclr">Vaciar</button></span></div><div id="hist"></div><input type="file" id="file" accept=".json" hidden></div>
+</main></div></div><div class="toast" id="toast"></div>
+<script>
+const $=i=>document.getElementById(i),sp=s=>s.split(","),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const mem={};let warned=0;
+const L=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):(mem[k]??d)}catch(e){return mem[k]??d}};
+const W=(k,v)=>{mem[k]=v;try{localStorage.setItem(k,JSON.stringify(v))}catch(e){if(!warned++)toast("Sin localStorage: guardo solo en esta sesión")}};
+const F={"CULTURA URBANA":"Streetwear,Skate,Hip-Hop,Punk,Grunge,Graffiti,Utility,Cyberpunk,Neon Glitch,Pixel Retro,Sticker Bomb,Lowrider / Chicano,Rave Flyer,Techwear",
+"HERITAGE":"Collegiate,Athletic,Workwear,Western,Americana,Vintage Gospel,Medieval Iluminado,Art Déco,Letterpress,Etiqueta de Whisky,Barbería Vintage,Bizantino / Ícono,Celta,Heráldico,Sign Painting",
+"MODA / EDITORIAL":"Minimal,Editorial,Swiss / International,Luxury Graphic,Avant-Garde,Art Direction,Brutal Chic,Dark Academia,Quiet Luxury,Monograma",
+"ARTÍSTICO":"Tattoo,Woodblock,Engraving,Linocut,Poster Art,Collage,Hand-drawn,Ukiyo-e,Psicodélico,Vitral,Risograph,Sumi-e,Cómic Clásico,Manga,Pop Art,Mosaico,Tinta y Acuarela,Grabado en Cobre,Alebrije / Folk",
+"RETRO / NOSTALGIA":"70s,80s,90s,Y2K,Vintage Print,Retro Sports,Arcade,Psicodelia 60s,Memphis,Vaporwave,Space Age,Cartel de Circo,Disco",
+"NATURALEZA / LIFESTYLE":"Outdoor,Surf,Mountain,Adventure,Botanical,Desierto,Botánico Científico,Náutico / Costero,Bosque Nórdico,Cosmos / Astronomía",
+"EXPERIMENTAL":"Brutalist,Constructivist,Experimental Typography,Abstract,Distorted Type,Digital,Geometría Sagrada,Glitch,Op Art,Anti-diseño,Blueprint / Wireframe,Fractal,Doble Exposición,Tipografía Cinética",
+"OSCURO / GÓTICO":"Gótico,Dark Fantasy,Memento Mori,Metal / Death Metal,Horror Punk,Catedral Gótica,Noir",
+"CULTURAL / FOLK":"Día de Muertos,Escandinavo Folk,Africano / Adinkra,Árabe Geométrico,Caribe Tropical,Andino / Textil,Japonés Tradicional",
+"FUTURISTA":"Retrofuturismo,Cyber Sacro,Holográfico,Sci-Fi Terminal,Biomecánico,Y3K Chrome"};
+const PH={"Alto contraste":"000000 FFFFFF FF2D2D","Heritage":"1F3A5F C8A24A F2E8D0","Monocromática":"111111 555555 BBBBBB","Washed vintage":"C9B79C 8C9A8B D9A99B","Retro color":"E4572E F3A712 29B2A4","Tierra / natural":"6B4F2A A67C52 3F5B3A","Negro + acento lima":"000000 D8FF3E","Negro + acento cian":"000000 00CCCC","Negro + acento rojo":"000000 E10600","Cream + negro":"F3EBDD 111111","Colores intensos":"FF006E 3A86FF FFBE0B","Neutros cálidos":"D8C3A5 A98467 6C584C","Neón glitch":"000000 00CCCC FF00AA","Oro + borgoña":"7A1F2B D4AF37 0D0D0D","Azul noche + oro":"0B1D3A E3B23C","Rojo + crema":"B3201F F3E9D2","Verde bosque + oro":"1E3B2C C9A227 EFE6CF","Púrpura real + oro":"4B1E6D D4AF37","Pastel suave":"F4C2C2 BFD8D2 FFF1B8","Azul cobalto + crema":"1E4DB7 F3EBDD","Naranja quemado + negro":"CC5500 111111","Turquesa + coral":"1FB5A8 FF6F61 FFF4E0","Sepia":"3B2A1A 8B6B43 D9C3A0","Negro + acento magenta":"000000 FF00AA","Ceniza + hueso":"55595E E8E2D4","Memphis":"FF71CE 01CDFE FFFB96","Verde militar + arena":"4B5320 D2B48C","Negro + oro":"000000 D4AF37","Vaporwave":"FF71CE B967FF 05FFA1","Sangre + hueso":"7A0C14 EDE6D6 0D0D0D","Hielo":"CFE8F5 5A8DB8 0B1D3A","Cobre + turquesa":"B87333 2A9D8F 1B1B1B"};
+const AX={lang:{t:"Lenguajes",p:[]},
+tr:{t:"Tratamiento",p:sp("HEAVY,SOFT,MODERN,EXPRESSIVE,ICONIC,HERITAGE,RAW,CLEAN,CONFRONTACIONAL,SOLEMNE,MINIMAL EXTREMO,MAXIMALISTA,BRUTAL,ETÉREO,SAGRADO,ÉPICO,LÚDICO,NOSTÁLGICO,ELEGANTE,SUBVERSIVO")},
+te:{t:"Técnica",p:sp("Screenprint,Stencil,Xerox,Vintage Ink,Linework,Engraving,Collage,Illustración gráfica,Hand lettering,Vector limpio,Texture print,Halftone,Stipple,Sello / Stamp,Papercut,Pixel 8-bit,Glitch vectorial,Woodcut tallado,Línea continua,Crosshatch,Duotono 2 tintas,Tinta china,Mosaico de formas,Recorte geométrico,Sombra desplazada,Neón lineal,Dibujo técnico,Bordado simulado,Doble exposición vectorial")},
+co:{t:"Composición",p:sp("Monumental,Editorial asimétrica,Poster,Badge / Emblema,Vertical,Diagonal,Grid,Tipografía integrada,Símbolo dominante,Offset lateral,Stacked type,Open space,Mandala / Radial,Simetría ritual,Corte de ventana,Texto en arco,Columna tipográfica,Objeto fragmentado,Marco ornamental,Pergamino / Cinta,Collage de capas,Espejo vertical,Cuadrícula modular,Anillos concéntricos,Silueta con texto interior,Texto cruzado sobre símbolo,Esquina / Corner,Franja horizontal,Triángulo / Pirámide,Constelación,Escudo partido")},
+ty:{t:"Tipografía",p:sp("Condensed Sans,Bold Sans,Athletic Serif,Western Serif,Editorial Serif,Grotesk,Hand Lettering,Display Vintage,Monospace,Blackletter,Slab Serif,Stencil,Script Brush,Inline / Outline,Pixel Font,Fraktur Moderna,Caligrafía,Wide Extended,Sans Humanista,Ornamental,Rounded Bold,Didone Editorial,Typewriter,Brush Pen,Tall Condensed Poster,Graffiti Tag")},
+pa:{t:"Paleta",p:Object.keys(PH)},
+ob:{t:"Símbolo dominante",p:sp("Cruz,Espada,León,Cordero,Alfa y Omega,Ancla,Llama,Corona de espinas,Biblia abierta,Sello,Paloma,Lámpara,Escudo,Clavos,Tumba vacía,Pez,Trompeta,Zarza ardiente,Cruz tecnológica,Corona,Manos en oración,Pan y copa,Candelabro,Cáliz,Vid y racimo,Llave,Puerta,Camino / Sendero,Árbol de la vida,Corona de laurel,Barca,Roca,Estrella de Belén,Arpa,Ojo de la Providencia,Trigo,Mano con herida,Cruz celta,Casco de salvación,Trono,Arca,Río / Agua viva,Montaña,Nube de gloria")},
+tx:{t:"Textura / Acabado",p:sp("Vector plano limpio,Grano de impresión,Desgaste vintage,Craquelado,Halftone grueso,Rasgado / Torn,Tinta corrida,Papel arrugado,Líneas de escaneo,Polvo / Dust,Fotocopia ruidosa,Tinta saturada irregular")},
+mo:{t:"Atmósfera / Mood",p:sp("Solemne,Triunfante,Íntimo,Épico,Callejero,Juguetón,Contemplativo,Rebelde,Esperanzador,Reverente,Nocturno,Radiante")}};
+const AXK=Object.keys(AX),famOf={};
+Object.entries(F).forEach(([f,s])=>sp(s).forEach(x=>{famOf[x]=f;AX.lang.p.push(x)}));
+const PN={"CAMISETA SOFT":"frente grande, arte plano vectorizable, pocas tintas, contornos cerrados","CAMISETA OVERSIZE":"composición monumental, arte grande de frente o espalda, masas sólidas","HOODIE":"diseño centrado y alto, evitar zona de bolsillo y capucha","DISPLATE":"formato metálico, más detalle y color permitido, margen libre en bordes","POSTER":"jerarquía de lectura a distancia, formato vertical, texto secundario legible","TOTE":"área cuadrada, trazo grueso, 1–2 tintas, texto mínimo","CAP":"área pequeña (≤10 cm), trazos gruesos, mínimo texto, apto bordado"};
+const RULES="No repetir composición entre piezas. El texto forma parte de la arquitectura visual. No usar microtexto ilegible. Mantener claridad comercial. La imagen conserva el ADN teológico y de marca. MISMO ADN ≠ MISMA IMAGEN.\nCada arte exalta a Cristo, único Señor de señores y Rey de reyes, y apunta a la Gran Comisión (Mt 28:19-20).\nTexto principal + texto secundario (≤50% del tamaño, gris claro, ubicación estratégica); máximo 1 microtexto; versículos en paráfrasis original.\nPensado para estampado: construcción vectorial, contornos cerrados, masas sólidas, sin 3D, fotografía ni degradados.";
+const FI=["serie","concepto","audiencia","mensaje","producto","idioma","n","seed","mix","mixT","rules"];
+const DEF=()=>({f:{serie:"",concepto:"",audiencia:"",mensaje:"",producto:"CAMISETA SOFT",idioma:"ESPAÑOL",n:"9",seed:"",mix:"R",mixT:"1",rules:RULES},sel:Object.fromEntries(AXK.map(a=>[a,[]])),lock:{},creative:false,anti:true,cross:true});
+function norm(s){const d=DEF();return{...d,...s,f:{...d.f,...(s&&s.f)},sel:{...d.sel,...(s&&s.sel)},lock:{...(s&&s.lock)}}}
+let S=norm(L("pod_motor_v2",{})),hist=L("pod_motor_hist",[]),presets=L("pod_motor_presets",{}),cur="",rnd=Math.random,U={};
+const save=()=>W("pod_motor_v2",S);
+function toast(t){const x=$("toast");x.textContent=t;x.classList.add("show");clearTimeout(x.t);x.t=setTimeout(()=>x.classList.remove("show"),1600)}
+function hash(s){let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0;return h}
+function setRng(){const s=S.f.seed.trim();if(!s){rnd=Math.random;return}let a=hash(s);rnd=()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+/* UI */
+$("producto").innerHTML=Object.keys(PN).map(p=>`<option>${p}</option>`).join("");
+(function(){const ch=(a,x)=>`<label class="chip"><input type="checkbox" data-ax="${a}" value="${esc(x)}"><span>${a=="pa"?PH[x].split(" ").map(h=>`<i class="sw" style="background:#${h}"></i>`).join(""):""}${esc(x)}</span></label>`;
+$("axes").innerHTML=AXK.map((a,i)=>{const body=a=="lang"?Object.entries(F).map(([f,s])=>`<div class="fh">${f}</div><div class="checkgrid">${sp(s).map(x=>ch(a,x)).join("")}</div>`).join(""):`<div class="checkgrid">${AX[a].p.map(x=>ch(a,x)).join("")}</div>`;
+return`<div class="section"><div class="ah"><h2>${String(i+3).padStart(2,"0")} · ${AX[a].t} <span class="note">(${AX[a].p.length})</span></h2><span><button class="ib" data-a="fold" title="Plegar / desplegar">▾</button><button class="ib" data-a="dice" data-x="${a}" title="Aleatorio">🎲</button><button class="ib" data-a="lock" data-x="${a}" id="lk_${a}" title="Bloquear eje">🔓</button><button class="ib" data-a="all" data-x="${a}" title="Todo">✓</button><button class="ib" data-a="none" data-x="${a}" title="Ninguno">✕</button></span></div><div class="bd">${body}</div></div>`}).join("")})();
+function readF(){FI.forEach(k=>S.f[k]=$(k).value)}
+function writeF(){FI.forEach(k=>$(k).value=S.f[k])}
+function sync(){document.querySelectorAll("[data-ax]").forEach(c=>c.checked=S.sel[c.dataset.ax].includes(c.value));
+AXK.forEach(a=>{const b=$("lk_"+a);b.textContent=S.lock[a]?"🔒":"🔓";b.classList.toggle("on",!!S.lock[a])});
+$("manualBtn").classList.toggle("active",!S.creative);$("creativeBtn").classList.toggle("active",S.creative);$("anti").checked=S.anti;$("cross").checked=S.cross;save()}
+/* motor aleatorio + anti-repetición */
+const PR=[[/guerr|firme|armadur|batall|victori|fuerz|valent/,["CULTURA URBANA","HERITAGE","ARTÍSTICO"]],[/gracia|salv|perd[oó]n|redim|amor|misericord/,["HERITAGE","RETRO / NOSTALGIA","MODA / EDITORIAL"]],[/ador|alabanz|santo|gloria|dios|rey/,["ARTÍSTICO","HERITAGE","MODA / EDITORIAL"]],[/creaci|natur|jard[ií]n|monta[nñ]a/,["NATURALEZA / LIFESTYLE","ARTÍSTICO","RETRO / NOSTALGIA"]],[/urban|joven|street|skate|calle|alternativ/,["CULTURA URBANA","EXPERIMENTAL"]],[/muert|cruz|sacrific|pasi[oó]n|calvario|resurrec/,["OSCURO / GÓTICO","ARTÍSTICO","HERITAGE"]],[/latin|hispan|colomb|caribe|mexic/,["CULTURAL / FOLK","CULTURA URBANA"]],[/futur|tecnolog|digital|cyber/,["FUTURISTA","EXPERIMENTAL"]],[/premium|minimal|elegan|mujer/,["MODA / EDITORIAL","ARTÍSTICO"]],[/tradicion|iglesia|heritage|famil/,["HERITAGE","RETRO / NOSTALGIA","NATURALEZA / LIFESTYLE"]]];
+function pref(){const t=[S.f.concepto,S.f.audiencia,S.f.mensaje].join(" ").toLowerCase(),b={EXPERIMENTAL:.3};PR.forEach(([r,fs])=>{if(r.test(t))fs.forEach((f,i)=>b[f]=(b[f]||0)+(3-i)/3)});return b}
+function usage(){const u={};hist.slice(0,40).forEach((e,i)=>{const w=1/(1+i*.05);Object.entries(e.used||{}).forEach(([a,xs])=>xs.forEach(x=>u[a+"|"+x]=(u[a+"|"+x]||0)+w))});return u}
+function wf(a,b){return x=>(S.anti?1/(1+2*(U[a+"|"+x]||0)):1)*(a=="lang"?1+3*(b[famOf[x]]||0):1)}
+function wpick(pool,k,w){return pool.map(x=>[Math.pow(rnd(),1/Math.max(w(x),1e-6)),x]).sort((p,q)=>q[0]-p[0]).slice(0,k).map(p=>p[1])}
+const kOf=(m,mx=3)=>m=="R"?1+(rnd()*mx|0):Math.max(1,+m||1);
+function combo(i,ord,k,cross,w){const p=ord[i%ord.length],r=[p];let pool=ord.filter(x=>x!=p);
+while(r.length<k&&pool.length){let c=pool;if(cross){const fs=new Set(r.map(x=>famOf[x])),d=pool.filter(x=>!fs.has(famOf[x]));if(d.length)c=d}
+const x=wpick(c,1,w)[0];r.push(x);pool=pool.filter(y=>y!=x)}return r.join(" + ")}
+function roll(a,b){if(S.lock[a])return;const k=a=="lang"?kOf(S.f.mix):a=="te"?kOf(S.f.mixT,2):1;S.sel[a]=wpick(AX[a].p,k,wf(a,b||pref()))}
+function matrix(n,wide,nh){const b=pref(),dirs=Array.from({length:n},()=>({}));
+AXK.forEach(a=>{const s=S.sel[a],pool=S.lock[a]?(s.length?s:AX[a].p):(wide?AX[a].p:(s.length?s:AX[a].p)),w=wf(a,b),ord=wpick(pool,pool.length,w),mx=a=="lang"||a=="te",m=a=="lang"?S.f.mix:S.f.mixT;
+for(let i=0;i<n;i++)dirs[i][a]=mx?combo(i,ord,Math.min(kOf(m,a=="lang"?3:2),ord.length),a=="lang"&&S.cross,w):ord[i%ord.length]});
+if(wide&&!nh)AXK.forEach(a=>{if(S.sel[a].length)dirs[0][a]=a=="lang"||a=="te"?S.sel[a].slice(0,3).join(" + "):S.sel[a][0]});
+return dirs}
+/* render / commit */
+const pal=n=>PH[n]?`${n} (${PH[n].split(" ").map(h=>"#"+h).join(" ")})`:n;
+let curDirs=[],curWide=false;
+const lineOf=(d,i)=>`${String(i+1).padStart(2,"0")}${i?"":" HERO"} · LENGUAJE: ${d.lang} | TRAT: ${d.tr} | TÉCNICA: ${d.te} | COMP: ${d.co} | TIPO: ${d.ty} | PALETA: ${pal(d.pa)} | SÍMBOLO: ${d.ob} | TEXTURA: ${d.tx} | MOOD: ${d.mo}`;
+const card=(d,i)=>`<div class="dc"><div class="dh"><b>${String(i+1).padStart(2,"0")}${i?"":" HERO"}</b><span><button class="ib" data-a="dre" data-i="${i}" title="Re-tirar esta dirección">🎲</button><button class="ib" data-a="dcp" data-i="${i}" title="Copiar línea">⧉</button></span></div><div class="dl">${esc(d.lang)}</div><div class="dm">${["tr","te","co","ty","ob","tx","mo"].map(a=>`<span><em>${AX[a].t}</em>${esc(d[a])}</span>`).join("")}</div><div class="dp">${PH[d.pa].split(" ").map(h=>`<i class="sw" style="background:#${h}"></i>`).join("")} ${esc(d.pa)}</div></div>`;
+function paint(dirs){readF();curDirs=dirs;const n=dirs.length,f=S.f,open="ABIERTA — la define la matriz",mixed=dirs.some(d=>/ \+ /.test(d.lang+d.te));
+const base=a=>S.sel[a].length?S.sel[a].map(x=>a=="pa"?pal(x):x).join(" + "):open;
+$("formula").innerHTML=AXK.map(a=>`<div class="card"><b>${AX[a].t}</b>${esc(base(a))}</div>`).join("");
+cur=`/CONTACTSHEET — ${f.serie||"SERIE SIN NOMBRE"}
+
+NICHO: Gospel / cristiano
+PRODUCTO: ${f.producto} — ${PN[f.producto]}
+IDIOMA: ${f.idioma}
+SERIE: ${f.serie||"—"}
+CONCEPTO: ${f.concepto||"—"}
+MENSAJE / VERDAD: ${f.mensaje||"—"}
+AUDIENCIA: ${f.audiencia||"—"} (debe notarse en lenguaje, color y tono de cada dirección)
+
+FÓRMULA BASE:
+${AXK.map(a=>`${AX[a].t.toUpperCase()}: ${base(a)}`).join("\n")}
+
+MATRIZ DE ${n} DIRECCIONES (asignadas, ningún eje se repite entre piezas):
+${dirs.map(lineOf).join("\n")}
+${mixed?"\nFUSIONES: donde hay «+», combinar los lenguajes/técnicas en UN solo estilo nuevo y coherente, no dos estilos pegados.\n":""}
+DIRECCIÓN:
+Crear una colección comercial donde el lenguaje visual traduzca el concepto y no funcione como fórmula fija.
+Respetar la asignación de cada dirección: composición, tipografía, paleta, símbolo, textura y atmósfera propios.
+El texto forma parte de la arquitectura del diseño, no parece colocado encima.
+Cambiar posición del texto, jerarquía y símbolo dominante entre piezas.
+Priorizar legibilidad, identidad de marca, diferenciación y viabilidad comercial para POD.
+
+REGLAS:
+${f.rules}
+
+GENERAR:
+${n} direcciones visuales distintas. 01 es el HERO; 02–${String(n).padStart(2,"0")} amplían el lenguaje sin clonarlo.
+Presentarlas en un CONTACTSHEET coherente y profesional.`;
+$("out").textContent=cur;$("dirs").innerHTML=dirs.map(card).join("");
+const mt={1:"puro",2:"fusión de 2",3:"fusión de 3",R:"fusión variable"}[f.mix];
+$("info").textContent=(f.seed.trim()?"Semilla: "+f.seed.trim()+" · ":"")+(S.anti?"anti-repetición activa":"anti-repetición apagada")+" · "+n+" direcciones · lenguajes: "+mt+(S.cross?" · cruzando familias":"")}
+function render(opt={}){readF();setRng();U=usage();const{reroll,wide}=opt,w=wide||S.creative;curWide=w;
+if(reroll&&w){const b=pref();AXK.forEach(a=>roll(a,b));sync()}
+const n=+S.f.n;let dirs,fp,t=0;
+do{dirs=matrix(n,w);fp=hash(dirs.map(d=>AXK.map(a=>d[a]).join("|")).join("/"))}while(S.anti&&hist.some(h=>h.fp===fp)&&++t<15);
+paint(dirs);
+const used={};AXK.forEach(a=>used[a]=[...new Set(dirs.flatMap(d=>a=="lang"||a=="te"?d[a].split(" + "):[d[a]]))]);
+return{dirs,fp,used}}
+function commit(opt){const r=render(opt);hist.unshift({t:Date.now(),serie:S.f.serie||"SIN NOMBRE",fp:r.fp,dirs:r.dirs,prompt:cur,used:r.used,hero:AXK.map(a=>r.dirs[0][a]).slice(0,4).join(" · "),fav:0,st:JSON.parse(JSON.stringify(S))});
+while(hist.length>60){const i=hist.map(h=>h.fav).lastIndexOf(0);if(i<0)break;hist.splice(i,1)}
+W("pod_motor_hist",hist);drawHist();save()}
+function drawHist(){$("hc").textContent=hist.length;$("hist").innerHTML=hist.length?hist.map((h,i)=>`<div class="h"><div><b>${esc(h.serie)}</b> ${h.fav?"⭐":""}<small>${new Date(h.t).toLocaleString("es",{dateStyle:"short",timeStyle:"short"})} · ${esc(h.hero)}</small></div><button class="ib" data-a="hload" data-i="${i}">Cargar</button><button class="ib" data-a="hcopy" data-i="${i}">Copiar</button><button class="ib" data-a="hfav" data-i="${i}">⭐</button><button class="ib" data-a="hdel" data-i="${i}">🗑</button></div>`).join(""):'<div class="note">Aún no hay generaciones. Cada GENERAR se guarda aquí.</div>'}
+function drawPresets(){$("presets").innerHTML='<option value="">— Presets guardados —</option>'+Object.keys(presets).map(k=>`<option>${esc(k)}</option>`).join("")}
+async function copy(t){try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove()}toast("Copiado")}
+function dl(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+/* eventos */
+document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a,x=b.dataset.x,i=+b.dataset.i;
+switch(a){
+case"dice":if(S.lock[x])return toast("Eje bloqueado 🔒");roll(x);sync();render();break;
+case"lock":S.lock[x]=!S.lock[x];sync();break;
+case"all":S.sel[x]=[...AX[x].p];sync();render();break;
+case"none":S.sel[x]=[];sync();render();break;
+case"manual":S.creative=false;sync();render();break;
+case"creative":S.creative=true;readF();AXK.forEach(k=>roll(k));sync();commit({reroll:false,wide:true});break;
+case"gen":readF();commit({reroll:true});break;
+case"dall":readF();S.f.mix=["1","2","3","R","R"][Math.random()*5|0];S.f.mixT=["1","2","R"][Math.random()*3|0];S.cross=Math.random()<.6;writeF();sync();commit({reroll:true,wide:true});toast("🎲 Sorpresa total");break;
+case"dre":{readF();rnd=Math.random;U=usage();curDirs[i]=matrix(1,curWide,1)[0];paint(curDirs);break}
+case"dcp":copy(lineOf(curDirs[i],i));break;
+case"fold":b.closest(".section").classList.toggle("fold");break;
+
+case"copy":copy(cur);break;
+case"txt":dl((S.f.serie||"direccion-visual").replace(/\W+/g,"-")+".txt",cur,"text/plain");break;
+case"reset":if(!confirm("¿Reiniciar campos y selecciones? El historial y los presets se conservan."))return;S=norm({});writeF();sync();render();toast("Reiniciado");break;
+case"psave":{readF();const n=prompt("Nombre del preset:",S.f.serie||"");if(!n)return;presets[n]=JSON.parse(JSON.stringify(S));W("pod_motor_presets",presets);drawPresets();$("presets").value=n;toast("Preset guardado");break}
+case"pload":{const n=$("presets").value;if(!n||!presets[n])return toast("Elige un preset");S=norm(presets[n]);writeF();sync();render();toast("Preset cargado");break}
+case"pdel":{const n=$("presets").value;if(!n||!confirm("¿Borrar preset «"+n+"»?"))return;delete presets[n];W("pod_motor_presets",presets);drawPresets();toast("Preset borrado");break}
+case"hload":{const h=hist[i];S=norm(h.st);writeF();sync();readF();setRng();U=usage();if(h.dirs){curWide=!!S.creative;paint(h.dirs)}else{render();$("out").textContent=h.prompt;cur=h.prompt}toast("Cargada del historial");break}
+case"hcopy":copy(hist[i].prompt);break;
+case"hfav":hist[i].fav=hist[i].fav?0:1;W("pod_motor_hist",hist);drawHist();break;
+case"hdel":hist.splice(i,1);W("pod_motor_hist",hist);drawHist();break;
+case"hclr":if(!hist.length||!confirm("¿Vaciar todo el historial? (se pierde la memoria anti-repetición)"))return;hist=[];W("pod_motor_hist",hist);drawHist();break;
+case"exp":dl("motor-lenguajes-respaldo.json",JSON.stringify({S,hist,presets},null,1),"application/json");break;
+case"imp":$("file").click();break}});
+$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.hist)hist=[...d.hist,...hist.filter(h=>!d.hist.some(k=>k.t===h.t))].slice(0,60);if(d.presets)presets={...presets,...d.presets};if(d.S)S=norm(d.S);W("pod_motor_hist",hist);W("pod_motor_presets",presets);writeF();drawHist();drawPresets();sync();render();toast("Respaldo importado")}catch(x){toast("Archivo inválido")}};r.readAsText(f);e.target.value=""};
+document.addEventListener("change",e=>{const t=e.target;
+if(t.dataset.ax){S.sel[t.dataset.ax]=[...document.querySelectorAll(`[data-ax="${t.dataset.ax}"]:checked`)].map(c=>c.value);save();render()}
+else if(t.id=="anti"){S.anti=t.checked;save();render()}
+else if(t.id=="cross"){S.cross=t.checked;save();render()}
+else if(t.closest(".controls")&&FI.includes(t.id)){readF();save();render()}});
+document.addEventListener("input",e=>{if(e.target.id=="flt"){const q=e.target.value.toLowerCase();document.querySelectorAll(".chip").forEach(c=>c.style.display=c.textContent.toLowerCase().includes(q)?"":"none")}if(FI.includes(e.target.id)){readF();save()}});
+$("cnt").textContent=AX.lang.p.length+" lenguajes";$("rn").textContent=String(AXK.length+3).padStart(2,"0");
+writeF();sync();drawHist();drawPresets();render();
+</script>
+<script src="js/pod-nav.js"></script>
+<script>try{if(window.PODNav){window.PODNav.prefill();}}catch(e){}</script></body></html>
