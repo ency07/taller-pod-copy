@@ -77,6 +77,15 @@ const PRODUCT_BIAS = {
     mockup: "prenda premium o presentación textil enmarcada",
     safeMargin: "respetar márgenes de impresión textil amplia"
   },
+  "MUG": {
+    trat: ["MODERN", "SOFT", "EXPRESSIVE"],
+    layout: ["Emblema circular", "Sello descentrado", "Banda horizontal", "Tarjeta interior"],
+    density: ["Minimal", "Balanced"],
+    hierarchy: ["TEXTO_DOMINANTE", "BALANCEADO", "OBJETO_DOMINANTE"],
+    scale: "arte para zona imprimible visible de una taza; foco legible de frente, sin detalles criticos junto al asa; medidas dependen del proveedor",
+    mockup: "taza con asa visible en vista frontal y tres cuartos, mas vista plana del arte",
+    safeMargin: "deja margen en el area imprimible y confirma la plantilla exacta del proveedor"
+  },
   "DISPLATE": {
     trat: ["MODERN", "HEAVY"],
     layout: [
@@ -101,11 +110,13 @@ const PLACEMENT = {
   "HOODIE": "pecho amplio o espalda oversized",
   "GORRA": "panel frontal de la gorra; composición compacta y centrada, respetando costuras, curva y visera",
   "ILUSTRACION PREMIUM APPAREL": "lienzo completo 4:5 sobre textil premium",
+  "MUG": "zona imprimible de taza; diseno legible de frente y separado del asa",
   "DISPLATE": "lienzo rectangular completo con margen de marco; pieza de pared, no prenda"
 };
 
 const PRODUCT_RULES = {
   "GORRA": "GORRA: diseña dentro del panel frontal pequeño y ligeramente curvo. Usa un foco claro, silueta reconocible a tamaño reducido y texto breve; conserva legibilidad y evita microtexto. Ajusta el detalle a una aplicación viable para gorra (bordado, parche o impresión) según el estilo; no supongas que todos los acabados son bordado. No extiendas el arte sobre costuras, visera ni paneles laterales salvo que se pida explícitamente. En la lámina de presentación muestra gorras reales de frente y en vista tres cuartos, con un acercamiento del área impresa o bordada.",
+  "MUG": "MUG: crea arte para taza con asa, no lamina plana. Mantén el foco principal en el area visible, evita texto indispensable sobre el asa y conserva lectura en la curvatura. No inventes medidas ni afirmes que la plantilla esta validada; varia segun proveedor.",
   "DISPLATE": "DISPLATE: esto NO es una camiseta ni un estampado textil. Diseña una obra mural premium para impresión sobre metal. Usa composición rectangular completa (full-bleed permitido). Respeta margen de seguridad mínimo del 5% en los cuatro bordes para montaje. Permite detalle alto, atmósfera, textura rica y fondo completo. La lectura debe funcionar tanto de cerca como de lejos. No uses lógica de pecho, espalda, panel frontal ni placement textil. El mockup debe mostrar la lámina en pared o ambiente real, nunca sobre cuerpo humano. Evita texto pegado a los bordes. La paleta debe ser sólida y limpia para impresión metálica."
 };
 
@@ -113,7 +124,8 @@ const PRODUCT_MOCKUP_RULES = {
   "CAMISETA SOFT": "dos mockups de camiseta (uno oscuro y otro claro); vista frontal y tres cuartos",
   "CAMISETA APPAREL": "dos mockups de prenda fashion (plana o modelo); vista frontal y detalle",
   "HOODIE": "dos mockups de hoodie (uno oscuro y otro claro); vista frontal y espalda",
-  "GORRA": "dos mockups de gorra (vista frontal y tres cuartos) más un acercamiento del panel frontal impreso o bordado",
+  "GORRA": "dos mockups de gorra (vista frontal y tres cuartos) y acercamiento del panel con el acabado elegido",
+  "MUG": "taza con asa visible en vista frontal y tres cuartos, mas vista plana del arte",
   "ILUSTRACION PREMIUM APPAREL": "dos mockups de prenda premium o presentación textil enmarcada",
   "DISPLATE": "dos mockups de placa mural metálica: uno frontal plano y otro en ambiente real (pared, habitación, setup)"
 };
@@ -147,7 +159,10 @@ function isHeadwear(product) {
 }
 
 function isTextile(product) {
-  return !isWallArt(product);
+  return product !== "DISPLATE" && product !== "MUG";
+}
+function isDrinkware(product) {
+  return product === "MUG";
 }
 
 function getProductScaleDirective(product) {
@@ -165,3 +180,4 @@ window.PRODUCT_BIAS = PRODUCT_BIAS;
 window.PLACEMENT = PLACEMENT;
 window.PRODUCT_RULES = PRODUCT_RULES;
 window.PRODUCT_MOCKUP_RULES = PRODUCT_MOCKUP_RULES;
+window.isDrinkware = isDrinkware;

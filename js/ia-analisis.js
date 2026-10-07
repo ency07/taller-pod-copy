@@ -348,6 +348,14 @@
     if (statusEl) statusEl.textContent = 'Analizando imagen con Gemini Vision...';
 
     const file = fileInput.files[0];
+    if (!file.type || !/^image\/(png|jpeg|webp|gif)$/i.test(file.type)) {
+      if (statusEl) statusEl.textContent = 'Formato no compatible para vision. Usa PNG, JPG, WEBP o GIF.';
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      if (statusEl) statusEl.textContent = 'La imagen supera 20 MB. Reduce su tamano e intentalo de nuevo.';
+      return;
+    }
 
     try {
       const fileData = await fileToBase64(file);
@@ -386,14 +394,26 @@
       const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
         encodeURIComponent(slot.model) + ':generateContent?key=' + encodeURIComponent(slot.key);
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timeout = controller ? setTimeout(function () { controller.abort(); }, 45000) : null;
+      let response;
+      try {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: controller ? controller.signal : undefined
+        });
+      } finally {
+        if (timeout) clearTimeout(timeout);
+      }
       if (!response.ok) {
-        throw new Error('HTTP ' + response.status);
+        let detail = '';
+        try {
+          const errorBody = await response.json();
+          detail = errorBody && errorBody.error && errorBody.error.message ? ': ' + errorBody.error.message : '';
+        } catch (e) {}
+        throw new Error('Gemini respondio HTTP ' + response.status + detail);
       }
 
       const data = await response.json();
@@ -414,6 +434,16 @@
         const sliced = (start > -1 && end > start) ? cleaned.slice(start, end + 1) : cleaned;
         analysis = JSON.parse(sliced);
       }
+
+      // Vincular el analisis al archivo exacto; cambiar imagen invalida su resultado.
+      fileInput.dataset.analysisSignature = [file.name, file.size, file.lastModified].join('|');
+      fileInput.dataset.analysisSummary = JSON.stringify({
+        concepto: analysis.concepto || '',
+        mensaje_visible: analysis.mensaje_visible || '',
+        simbolo_descripcion: analysis.simbolo_descripcion || '',
+        funcion_simbolica: analysis.funcion_simbolica || '',
+        esencia_a_conservar: analysis.esencia_a_conservar || ''
+      });
 
       // Llenar campos automáticamente
       if ($('concept') && analysis.concepto) {
@@ -449,7 +479,10 @@
     } catch (e) {
       console.error('[IA-Analisis] Error:', e);
       if (statusEl) {
-        statusEl.textContent = 'Error al analizar: ' + (e && e.message ? e.message : e);
+        const message = e && e.name === 'AbortError'
+          ? 'El analisis tardo demasiado y se cancelo. Puedes reintentar o continuar sin analisis.'
+          : (e && e.message ? e.message : e);
+        statusEl.textContent = 'Error al analizar: ' + message + '. Puedes continuar con los selectores sin bloquear la generacion.';
       }
     }
   }

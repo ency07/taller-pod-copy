@@ -112,7 +112,10 @@ let MOTOR_STATE = {
     textos: 'conservar_palabras',
     paleta: 'renovar',
     esencia: ''
-  }
+  },
+  capApplication: 'auto',
+  imageReference: null,
+  imageAnalysis: null
 };
 
 const K = ['A', 'B', 'C'];
@@ -149,6 +152,18 @@ function readStateFromDOM() {
   MOTOR_STATE.variationOptions.textos = v('textosVar', 'conservar_palabras');
   MOTOR_STATE.variationOptions.paleta = v('paletaVar', 'renovar');
   MOTOR_STATE.variationOptions.esencia = (g('essence') ? g('essence').value : '').trim();
+  MOTOR_STATE.capApplication = v('capApplication', 'auto');
+  const imageInput = g('imageUpload');
+  const imageFile = imageInput && imageInput.files ? imageInput.files[0] : null;
+  MOTOR_STATE.imageReference = imageFile ? {
+    name: imageFile.name, size: imageFile.size, lastModified: imageFile.lastModified,
+    signature: [imageFile.name, imageFile.size, imageFile.lastModified].join('|')
+  } : null;
+  MOTOR_STATE.imageAnalysis = null;
+  if (imageFile && imageInput.dataset && imageInput.dataset.analysisSignature === MOTOR_STATE.imageReference.signature) {
+    try { MOTOR_STATE.imageAnalysis = JSON.parse(imageInput.dataset.analysisSummary || 'null'); }
+    catch (e) { MOTOR_STATE.imageAnalysis = null; }
+  }
 }
 
 /* --- ResoluciÃ³n de audiencias --- */
@@ -209,14 +224,14 @@ function resolveAudiences() {
 /* --- ResoluciÃ³n de estilos --- */
 function _styleCandidatesForContext() {
   const subniche = MOTOR_STATE.subniche;
-  let candidates = subniche !== 'auto' && _STYLE_CANDIDATES[subniche]
-    ? _STYLE_CANDIDATES[subniche].slice()
-    : _ESTILOS_LIST.slice();
-
+  const recommended = subniche !== 'auto' && _STYLE_CANDIDATES[subniche]
+    ? _STYLE_CANDIDATES[subniche].slice() : [];
+  let candidates = recommended.concat(_ESTILOS_LIST.filter(function (style) {
+    return recommended.indexOf(style) === -1;
+  }));
   if (isGospelMarket()) {
     const allow = ["Folk Popular", "Vitral / Mosaico", "Barroco Ornamental", "Grabado / Linóleo", "Hand-Drawn", "Acuarela Suelta", "Sumi-e / Tinta Lavada", "Minimal Modern", "Bordado / Puntada", "Ukiyo-e / Woodblock", "Retro 70s", "Kids Storybook", "Collage Cut-Paper", "Papercraft 3D", "Airbrush Smooth", "Foil Stamp / Metallic", "Vintage Desgastado", "Bohemian"];
-    const filtered = candidates.filter(function (e) { return allow.indexOf(e) !== -1; });
-    candidates = filtered.length ? filtered : allow;
+    candidates = candidates.filter(function (e) { return allow.indexOf(e) !== -1; });
   }
   return candidates;
 }
@@ -475,9 +490,9 @@ function buildCandidate(audsPerKey) {
   const hierarchyPerKey = resolveTextImageModes(estilos, audsPerKey);
   const objectPool = getObjectPool();
   const isVar = MOTOR_STATE.workflowMode === 'variation';
-  const conservarSimb = isVar && MOTOR_STATE.variationOptions.simbolo === 'conservar';
-  const conservarPaleta = isVar && MOTOR_STATE.variationOptions.paleta === 'conservar';
-  const textosImagen = isVar && MOTOR_STATE.variationOptions.textos === 'conservar_palabras';
+  const conservarSimb = isVar && !!MOTOR_STATE.imageReference && MOTOR_STATE.variationOptions.simbolo === 'conservar';
+  const conservarPaleta = isVar && !!MOTOR_STATE.imageReference && MOTOR_STATE.variationOptions.paleta === 'conservar';
+  const textosImagen = isVar && !!MOTOR_STATE.imageReference && MOTOR_STATE.variationOptions.textos === 'conservar_palabras';
   const textosMensaje = isVar && MOTOR_STATE.variationOptions.textos === 'mismo_mensaje';
 
   const set = {};
@@ -712,7 +727,7 @@ function generateSet() {
     const pertinenciaOk = m.fitAudienciaMin >= 50 && m.fitProductoMin >= 40;
     const estilosOk = MOTOR_STATE.groupMode === 'mismo'
       ? m.estilos.length === 1
-      : m.estilos.length >= 2;
+      : m.estilos.length === 3;
     const ok = m.diversity >= 55 && estilosOk && m.objUnique && ejesOk && pertinenciaOk
       && _patternConflictsOf(cand) === 0;
 
@@ -787,19 +802,47 @@ function formatPrompt(result) {
     legalDir = getLegalDirective(MOTOR_STATE.market, MOTOR_STATE.marketplace);
   }
 
-  // Producto
-  const productRule = _PRODUCT_RULES[MOTOR_STATE.product] || '';
-
+  // Product-specific rules
+  let productRule = _PRODUCT_RULES[MOTOR_STATE.product] || '';
+  if (MOTOR_STATE.product === 'GORRA') {
+    const capRules = {
+      auto: 'Auto: usa silueta simple y pocos detalles; no afirmes que el arte esta validado para produccion.',
+      bordado: 'ACABADO: BORDADO. Usa formas solidas, contornos gruesos, pocos colores, espacios amplios; evita degradados, lineas finas y microtexto. La viabilidad final depende de la plantilla del proveedor.',
+      parche: 'ACABADO: PARCHE. Usa silueta compacta, contorno claro y areas separables; evita microtexto y detalles finos.',
+      impresion: 'ACABADO: IMPRESION. Permite mas detalle que el bordado, manteniendo contraste y lectura en el panel curvo.'
+    };
+    productRule += ' ' + capRules[MOTOR_STATE.capApplication || 'auto'];
+  }
+  const mockupRule = typeof getMockupRule === 'function' ? getMockupRule(MOTOR_STATE.product) : '';
   let o = '';
   if (isVar) {
-    o += '/VARIATION-FROM-IMAGE â€” TRES PRODUCTOS NUEVOS (01A Â· 01B Â· 01C)\n';
-    o += 'MODO: variaciÃ³n creativa | MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + '\n';
-    o += 'IMAGEN: adjunta en el chat | ESQUEMAS: ' + K.map(function (k) { return N[K.indexOf(k)] + ' ' + set[k].estilo; }).join(' Â· ') + '\n\n';
+    const image = MOTOR_STATE.imageReference;
+    const analysis = MOTOR_STATE.imageAnalysis;
+    const hasAnalysis = !!(image && analysis);
+    o += '/VARIATION - TRES DIRECCIONES NUEVAS (01A · 01B · 01C)\n';
+    o += 'MODO: variacion guiada | MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + '\n';
+    o += 'ESTILOS: ' + K.map(function (k) { return N[K.indexOf(k)] + ' ' + set[k].estilo; }).join(' · ') + '\n';
+    if (hasAnalysis) {
+      o += 'REFERENCIA: imagen analizada en el generador. Este texto no contiene el archivo: adjuntalo tambien en la IA de imagen. No inventes detalles ausentes del analisis.\n';
+      o += 'ANALISIS CONFIRMADO: concepto ' + (analysis.concepto || 'sin dato') + '; texto visible ' + (analysis.mensaje_visible || 'no detectado') + '; simbolo ' + (analysis.simbolo_descripcion || 'sin dato') + '; funcion ' + (analysis.funcion_simbolica || 'sin dato') + '; esencia ' + (analysis.esencia_a_conservar || 'sin dato') + '.\n';
+    } else if (image) {
+      o += 'REFERENCIA: hay un archivo en el generador, pero no analisis confirmado. Adjunta la imagen en la IA de imagen si debe usarse; no supongas su contenido.\n';
+    } else {
+      o += 'REFERENCIA: NO se cargo imagen. No inventes una imagen fuente. Sigue concepto, audiencia, producto, selectores y fichas; la falta de imagen no bloquea la tarea.\n';
+    }
+    if (MOTOR_STATE.variationOptions.esencia) o += 'ESENCIA ESCRITA POR EL USUARIO: ' + MOTOR_STATE.variationOptions.esencia + '\n';
+    o += 'SELECTORES: simbolo=' + MOTOR_STATE.variationOptions.simbolo + '; color=' + MOTOR_STATE.variationOptions.paleta + '; textos=' + MOTOR_STATE.variationOptions.textos + '.\n';
+    if (MOTOR_STATE.variationOptions.simbolo === 'conservar' && !hasAnalysis) o += 'Si se adjunta referencia, conserva funcion y silueta; sin imagen no finjas conocer el simbolo.\n';
+    if (MOTOR_STATE.variationOptions.paleta === 'conservar' && !hasAnalysis) o += 'Si se adjunta referencia, conserva sus colores; sin imagen usa la paleta explicita de cada ficha y no afirmes que replica la original.\n';
+    if (MOTOR_STATE.variationOptions.textos === 'conservar_palabras') o += 'Conserva literalmente solo texto fuente visible en el analisis o escrito en MENSAJE/CONCEPTO; si no existe, no inventes palabras que deban conservarse.\n';
+    else if (MOTOR_STATE.variationOptions.textos === 'mismo_mensaje') o += 'Conserva la idea de MENSAJE/CONCEPTO; permite reformular sin cambiar su sentido.\n';
+    else o += 'Crea redaccion nueva desde CONCEPTO/MENSAJE, sin atribuirla a la imagen fuente.\n';
+    o += 'ESQUEMAS: aplica las decisiones particulares de cada ficha.\n\n';
   } else {
-    o += '/CONTACTSHEET â€” 3 DIRECCIONES Â· MISMO CONCEPTO Â· NADA CLONADO\n';
-    o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || 'â€”') + '\n';
+    o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
+    o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
     o += 'CONCEPTO: ' + MOTOR_STATE.concept + ' | MENSAJE: ' + MOTOR_STATE.message + '\n';
-    o += 'ADN IGUAL EN A/B/C: concepto Â· mensaje Â· dominio Â· funciÃ³n simbÃ³lica Â· intenciÃ³n emocional\n\n';
+    o += 'ADN IGUAL EN A/B/C: concepto · mensaje · dominio · función simbólica · intención emocional\n\n';
   }
 
   o += 'REGLAS INQUEBRANTABLES:\n';
@@ -807,6 +850,7 @@ function formatPrompt(result) {
   if (cultDir) o += 'CULTURA: ' + cultDir + '\n';
   if (legalDir) o += 'LEGAL: ' + legalDir + '\n';
   if (productRule) o += 'PRODUCTO: ' + productRule + '\n';
+  if (mockupRule) o += 'PRESENTACION: ' + mockupRule + '\n';
   if (MOTOR_STATE.market === 'gospel_es' || MOTOR_STATE.market === 'gospel_en') {
     o += 'DOCTRINA: Trinitario (Padre, Hijo, Espiritu Santo) y cristocentrico. Cruz y resurreccion al centro. PROHIBIDO prosperidad magica, decretos, angeles como centro, santos mediadores, esoterismo, horoscopo, energia. Sin region: universal.\n';
   }
@@ -826,6 +870,7 @@ function formatPrompt(result) {
     o += 'JERARQUÃA: ' + v.jerarquiaVisual + '\n';
     o += 'OBJETO: ' + v.objeto + '\n';
     o += 'DIRECCIÃ“N: ' + v.arquitectura + '; ' + v.composicion + '; ' + v.layout + '\n';
+    o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
     o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
     o += 'TEXTO: ' + v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' Â· ' + v.tipografia + '\n';
     o += 'PALETA: ' + v.paleta + '\n';
