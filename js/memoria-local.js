@@ -332,6 +332,11 @@
     };
     if (subniche) add('__phrase__' + subniche);
     if (subniche !== COMMON_BANK_KEY) add('__phrase__' + COMMON_BANK_KEY);
+    // Banco nombrado activo para este contexto (Fase 2).
+    try {
+      const active = getActivePersonalBank(market, subniche);
+      if (active && Array.isArray(active.phrases)) out.push.apply(out, active.phrases);
+    } catch (e) {}
     return Array.from(new Set(out.filter(Boolean)));
   }
 
@@ -346,6 +351,12 @@
     if (Array.isArray(bank[COMMON_BANK_KEY])) {
       out.push.apply(out, bank[COMMON_BANK_KEY]);
     }
+
+    // Banco nombrado activo para este contexto (Fase 2).
+    try {
+      const active = getActivePersonalBank(market, subniche);
+      if (active && Array.isArray(active.objects)) out.push.apply(out, active.objects);
+    } catch (e) {}
 
     return Array.from(new Set(out.filter(Boolean)));
   }
@@ -390,6 +401,157 @@
     } else {
       removeRaw(memKey(['personalBank', market]));
     }
+  }
+
+  /* ============================================================
+     BANCOS PERSONALES NOMBRADOS (Fase 2)
+     Varios bancos con nombre por mercado, cada uno atado a un subnicho.
+     El banco ACTIVO por (mercado, subnicho) alimenta getPersonalObjects/
+     getPersonalPhrases y por tanto al motor. El banco legacy sigue intacto.
+     ============================================================ */
+
+  function _loadNamedBanks(market) {
+    const raw = getJSON(memKey(['personalBanks', market]), null);
+    if (raw && raw.banks && typeof raw.banks === 'object') {
+      if (!raw.active || typeof raw.active !== 'object') raw.active = {};
+      return raw;
+    }
+    return { banks: {}, active: {} };
+  }
+
+  function _saveNamedBanks(market, data) {
+    return setJSON(memKey(['personalBanks', market]), data || { banks: {}, active: {} });
+  }
+
+  function _newBankId() {
+    try {
+      return 'pb_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    } catch (e) {
+      return 'pb_' + String(Math.floor(Math.random() * 1e9));
+    }
+  }
+
+  function _normBankEntry(s) {
+    return String(s || '').toLowerCase().normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+  }
+
+  function createPersonalBank(market, name, subniche) {
+    const clean = String(name || '').trim();
+    if (clean.length < 2) return { ok: false, error: 'el banco necesita un nombre (mínimo 2 caracteres)' };
+    const data = _loadNamedBanks(market);
+    const dup = Object.keys(data.banks).some(function (id) {
+      return String(data.banks[id].name || '').toLowerCase() === clean.toLowerCase();
+    });
+    if (dup) return { ok: false, error: 'ya existe un banco con ese nombre en este mercado' };
+    const id = _newBankId();
+    data.banks[id] = {
+      id: id,
+      name: clean,
+      subniche: subniche || COMMON_BANK_KEY,
+      objects: [],
+      phrases: [],
+      updatedAt: new Date().toISOString()
+    };
+    _saveNamedBanks(market, data);
+    return { ok: true, id: id };
+  }
+
+  function listPersonalBanks(market) {
+    const data = _loadNamedBanks(market);
+    return Object.keys(data.banks).map(function (id) { return data.banks[id]; }).sort(function (a, b) {
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+  }
+
+  function getPersonalBank(market, id) {
+    if (!id) return null;
+    return _loadNamedBanks(market).banks[id] || null;
+  }
+
+  function renamePersonalBank(market, id, name) {
+    const data = _loadNamedBanks(market);
+    if (!data.banks[id]) return { ok: false, error: 'el banco no existe' };
+    const clean = String(name || '').trim();
+    if (clean.length < 2) return { ok: false, error: 'nombre muy corto' };
+    const dup = Object.keys(data.banks).some(function (other) {
+      return other !== id && String(data.banks[other].name || '').toLowerCase() === clean.toLowerCase();
+    });
+    if (dup) return { ok: false, error: 'ya existe otro banco con ese nombre' };
+    data.banks[id].name = clean;
+    data.banks[id].updatedAt = new Date().toISOString();
+    _saveNamedBanks(market, data);
+    return { ok: true };
+  }
+
+  function deletePersonalBank(market, id) {
+    const data = _loadNamedBanks(market);
+    if (!data.banks[id]) return { ok: false, error: 'el banco no existe' };
+    delete data.banks[id];
+    Object.keys(data.active).forEach(function (ctx) {
+      if (data.active[ctx] === id) delete data.active[ctx];
+    });
+    _saveNamedBanks(market, data);
+    return { ok: true };
+  }
+
+  function clonePersonalBank(market, id, newName) {
+    const data = _loadNamedBanks(market);
+    const src = data.banks[id];
+    if (!src) return { ok: false, error: 'el banco no existe' };
+    const clean = String(newName || (src.name + ' copia')).trim();
+    if (clean.length < 2) return { ok: false, error: 'nombre muy corto' };
+    const r = createPersonalBank(market, clean, src.subniche);
+    if (!r.ok) return r;
+    const fresh = _loadNamedBanks(market);
+    fresh.banks[r.id].objects = (src.objects || []).slice();
+    fresh.banks[r.id].phrases = (src.phrases || []).slice();
+    _saveNamedBanks(market, fresh);
+    return { ok: true, id: r.id };
+  }
+
+  function saveToPersonalBank(market, id, entries) {
+    const data = _loadNamedBanks(market);
+    const bank = data.banks[id];
+    if (!bank) return { ok: false, error: 'el banco no existe' };
+    const e = entries || {};
+    let added = 0, duplicates = 0;
+    [['objects', 4], ['phrases', 2]].forEach(function (pair) {
+      const field = pair[0], minLen = pair[1];
+      const current = Array.isArray(bank[field]) ? bank[field] : [];
+      const sigs = new Set(current.map(_normBankEntry).filter(Boolean));
+      (Array.isArray(e[field]) ? e[field] : []).forEach(function (line) {
+        const value = String(line || '').trim();
+        if (value.length < minLen) return;
+        const sig = _normBankEntry(value);
+        if (!sig || sigs.has(sig)) { duplicates++; return; }
+        current.push(value);
+        sigs.add(sig);
+        added++;
+      });
+      bank[field] = current;
+    });
+    bank.updatedAt = new Date().toISOString();
+    _saveNamedBanks(market, data);
+    return { ok: true, added: added, duplicates: duplicates };
+  }
+
+  function getActivePersonalBank(market, subniche) {
+    const data = _loadNamedBanks(market);
+    const ctx = subniche || COMMON_BANK_KEY;
+    const id = data.active[ctx] || data.active[COMMON_BANK_KEY];
+    if (!id || !data.banks[id]) return null;
+    return data.banks[id];
+  }
+
+  function setActivePersonalBank(market, subniche, id) {
+    const data = _loadNamedBanks(market);
+    const ctx = subniche || COMMON_BANK_KEY;
+    if (id && !data.banks[id]) return { ok: false, error: 'el banco no existe' };
+    if (id) data.active[ctx] = id;
+    else delete data.active[ctx];
+    _saveNamedBanks(market, data);
+    return { ok: true };
   }
 
   /* ============================================================
@@ -876,6 +1038,16 @@
   window.getPersonalPhrases = getPersonalPhrases;
   window.addPersonalObjects = addPersonalObjects;
   window.removePersonalBank = removePersonalBank;
+
+  window.createPersonalBank = createPersonalBank;
+  window.listPersonalBanks = listPersonalBanks;
+  window.getPersonalBank = getPersonalBank;
+  window.renamePersonalBank = renamePersonalBank;
+  window.deletePersonalBank = deletePersonalBank;
+  window.clonePersonalBank = clonePersonalBank;
+  window.saveToPersonalBank = saveToPersonalBank;
+  window.getActivePersonalBank = getActivePersonalBank;
+  window.setActivePersonalBank = setActivePersonalBank;
 
   window.loadApprovedDirections = loadApprovedDirections;
   window.saveApprovedDirections = saveApprovedDirections;

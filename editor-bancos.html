@@ -313,9 +313,36 @@
         <textarea id="newObjects" placeholder="Ej: hamaca que sostiene tres generaciones y una mentira"></textarea>
         <div id="entryHint" class="hint">Una entrada por línea. Se detectan duplicados exactos normalizados en este subnicho.</div>
       </div>
+      <div class="field">
+        <label for="nbTarget">Guardar en</label>
+        <select id="nbTarget"></select>
+        <div class="hint">Banco general del subnicho o uno de tus bancos con nombre.</div>
+      </div>
       <div class="actions">
         <button id="btnSave" class="primary">Guardar en este mercado y subnicho</button>
         <button id="btnClearInput" class="ghost">Limpiar campo</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>Bancos personales con nombre</label>
+      <div class="hint" style="margin-top: 0; margin-bottom: 12px;">Crea bancos con nombre propio para diferenciarlos. El banco activo por subnicho alimenta al motor junto al banco general.</div>
+      <div class="field-row">
+        <div class="field">
+          <label for="nbName">Nombre del banco</label>
+          <input id="nbName" placeholder="Ej: Frases mamá 2026" />
+        </div>
+        <div class="field">
+          <label for="nbSubniche">Subnicho del banco</label>
+          <select id="nbSubniche"></select>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="btnCreateBank" class="primary">Crear banco</button>
+      </div>
+      <div class="field" style="margin-top: 14px;">
+        <label>Tus bancos (clic en activar para que alimente al motor)</label>
+        <div id="nbList"></div>
       </div>
     </div>
 
@@ -572,6 +599,22 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
           return;
         }
 
+        // Destino: banco nombrado (Fase 2) o banco general del subnicho.
+        var target = $('nbTarget') ? $('nbTarget').value : '';
+        if (target && target.indexOf('nb:') === 0 && typeof saveToPersonalBank === 'function') {
+          var bid = target.slice(3);
+          var payload = type === 'phrases' ? { phrases: lines } : { objects: lines };
+          var rr = saveToPersonalBank(market, bid, payload);
+          if (!rr.ok) { tell(rr.error || 'No se pudo guardar.', 'bad'); return; }
+          textarea.value = '';
+          displayBank();
+          renderNbanks();
+          var noun2 = type === 'phrases' ? 'frase(s)' : 'objeto(s)';
+          var bname = (typeof getPersonalBank === 'function' && getPersonalBank(market, bid) || {}).name || 'banco';
+          tell(rr.added + ' ' + noun2 + ' guardado(s) en "' + bname + '".' + (rr.duplicates ? ' ' + rr.duplicates + ' repetida(s).' : ''), 'good');
+          return;
+        }
+
         var bank = loadPersonalBank(market);
         var key = entryKey(subniche, type);
         var current = Array.isArray(bank[key]) ? bank[key] : [];
@@ -806,6 +849,99 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
         tell('Template guardado y activado para ' + tplProduct() + '.', 'good');
       }
 
+      /* ============================================================
+         BANCOS PERSONALES NOMBRADOS (Fase 2)
+         ============================================================ */
+      function nbMarket() { return $('selMarket') ? $('selMarket').value : 'global_en'; }
+      function nbSubniche() { return $('selSubniche') ? $('selSubniche').value : 'comun'; }
+
+      function renderNbanks() {
+        var market = nbMarket();
+        // Subnichos del banco nuevo (copia del selector principal)
+        var ns = $('nbSubniche'), ss = $('selSubniche');
+        if (ns && ss && ns.options.length !== ss.options.length) {
+          ns.innerHTML = ss.innerHTML;
+          ns.value = ss.value;
+        }
+        // Destinos de guardado
+        var tgt = $('nbTarget');
+        if (tgt && typeof listPersonalBanks === 'function') {
+          const prev = tgt.value;
+          let html = '<option value="">Banco general del subnicho</option>';
+          listPersonalBanks(market).forEach(function (b) {
+            html += '<option value="nb:' + b.id + '">' + b.name.replace(/</g, '&lt;') +
+              ' (' + (b.objects.length + b.phrases.length) + ')</option>';
+          });
+          tgt.innerHTML = html;
+          const still = Array.prototype.some.call(tgt.options, function (o) { return o.value === prev; });
+          if (still) tgt.value = prev;
+        }
+        // Lista con acciones
+        var el = $('nbList');
+        if (!el || typeof listPersonalBanks !== 'function') return;
+        var items = listPersonalBanks(market);
+        if (!items.length) {
+          el.innerHTML = '<div class="hint">Sin bancos con nombre. Crea uno arriba para diferenciar tus colecciones.</div>';
+          return;
+        }
+        const sub = nbSubniche();
+        let html = '';
+        items.forEach(function (b) {
+          const isActive = (typeof getActivePersonalBank === 'function' &&
+            getActivePersonalBank(market, sub) && getActivePersonalBank(market, sub).id === b.id);
+          html += '<div style="display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:var(--r);padding:8px;margin-bottom:8px;">'
+            + '<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">' + b.name.replace(/</g, '&lt;') + '</div>'
+            + '<div class="hint" style="margin:0;">' + b.subniche + ' · ' + b.objects.length + ' objetos · ' + b.phrases.length + ' frases'
+            + (isActive ? ' · <b>ACTIVO</b>' : '') + '</div></div>'
+            + '<button class="ghost" data-nb-act="' + b.id + '">' + (isActive ? 'Quitar' : 'Activar') + '</button>'
+            + '<button class="ghost" data-nb-clone="' + b.id + '">Clonar</button>'
+            + '<button class="ghost" data-nb-ren="' + b.id + '">Renombrar</button>'
+            + '<button class="ghost" data-nb-del="' + b.id + '" style="color:var(--bad);">Borrar</button>'
+            + '</div>';
+        });
+        el.innerHTML = html;
+        Array.prototype.forEach.call(el.querySelectorAll('[data-nb-act]'), function (x) {
+          x.addEventListener('click', function () {
+            const id = x.getAttribute('data-nb-act');
+            const cur = getActivePersonalBank(market, sub);
+            if (cur && cur.id === id) setActivePersonalBank(market, sub, null);
+            else setActivePersonalBank(market, sub, id);
+            renderNbanks();
+            tell(cur && cur.id === id ? 'Banco desactivado.' : 'Banco activado: alimenta al motor.', 'good');
+          });
+        });
+        Array.prototype.forEach.call(el.querySelectorAll('[data-nb-clone]'), function (x) {
+          x.addEventListener('click', function () {
+            const id = x.getAttribute('data-nb-clone');
+            const src = getPersonalBank(market, id);
+            const nn = prompt('Nombre de la copia:', (src ? src.name + ' copia' : 'Copia'));
+            if (nn === null) return;
+            const r = clonePersonalBank(market, id, nn);
+            tell(r.ok ? 'Banco clonado.' : (r.error || 'No se pudo clonar.'), r.ok ? 'good' : 'bad');
+            renderNbanks();
+          });
+        });
+        Array.prototype.forEach.call(el.querySelectorAll('[data-nb-ren]'), function (x) {
+          x.addEventListener('click', function () {
+            const id = x.getAttribute('data-nb-ren');
+            const src = getPersonalBank(market, id);
+            const nn = prompt('Nuevo nombre:', src ? src.name : '');
+            if (nn === null) return;
+            const r = renamePersonalBank(market, id, nn);
+            tell(r.ok ? 'Banco renombrado.' : (r.error || 'No se pudo renombrar.'), r.ok ? 'good' : 'bad');
+            renderNbanks();
+          });
+        });
+        Array.prototype.forEach.call(el.querySelectorAll('[data-nb-del]'), function (x) {
+          x.addEventListener('click', function () {
+            if (!confirm('¿Borrar este banco con todo su contenido?')) return;
+            const r = deletePersonalBank(market, x.getAttribute('data-nb-del'));
+            tell(r.ok ? 'Banco eliminado.' : (r.error || 'No se pudo eliminar.'), r.ok ? 'good' : 'bad');
+            renderNbanks();
+          });
+        });
+      }
+
       /* --- Wire --- */
       function init() {
         fillMarkets();
@@ -823,6 +959,9 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
         }
         fillSubniches();
         displayBank();
+        renderNbanks();
+        renderTplZones();
+        renderTplList();
 
         $('selMarket').addEventListener('change', function () {
           if (window.PODNav) {
@@ -830,9 +969,13 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
           }
           fillSubniches();
           displayBank();
+          renderNbanks();
         });
 
-        $('selSubniche').addEventListener('change', displayBank);
+        $('selSubniche').addEventListener('change', function () {
+          displayBank();
+          renderNbanks();
+        });
         $('entryType').addEventListener('change', function () {
           updateEntryUI();
           displayBank();
@@ -840,6 +983,16 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
         updateEntryUI();
 
         $('btnSave').addEventListener('click', saveNewObjects);
+        $('btnCreateBank').addEventListener('click', function () {
+          const name = $('nbName') ? $('nbName').value.trim() : '';
+          const sub = $('nbSubniche') ? $('nbSubniche').value : 'comun';
+          if (typeof createPersonalBank !== 'function') { tell('Banco con nombre no disponible.', 'bad'); return; }
+          const r = createPersonalBank(nbMarket(), name, sub);
+          if (!r.ok) { tell(r.error || 'No se pudo crear.', 'bad'); return; }
+          if ($('nbName')) $('nbName').value = '';
+          renderNbanks();
+          tell('Banco "' + name + '" creado.', 'good');
+        });
         $('btnClearInput').addEventListener('click', function () {
           var t = $('newObjects');
           if (t) t.value = '';

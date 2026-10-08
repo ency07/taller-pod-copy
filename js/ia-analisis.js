@@ -309,6 +309,26 @@
     }
   }
 
+  /* Selector de banco destino (general o nombrado, Fase 2). */
+  function updatePbBankSelect() {
+    const sel = $('pbBank');
+    if (!sel) return;
+    const marketId = _marketId();
+    const prev = sel.value;
+    let html = '<option value="">Banco general</option>';
+    try {
+      if (typeof listPersonalBanks === 'function') {
+        listPersonalBanks(marketId).forEach(function (b) {
+          html += '<option value="nb:' + b.id + '">' + b.name.replace(/</g, '&lt;') +
+            ' (' + ((b.objects || []).length + (b.phrases || []).length) + ')</option>';
+        });
+      }
+    } catch (e) {}
+    sel.innerHTML = html;
+    const still = Array.prototype.some.call(sel.options, function (o) { return o.value === prev; });
+    if (still) sel.value = prev;
+  }
+
   function cascadeUpdate() {
     // H1: la región se valida y normaliza ANTES de derivar el resto.
     updateRegionSelect();
@@ -317,6 +337,7 @@
     updateAudienceSelect();
     updateLanguageSelect();
     updatePbDomSelect();
+    updatePbBankSelect();
     updateDominioSelect();
     updateDomImagenSelect();
     updateTemplateHint();
@@ -812,6 +833,8 @@
   function savePersonalBankFromUI() {
     const pbTextEl = $('pbText');
     const pbDomEl = $('pbDom');
+    const pbBankEl = $('pbBank');
+    const pbBankNameEl = $('pbBankName');
     const pbCountEl = $('pbCount');
 
     if (!pbTextEl || !pbTextEl.value.trim()) {
@@ -822,6 +845,32 @@
     const marketId = $('market') ? $('market').value : 'global_en';
     const subniche = pbDomEl ? pbDomEl.value : 'comun';
     const lines = pbTextEl.value.split('\n').map(function (l) { return l.trim(); }).filter(function (l) { return l.length > 3; });
+    const newName = pbBankNameEl ? pbBankNameEl.value.trim() : '';
+    const dest = pbBankEl ? pbBankEl.value : '';
+
+    // Destino: banco nuevo con nombre > banco nombrado > banco general.
+    if (newName && typeof createPersonalBank === 'function' && typeof saveToPersonalBank === 'function') {
+      const created = createPersonalBank(marketId, newName, subniche);
+      if (!created.ok) { tell('<span class="bad">' + created.error + '</span>'); return; }
+      const saved = saveToPersonalBank(marketId, created.id, { objects: lines });
+      if (typeof setActivePersonalBank === 'function') setActivePersonalBank(marketId, subniche, created.id);
+      if (pbTextEl) pbTextEl.value = '';
+      if (pbBankNameEl) pbBankNameEl.value = '';
+      updatePbBankSelect();
+      if (pbBankEl) pbBankEl.value = 'nb:' + created.id;
+      updatePbCount();
+      tell('<span class="good">Banco "' + newName.replace(/</g, '&lt;') + '" creado con ' + saved.added + ' objeto(s). Ya alimenta al motor.</span>');
+      return;
+    }
+    if (dest && dest.indexOf('nb:') === 0 && typeof saveToPersonalBank === 'function') {
+      const saved = saveToPersonalBank(marketId, dest.slice(3), { objects: lines });
+      if (!saved.ok) { tell('<span class="bad">' + (saved.error || 'No se pudo guardar.') + '</span>'); return; }
+      if (pbTextEl) pbTextEl.value = '';
+      updatePbBankSelect();
+      updatePbCount();
+      tell('<span class="good">' + saved.added + ' objeto(s) guardado(s) en el banco. Duplicados: ' + saved.duplicates + '.</span>');
+      return;
+    }
 
     if (typeof addPersonalObjects === 'function') {
       const result = addPersonalObjects(marketId, subniche, lines);
@@ -849,6 +898,13 @@
           total += bank[key].length;
         }
       });
+      try {
+        if (typeof listPersonalBanks === 'function') {
+          listPersonalBanks(marketId).forEach(function (b) {
+            total += (b.objects || []).length + (b.phrases || []).length;
+          });
+        }
+      } catch (e) {}
       pbCountEl.textContent = 'Banco personal: ' + total + ' objetos guardados.';
     }
   }
