@@ -82,8 +82,13 @@
       html += '<option value="' + r.id + '">' + r.label + '</option>';
     });
     regionSel.innerHTML = html;
-    // Preservar elección manual si sigue siendo válida en el nuevo mercado
-    regionSel.value = (ids.indexOf(prev) !== -1) ? prev : ids[0];
+    // Reset total al cambiar de mercado (aunque el valor anterior siga válido).
+    // Dentro del mismo mercado se preserva la elección manual si sigue válida.
+    if (_marketResetPending || ids.indexOf(prev) === -1 || !ids.length) {
+      regionSel.value = ids.length ? ids[0] : prev;
+    } else {
+      regionSel.value = prev;
+    }
   }
 
   function _subnicheOptions(ids) {
@@ -127,7 +132,8 @@
     }
 
     subSel.innerHTML = html;
-    if (prev && Array.prototype.some.call(subSel.options, function (o) { return o.value === prev; })) {
+    // Reset total al cambiar de mercado; si no, se preserva si sigue válido.
+    if (!_marketResetPending && prev && Array.prototype.some.call(subSel.options, function (o) { return o.value === prev; })) {
       subSel.value = prev;
     }
   }
@@ -156,11 +162,21 @@
       html += '<option value="' + a + '">' + label + '</option>';
     });
     audSel.innerHTML = html;
-    if (prev === 'Auto' || !audiences.includes(prev)) audSel.value = 'Auto';
+    if (_marketResetPending || prev === 'Auto' || !audiences.includes(prev)) audSel.value = 'Auto';
     else audSel.value = prev;
   }
 
   let _lastLangAuto = 'auto';
+
+  /* Reset total al cambiar de mercado: TODOS los selectores dependientes
+     saltan al idioma/coherencia del mercado nuevo, aunque se hubieran fijado
+     a mano. Lo manual solo vale dentro del mercado actual. */
+  var _marketResetPending = false;
+
+  function onMarketChange() {
+    _marketResetPending = true;
+    try { cascadeUpdate(); } finally { _marketResetPending = false; }
+  }
 
   function updateLanguageSelect() {
     const marketId = _marketId();
@@ -187,7 +203,11 @@
     // innerHTML RESETea la selección al primer option: había que restaurar el
     // valor guardado ANTES, no reasignar el valor ya perdido.
     langSel.innerHTML = html;
-    if (isAutoChoice && langs['auto']) langSel.value = 'auto';
+    if (_marketResetPending) {
+      // Reset total: el idioma sigue al mercado nuevo aunque se hubiera fijado a mano.
+      if (langs[defaultLang]) langSel.value = defaultLang;
+    }
+    else if (isAutoChoice && langs['auto']) langSel.value = 'auto';
     else if (keepManual && langs[prevVal]) langSel.value = prevVal;
     _lastLangAuto = defaultLang;
   }
@@ -209,7 +229,7 @@
     }
 
     pbSel.innerHTML = html;
-    if (prev && Array.prototype.some.call(pbSel.options, function (o) { return o.value === prev; })) {
+    if (!_marketResetPending && prev && Array.prototype.some.call(pbSel.options, function (o) { return o.value === prev; })) {
       pbSel.value = prev;
     }
   }
@@ -231,7 +251,7 @@
       html += '<option value="' + d.id + '">' + d.label + '</option>';
     });
     domSel.innerHTML = html;
-    const ok = prev === 'Auto' || list.some(function (d) { return d.id === prev; });
+    const ok = !_marketResetPending && (prev === 'Auto' || list.some(function (d) { return d.id === prev; }));
     domSel.value = ok ? prev : 'Auto';
   }
 
@@ -249,9 +269,9 @@
       html += '<option value="' + d.id + '">' + d.label + '</option>';
     });
     domSel.innerHTML = html;
-    // Preservar elección manual si sigue existiendo
+    // Preservar elección manual si sigue existiendo (salvo reset de mercado).
     const stillThere = prev === 'auto' || list.some(function (d) { return d.id === prev; });
-    domSel.value = stillThere ? prev : 'auto';
+    domSel.value = (!_marketResetPending && stillThere) ? prev : 'auto';
     updateDominioHelp();
   }
 
@@ -867,7 +887,7 @@
 
   function wireButtons() {
     // Cascada de selectores
-    on('market', 'change', cascadeUpdate);
+    on('market', 'change', onMarketChange);
     on('region', 'change', function () {
       updateSubnicheSelect();
       updateAudienceSelect();
@@ -1095,6 +1115,7 @@
      ============================================================ */
   window.analyzeImageWithVision = analyzeImageWithVision;
   window.cascadeUpdate = cascadeUpdate;
+  window.onMarketChange = onMarketChange;
   window.savePersonalBankFromUI = savePersonalBankFromUI;
   window.testVisionConnection = testVisionConnection;
   window.PODVision = {
