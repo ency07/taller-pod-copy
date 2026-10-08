@@ -521,6 +521,31 @@
   }
 
   /* ============================================================
+     CONTADOR DE USO DE ESTILOS (cobertura de cola larga)
+     Garantiza que los 49 estilos roten: los no usados suben prioridad.
+     ============================================================ */
+
+  function getStyleUsageCounter(market, product) {
+    return getJSON(memKey(['styleUsage', market || 'global', product || 'all']), {}) || {};
+  }
+
+  function recordStyleUse(market, product, style) {
+    if (!style) return;
+    const key = memKey(['styleUsage', market || 'global', product || 'all']);
+    const c = getJSON(key, {}) || {};
+    c[style] = (c[style] || 0) + 1;
+    // Decaimiento: los no usados suben prioridad relativa
+    Object.keys(c).forEach(function (s) {
+      c[s] = Math.max(0, c[s] - 0.1);
+    });
+    setJSON(key, c);
+  }
+
+  function clearStyleUsage(market, product) {
+    removeRaw(memKey(['styleUsage', market || 'global', product || 'all']));
+  }
+
+  /* ============================================================
      EXPORT / IMPORT / FUSIÓN
      ============================================================ */
 
@@ -729,6 +754,10 @@
   window.loadCreativeMemory = loadCreativeMemory;
   window.saveCreativeMemory = saveCreativeMemory;
   window.clearCreativeMemory = clearCreativeMemory;
+
+  window.getStyleUsageCounter = getStyleUsageCounter;
+  window.recordStyleUse = recordStyleUse;
+  window.clearStyleUsage = clearStyleUsage;
 
   window.mergeArraysUnique = mergeArraysUnique;
   window.exportMemoryObject = exportMemoryObject;

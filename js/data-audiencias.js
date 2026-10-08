@@ -1,7 +1,7 @@
-'use strict';
+﻿'use strict';
 
 /* ============================================================
-   DATA AUDIENCIAS — POD COMERCIAL COLOMBIA
+   DATA AUDIENCIAS â€” POD COMERCIAL COLOMBIA
    Audiencias diferenciadas por región + género + edad/etapa.
    No son decorativas: gobiernan estilo, tipografía, forma,
    tratamiento, layout, densidad, color y jerarquía.
@@ -382,7 +382,7 @@ const AUD_PROFILES = {
   /* ================= UNISEX NACIONAL ================= */
 
   unisex_nacional: {
-    label: "Unisex nacional — todas las edades",
+    label: "Unisex nacional â€” todas las edades",
     region: "nacional",
     genero: "unisex",
     edad: "amplia",
@@ -443,7 +443,7 @@ const AUD_PROFILES = {
     formaPref: ["tallado en bloque", "silueta sólida a una tinta"]
   },
   global_family_en: {
-    label: "Global Family — gift",
+    label: "Global Family â€” gift",
     region: "global",
     genero: "unisex",
     edad: "todas",
@@ -490,7 +490,7 @@ const AUD_PROFILES = {
     formaPref: ["tallado en bloque", "silueta sólida a una tinta"]
   },
   global_familia_es: {
-    label: "Global familia — regalo",
+    label: "Global familia â€” regalo",
     region: "global_es",
     genero: "unisex",
     edad: "todas",
@@ -507,7 +507,7 @@ const AUD_PROFILES = {
 
   /* ================= GOSPEL (3 ES + 3 EN, universales) ================= */
   gospel_joven_fe: {
-    label: "Gospel joven 16-28 — fe",
+    label: "Gospel joven 16-28 â€” fe",
     region: "universal_es",
     genero: "unisex",
     edad: "16-28",
@@ -522,7 +522,7 @@ const AUD_PROFILES = {
     formaPref: ["silueta sólida a una tinta", "contorno lineal calibrado"]
   },
   gospel_adulto_fe: {
-    label: "Gospel adulto 29-55 — fe",
+    label: "Gospel adulto 29-55 â€” fe",
     region: "universal_es",
     genero: "unisex",
     edad: "29-55",
@@ -537,7 +537,7 @@ const AUD_PROFILES = {
     formaPref: ["tallado en bloque", "silueta sólida a una tinta"]
   },
   gospel_familia_fe: {
-    label: "Gospel familia — fe",
+    label: "Gospel familia â€” fe",
     region: "universal_es",
     genero: "unisex",
     edad: "todas",
@@ -552,7 +552,7 @@ const AUD_PROFILES = {
     formaPref: ["orgánico gestual con pincel", "manchado acuoso"]
   },
   gospel_youth_faith: {
-    label: "Gospel Youth 16-28 — faith",
+    label: "Gospel Youth 16-28 â€” faith",
     region: "universal_en",
     genero: "unisex",
     edad: "16-28",
@@ -567,7 +567,7 @@ const AUD_PROFILES = {
     formaPref: ["silueta sólida a una tinta", "contorno lineal calibrado"]
   },
   gospel_adult_faith: {
-    label: "Gospel Adult 29-55 — faith",
+    label: "Gospel Adult 29-55 â€” faith",
     region: "universal_en",
     genero: "unisex",
     edad: "29-55",
@@ -582,7 +582,7 @@ const AUD_PROFILES = {
     formaPref: ["tallado en bloque", "silueta sólida a una tinta"]
   },
   gospel_family_faith: {
-    label: "Gospel Family — faith",
+    label: "Gospel Family â€” faith",
     region: "universal_en",
     genero: "unisex",
     edad: "all",
@@ -601,7 +601,7 @@ const AUD_PROFILES = {
 const AUD_NAMES = Object.keys(AUD_PROFILES);
 
 /* ============================================================
-   COMPATIBILIDAD POR REGIÓN
+   COMPATIBILIDAD POR REGIÃ“N
    ============================================================ */
 
 const REGION_AUDIENCES = {
@@ -685,7 +685,7 @@ const REGION_AUDIENCES = {
 };
 
 /* ============================================================
-   PREFERENCIAS DE DECISIÓN VISUAL POR AUDIENCIA
+   PREFERENCIAS DE DECISIÃ“N VISUAL POR AUDIENCIA
    ============================================================ */
 
 const AUD_HIERARCHY_PREF = {
@@ -747,81 +747,177 @@ const AUD_DENSITY_PREF = {
 const AUD_STYLE_PREF = {
   coste_joven_m: [
     "Stencil Urbano",
-    "Cómic / Halftone",
-    "Y2K / Cyber"
-  ],
+    "C\u00f3mic / Halftone",
+    "Y2K / Cyber",
+    "Pixel / 8-bit",
+    "Grunge / DIY",
+    "Surf / Skate 90s",
+    "Retro 80s Neon",
+    "Vaporwave"
+  ,
+    "Anime / Manga",
+    "Paste-up Wheatpaste",
+    "Puff Print / 3D Ink",
+    "Glow Zone / Zona fosforescente"],
   coste_joven_f: [
     "Folk Popular",
     "Hand-Drawn",
-    "Retro 70s"
-  ],
+    "Retro 70s",
+    "Collage Cut-Paper",
+    "Airbrush Smooth",
+    "Kids Storybook",
+    "Bordado / Puntada",
+    "Risograph"
+  ,
+    "Glitter Zone / Zona glitter"],
   coste_adulto_m: [
     "Vintage Desgastado",
     "Retro 70s",
-    "Folk Popular"
-  ],
+    "Folk Popular",
+    "Blueprint / Technical",
+    "Brutalist",
+    "Grabado / Linóleo",
+    "Stencil Urbano",
+    "Photomontage / Dada",
+    "Vector Flat / Plano vectorial",
+    "Indexed Palette / Paleta indizada"
+  ,
+    "Tattoo Old School",
+    "Choke/Spread Trapping"],
   coste_adulta_f: [
     "Folk Popular",
     "Hand-Drawn",
-    "Bordado / Puntada"
-  ],
+    "Bordado / Puntada",
+    "Acuarela Suelta",
+    "Retro 70s",
+    "Bohemian",
+    "Collage Cut-Paper",
+    "Airbrush Smooth"
+  ,
+    "Knockout / Reserva blanca",
+    "White Ink Optimized / Tinta blanca optimizada",
+    "Metallic Foil Ready / Listo para foil"],
   andino_joven_m: [
     "Minimal Modern",
     "Brutalist",
-    "Y2K / Cyber"
-  ],
+    "Y2K / Cyber",
+    "Stencil Urbano",
+    "Pixel / 8-bit",
+    "Retro 80s Neon",
+    "Grunge / DIY",
+    "Risograph"
+  ,
+    "Anime / Manga",
+    "Paste-up Wheatpaste",
+    "Glow Zone / Zona fosforescente"],
   andino_joven_f: [
     "Minimal Modern",
     "Hand-Drawn",
-    "Bohemian"
+    "Bohemian",
+    "Acuarela Suelta",
+    "Retro 70s",
+    "Folk Popular",
+    "Collage Cut-Paper",
+    "Airbrush Smooth"
   ],
   andino_adulto_m: [
     "Vintage Desgastado",
     "Blueprint / Technical",
-    "Retro 70s"
-  ],
+    "Retro 70s",
+    "Grabado / Linóleo",
+    "Brutalist",
+    "Stencil Urbano",
+    "Pixel / 8-bit",
+    "Dark Tattoo",
+    "Vector Flat / Plano vectorial",
+    "CMYK Safe Gamut / Gamut CMYK seguro"
+  ,
+    "Gótico Ornamental",
+    "Irezumi / Wabori",
+    "Tattoo Old School",
+    "Spot Color Simulated / Tintas planas simuladas",
+    "Choke/Spread Trapping"],
   andino_adulta_f: [
     "Bohemian",
     "Hand-Drawn",
-    "Folk Popular"
+    "Folk Popular",
+    "Acuarela Suelta",
+    "Bordado / Puntada",
+    "Retro 70s",
+    "Collage Cut-Paper",
+    "Vintage Desgastado"
   ],
   pacifico_raiz: [
     "Folk Popular",
     "Acuarela Suelta",
-    "Ukiyo-e / Woodblock"
-  ],
+    "Ukiyo-e / Woodblock",
+    "Sumi-e / Tinta Lavada",
+    "Bohemian",
+    "Retro 70s",
+    "Collage Cut-Paper",
+    "Papercraft 3D"
+  ,
+    "Irezumi / Wabori"],
   llanos_identidad: [
     "Vintage Desgastado",
     "Hand-Drawn",
-    "Retro 70s"
-  ],
+    "Retro 70s",
+    "Folk Popular",
+    "Blueprint / Technical",
+    "Bordado / Puntada",
+    "Grabado / Linóleo",
+    "Airbrush Smooth",
+    "Distress Production / Desgaste de producción",
+    "Halftone Controlled / Tramado controlado"
+  ,
+    "Knockout / Reserva blanca"],
   amazonia_territorio: [
     "Acuarela Suelta",
     "Bohemian",
-    "Ukiyo-e / Woodblock"
+    "Ukiyo-e / Woodblock",
+    "Sumi-e / Tinta Lavada",
+    "Folk Popular",
+    "Vintage Desgastado",
+    "Collage Cut-Paper",
+    "Papercraft 3D"
   ],
   infantil_col: [
     "Kids Storybook",
     "Pixel / 8-bit",
-    "Cómic / Halftone"
-  ],
+    "C\u00f3mic / Halftone",
+    "Hand-Drawn",
+    "Retro 70s",
+    "Airbrush Smooth",
+    "Folk Popular",
+    "Collage Cut-Paper"
+  ,
+    "Glitter Zone / Zona glitter"],
   unisex_nacional: [
     "Minimal Modern",
     "Hand-Drawn",
-    "Folk Popular"
+    "Folk Popular",
+    "Retro 70s",
+    "Vintage Desgastado",
+    "Brutalist",
+    "Bohemian",
+    "Kids Storybook"
   ],
-  global_young_en: ["Minimal Modern", "Brutalist", "Retro 70s"],
-  global_adult_en: ["Vintage Desgastado", "Minimal Modern", "Retro 70s"],
-  global_family_en: ["Folk Popular", "Kids Storybook", "Hand-Drawn"],
-  global_joven_es: ["Minimal Modern", "Brutalist", "Retro 70s"],
-  global_adulto_es: ["Vintage Desgastado", "Minimal Modern", "Retro 70s"],
-  global_familia_es: ["Folk Popular", "Kids Storybook", "Hand-Drawn"],
-  gospel_joven_fe: ["Minimal Modern", "Hand-Drawn", "Folk Popular"],
-  gospel_adulto_fe: ["Folk Popular", "Vintage Desgastado", "Grabado / Linóleo"],
-  gospel_familia_fe: ["Folk Popular", "Kids Storybook", "Hand-Drawn"],
-  gospel_youth_faith: ["Minimal Modern", "Hand-Drawn", "Folk Popular"],
-  gospel_adult_faith: ["Folk Popular", "Vintage Desgastado", "Grabado / Linóleo"],
-  gospel_family_faith: ["Folk Popular", "Kids Storybook", "Hand-Drawn"]
+  global_young_en: ["Minimal Modern", "Brutalist", "Retro 70s", "Y2K / Cyber", "Stencil Urbano", "Pixel / 8-bit", "Vaporwave", "Grunge / DIY",
+    "Puff Print / 3D Ink"],
+  global_adult_en: ["Vintage Desgastado", "Minimal Modern", "Retro 70s", "Blueprint / Technical", "Hand-Drawn", "Folk Popular", "Grabado / Lin\u00f3leo", "Brutalist", "Vector Flat / Plano vectorial", "CMYK Safe Gamut / Gamut CMYK seguro"],
+  global_family_en: ["Folk Popular", "Kids Storybook", "Hand-Drawn", "Retro 70s", "Bohemian", "Acuarela Suelta", "Collage Cut-Paper", "Airbrush Smooth"],
+  global_joven_es: ["Minimal Modern", "Brutalist", "Retro 70s", "Y2K / Cyber", "Stencil Urbano", "Pixel / 8-bit", "Retro 80s Neon", "Vaporwave"],
+  global_adulto_es: ["Vintage Desgastado", "Minimal Modern", "Retro 70s", "Blueprint / Technical", "Hand-Drawn", "Folk Popular", "Grabado / Lin\u00f3leo", "Bordado / Puntada", "Vector Flat / Plano vectorial", "Halftone Controlled / Tramado controlado",
+    "Spot Color Simulated / Tintas planas simuladas"],
+  global_familia_es: ["Folk Popular", "Kids Storybook", "Hand-Drawn", "Retro 70s", "Bohemian", "Acuarela Suelta", "Collage Cut-Paper", "Bordado / Puntada",
+    "White Ink Optimized / Tinta blanca optimizada"],
+  gospel_joven_fe: ["Minimal Modern", "Hand-Drawn", "Folk Popular", "Vitral / Mosaico", "Barroco Ornamental", "Acuarela Suelta", "Kids Storybook", "Airbrush Smooth"],
+  gospel_adulto_fe: ["Folk Popular", "Vintage Desgastado", "Grabado / Lin\u00f3leo", "Vitral / Mosaico", "Barroco Ornamental", "Hand-Drawn", "Foil Stamp / Metallic", "Retro 70s",
+    "Metallic Foil Ready / Listo para foil"],
+  gospel_familia_fe: ["Folk Popular", "Kids Storybook", "Hand-Drawn", "Vitral / Mosaico", "Acuarela Suelta", "Bohemian", "Bordado / Puntada", "Collage Cut-Paper"],
+  gospel_youth_faith: ["Minimal Modern", "Hand-Drawn", "Folk Popular", "Vitral / Mosaico", "Barroco Ornamental", "Acuarela Suelta", "Kids Storybook", "Airbrush Smooth"],
+  gospel_adult_faith: ["Folk Popular", "Vintage Desgastado", "Grabado / Lin\u00f3leo", "Vitral / Mosaico", "Barroco Ornamental", "Hand-Drawn", "Foil Stamp / Metallic", "Retro 70s"],
+  gospel_family_faith: ["Folk Popular", "Kids Storybook", "Hand-Drawn", "Vitral / Mosaico", "Acuarela Suelta", "Bohemian", "Bordado / Puntada", "Collage Cut-Paper"]
 };
 
 const AUD_LAYOUT_PREF = {
@@ -832,7 +928,7 @@ const AUD_LAYOUT_PREF = {
   ],
   coste_joven_f: [
     "Editorial asimétrica",
-    "Órbita radial",
+    "Ã“rbita radial",
     "Tarjeta interior"
   ],
   coste_adulto_m: [
@@ -843,7 +939,7 @@ const AUD_LAYOUT_PREF = {
   coste_adulta_f: [
     "Arco y cúpula",
     "Tarjeta interior",
-    "Órbita radial"
+    "Ã“rbita radial"
   ],
   andino_joven_m: [
     "Editorial asimétrica",
@@ -866,7 +962,7 @@ const AUD_LAYOUT_PREF = {
     "Columna apilada"
   ],
   pacifico_raiz: [
-    "Órbita radial",
+    "Ã“rbita radial",
     "Editorial asimétrica",
     "Tarjeta interior"
   ],
@@ -877,11 +973,11 @@ const AUD_LAYOUT_PREF = {
   ],
   amazonia_territorio: [
     "Editorial asimétrica",
-    "Órbita radial",
+    "Ã“rbita radial",
     "Retícula áurea"
   ],
   infantil_col: [
-    "Órbita radial",
+    "Ã“rbita radial",
     "Arco y cúpula",
     "Tarjeta interior"
   ],
@@ -892,20 +988,20 @@ const AUD_LAYOUT_PREF = {
   ],
   global_young_en: ["Editorial asimétrica", "Sello descentrado", "Retícula áurea"],
   global_adult_en: ["Emblema circular", "Axial centrado", "Tarjeta interior"],
-  global_family_en: ["Tarjeta interior", "Órbita radial", "Arco y cúpula"],
+  global_family_en: ["Tarjeta interior", "Ã“rbita radial", "Arco y cúpula"],
   global_joven_es: ["Editorial asimétrica", "Sello descentrado", "Retícula áurea"],
   global_adulto_es: ["Emblema circular", "Axial centrado", "Tarjeta interior"],
-  global_familia_es: ["Tarjeta interior", "Órbita radial", "Arco y cúpula"],
+  global_familia_es: ["Tarjeta interior", "Ã“rbita radial", "Arco y cúpula"],
   gospel_joven_fe: ["Editorial asimétrica", "Tarjeta interior", "Retícula áurea"],
   gospel_adulto_fe: ["Arco y cúpula", "Emblema circular", "Tarjeta interior"],
-  gospel_familia_fe: ["Tarjeta interior", "Órbita radial", "Arco y cúpula"],
+  gospel_familia_fe: ["Tarjeta interior", "Ã“rbita radial", "Arco y cúpula"],
   gospel_youth_faith: ["Editorial asimétrica", "Tarjeta interior", "Retícula áurea"],
   gospel_adult_faith: ["Arco y cúpula", "Emblema circular", "Tarjeta interior"],
-  gospel_family_faith: ["Tarjeta interior", "Órbita radial", "Arco y cúpula"]
+  gospel_family_faith: ["Tarjeta interior", "Ã“rbita radial", "Arco y cúpula"]
 };
 
 /* ============================================================
-   HELPERS PÚBLICOS
+   HELPERS PÃšBLICOS
    ============================================================ */
 
 function getAudiencesForRegion(region) {

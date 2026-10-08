@@ -1,7 +1,7 @@
-'use strict';
+﻿'use strict';
 
 /* ============================================================
-   DATA ESTILOS — 38 estilos visuales POD
+   DATA ESTILOS â€” 38 estilos visuales POD
    Paletas, tipografías, tratamientos, pools de dirección.
    Vocabulario 100% comercial. Sin referencias religiosas.
    ============================================================ */
@@ -43,7 +43,21 @@ const ESTILO_INFO = {
   "Irezumi / Wabori": "tatuaje japonés, barras de viento, negro denso, koi",
   "Tattoo Old School": "línea gruesa, flash americano, paleta limitada, permanente",
   "Foil Stamp / Metallic": "oro estampado, relieve, reflejo dirigido, fondo limpio",
-  "Puff Print / 3D Ink": "tinta expandida, relieve redondeado, brillo mate, tangible"
+  "Puff Print / 3D Ink": "tinta expandida, relieve redondeado, brillo mate, tangible",
+
+  /* ===== ESTILOS DTF / SUBLIMACIÃ“N - Producción real ===== */
+  "Indexed Palette / Paleta indizada": "paleta fija 16-32 colores, RIP directo, colores consistentes",
+  "Vector Flat / Plano vectorial": "sin degradados, contornos nítidos, escala infinita, ideal corte/plotter",
+  "Spot Color Simulated / Tintas planas simuladas": "simula separaciones CMYK + tintas especiales en un solo archivo",
+  "Halftone Controlled / Tramado controlado": "tramado AM/FM predecible, evita moiré en tejido, 1 tinta = tonos",
+  "Knockout / Reserva blanca": "base blanca automática para tejidos oscuros (DTF), 0 tinta donde no imprime",
+  "Choke/Spread Trapping": "compensa registro entre colores, evita líneas blancas en bordes",
+  "Distress Production / Desgaste de producción": "textura repetible (no aleatoria), predecible en trama DTF",
+  "White Ink Optimized / Tinta blanca optimizada": "capa blanca mínima necesaria, reduce coste y tiempo de curado",
+  "CMYK Safe Gamut / Gamut CMYK seguro": "colores dentro de gamut imprimible, sin sorpresas en salida",
+  "Metallic Foil Ready / Listo para foil": "áreas planas = adhesivo + foil en post-proceso (DTF)",
+  "Glitter Zone / Zona glitter": "zona plana = base + glitter, sin detalle fino",
+  "Glow Zone / Zona fosforescente": "capa plana fosforescente sobre blanco"
 };
 
 const ESTILOS_LIST = Object.keys(ESTILO_INFO);
@@ -85,7 +99,21 @@ const SATURACION = {
   "Irezumi / Wabori": ["densidad que tapa el texto", "koi sin dirección ni sentido"],
   "Tattoo Old School": ["flash copiado sin verdad", "cinta ilegible"],
   "Foil Stamp / Metallic": ["oro por oro sin jerarquía", "reflejo que borra el texto"],
-  "Puff Print / 3D Ink": ["relieve sin jerarquía", "expansión que deforma la letra"]
+  "Puff Print / 3D Ink": ["relieve sin jerarquía", "expansión que deforma la letra"],
+
+  /* ===== SATURACIÃ“N DTF / SUBLIMACIÃ“N ===== */
+  "Indexed Palette / Paleta indizada": ["paleta excesiva que rompe el RIP", "colores fuera de gamut sin conversión"],
+  "Vector Flat / Plano vectorial": ["degradados simulados que no son planos", "puntos de ancla excesivos que ensucian el corte"],
+  "Spot Color Simulated / Tintas planas simuladas": ["tintas extra que no separan", "simulación que no coincide con impresión real"],
+  "Halftone Controlled / Tramado controlado": ["tramado aleatorio que causa moiré", "ángulo de trama incorrecto para el tejido"],
+  "Knockout / Reserva blanca": ["base blanca donde no debe haber", "reservas que dejan huecos en el diseño"],
+  "Choke/Spread Trapping": ["trapping excesivo que engorda el diseño", "sin trapping = líneas blancas visibles"],
+  "Distress Production / Desgaste de producción": ["desgaste aleatorio que no repite", "textura que tapa detalles finos"],
+  "White Ink Optimized / Tinta blanca optimizada": ["capa blanca gruesa que agrieta", "blanco insuficiente que transparenta"],
+  "CMYK Safe Gamut / Gamut CMYK seguro": ["colores RGB que no imprimen", "negros ricos que manchan"],
+  "Metallic Foil Ready / Listo para foil": ["áreas complejas que no registran foil", "adhesivo que sangra en detalles finos"],
+  "Glitter Zone / Zona glitter": ["glitter en zonas con detalle", "base que no sostiene la partícula"],
+  "Glow Zone / Zona fosforescente": ["fosforescencia en áreas finas", "capa base blanca insuficiente"]
 };
 
 const LAYOUTS = [
@@ -101,7 +129,7 @@ const LAYOUTS = [
   "Sangrado total: masa a sangre en dos o tres lados; el texto cae en la esquina opuesta",
   "Sello descentrado: emblema pequeño en un cuadrante; gran vacío dominante",
   "Split 2/3-1/3: dos campos verticales; símbolo en uno, texto en el otro",
-  "Órbita radial: textos giran en órbita alrededor del símbolo; lectura circular",
+  "Ã“rbita radial: textos giran en órbita alrededor del símbolo; lectura circular",
   "Arco y cúpula: masa bajo un arco; textos siguiendo la curva superior",
   "Escalinata: bloques escalonados en descenso; el texto vive entre peldaños",
   "Tríptico de bandas: tres bandas horizontales con jerarquía distinta; el símbolo ocupa la central"
@@ -166,10 +194,10 @@ const COLOR_FAMILIES = {
     "Terracota / Crema / Verde oliva",
     "Dorado suave / Terracota / Marfil",
     "Coral suave / Arena / Verde oliva",
-    "Óxido / Arena / Crema"
+    "Ã“xido / Arena / Crema"
   ],
   "bosque / sage": [
-    "Oliva / Arena / Óxido suave",
+    "Oliva / Arena / Ã“xido suave",
     "Rosa Empolvado / Verde Salvia / Crema",
     "Verde bosque / Crema / Cobre",
     "Lavanda / Sage / Crema cálida",
@@ -199,10 +227,10 @@ const COLOR_FAMILIES = {
   ],
   "industrial": [
     "Carbón / Gris Frío / Negro",
-    "Óxido / Carbón",
+    "Ã“xido / Carbón",
     "Concreto / Negro + un acento industrial",
     "Amarillo Industrial / Negro / Concreto",
-    "Negro / Blanco sucio / Óxido"
+    "Negro / Blanco sucio / Ã“xido"
   ],
   "tinta / ritual": [
     "Monocromo Negro / Marfil",
@@ -255,8 +283,8 @@ const HEX_DE_PALETA = {
   "Terracota / Crema / Verde oliva": ["#B5563B", "#F2E4CE", "#71753F", "#2C241A"],
   "Dorado suave / Terracota / Marfil": ["#D8B36A", "#B5563B", "#F4EEDF", "#2E2418"],
   "Coral suave / Arena / Verde oliva": ["#E08A6D", "#E8D9BE", "#7A7E4C", "#2F2A20"],
-  "Óxido / Arena / Crema": ["#B45A2E", "#DCC49B", "#F4EAD8", "#2E2318"],
-  "Oliva / Arena / Óxido suave": ["#75764A", "#DCC9A6", "#C07A4A", "#2C2A1E"],
+  "Ã“xido / Arena / Crema": ["#B45A2E", "#DCC49B", "#F4EAD8", "#2E2318"],
+  "Oliva / Arena / Ã“xido suave": ["#75764A", "#DCC9A6", "#C07A4A", "#2C2A1E"],
   "Rosa Empolvado / Verde Salvia / Crema": ["#D9AFA8", "#A8B5A0", "#F6EFE2", "#3A342C"],
   "Verde bosque / Crema / Cobre": ["#2F4A38", "#F2E8D2", "#B0713F", "#1C2A20"],
   "Lavanda / Sage / Crema cálida": ["#B4A7C9", "#A8B5A0", "#F6EFE2", "#342E3A"],
@@ -278,10 +306,10 @@ const HEX_DE_PALETA = {
   "Gris Frío / Negro + acento neón": ["#1A1E24", "#0B0D12", "#E0409A", "#3E4650"],
   "Cian / Magenta / Negro": ["#20C8D8", "#D838B8", "#0E0C14", "#4A4458"],
   "Carbón / Gris Frío / Negro": ["#2A2E34", "#8A9098", "#14161A", "#D8DCE0"],
-  "Óxido / Carbón": ["#B0562E", "#22262C", "#E8DCCE", "#4A3428"],
+  "Ã“xido / Carbón": ["#B0562E", "#22262C", "#E8DCCE", "#4A3428"],
   "Concreto / Negro + un acento industrial": ["#B8BCC2", "#14161A", "#E8A020", "#3A4048"],
   "Amarillo Industrial / Negro / Concreto": ["#E8B820", "#14161A", "#B8BCC2", "#3A3220"],
-  "Negro / Blanco sucio / Óxido": ["#14161A", "#E8E4DC", "#B0562E", "#3A3E44"],
+  "Negro / Blanco sucio / Ã“xido": ["#14161A", "#E8E4DC", "#B0562E", "#3A3E44"],
   "Monocromo Negro / Marfil": ["#14141A", "#F2ECDD", "#4A4A50", "#8A887C"],
   "Negro + Rojo Sangre / Crema": ["#14141A", "#A82820", "#F2E8D5", "#3A2A28"],
   "Sepia / Tinta Antigua": ["#3A2C1E", "#C8B896", "#F0E6D0", "#5E4630"],
@@ -373,7 +401,7 @@ const POOLS = {
     "Pacto / sello / marca"
   ],
   negativeSpace: [
-    "Órbita y vacío central",
+    "Ã“rbita y vacío central",
     "Bloques de respiración laterales",
     "Campo de tinta con margen vivo",
     "Vacíos verticales que guían la lectura",
@@ -471,7 +499,7 @@ const STYLE_CANDIDATES = {
   SONIDO: ["Retro 80s Neon", "Y2K / Cyber", "Vaporwave", "Pixel / 8-bit", "Risograph", "Grunge / DIY", "Stencil Urbano", "Surf / Skate 90s", "Collage Cut-Paper", "Brutalist"],
   CONCRETO: ["Brutalist", "Blueprint / Technical", "Minimal Modern", "Stencil Urbano", "Photomontage / Dada", "Ukiyo-e / Woodblock", "Grunge / DIY", "Y2K / Cyber", "Risograph", "Grabado / Linóleo"],
   pets: ["Kids Storybook", "Hand-Drawn", "Minimal Modern", "Retro 70s", "Acuarela Suelta", "Folk Popular", "Collage Cut-Paper", "Ukiyo-e / Woodblock", "Pixel / 8-bit", "Puff Print / 3D Ink"],
-  professions: ["Vintage Desgastado", "Blueprint / Technical", "Brutalist", "Hand-Drawn", "Retro 70s", "Bordado / Puntada", "Folk Popular", "Stencil Urbano", "Minimal Modern", "Risograph"],
+  professions: ["Vintage Desgastado", "Blueprint / Technical", "Brutalist", "Hand-Drawn", "Retro 70s", "Bordado / Puntada", "Folk Popular", "Stencil Urbano", "Minimal Modern", "Risograph", "Vector Flat / Plano vectorial", "Indexed Palette / Paleta indizada"],
   hobbies: ["Hand-Drawn", "Retro 70s", "Minimal Modern", "Kids Storybook", "Acuarela Suelta", "Ukiyo-e / Woodblock", "Pixel / 8-bit", "Collage Cut-Paper", "Vintage Desgastado", "Sumi-e / Tinta Lavada"],
   sarcasm_introvert: ["Brutalist", "Y2K / Cyber", "Retro 80s Neon", "Vaporwave", "Stencil Urbano", "Grunge / DIY", "Risograph", "Minimal Modern", "Pixel / 8-bit", "Photomontage / Dada"],
   fitness_mental: ["Brutalist", "Airbrush Smooth", "Retro 80s Neon", "Y2K / Cyber", "Minimal Modern", "Stencil Urbano", "Cómic / Halftone", "Retro 70s", "Grabado / Linóleo", "Blueprint / Technical"],
@@ -486,7 +514,7 @@ const STYLE_CANDIDATES = {
   humor_colombiano: ["Hand-Drawn", "Retro 70s", "Collage Cut-Paper", "Cómic / Halftone", "Grunge / DIY", "Risograph", "Folk Popular", "Pixel / 8-bit", "Stencil Urbano", "Vintage Desgastado"],
   comida_sabor: ["Folk Popular", "Retro 70s", "Hand-Drawn", "Acuarela Suelta", "Ukiyo-e / Woodblock", "Kids Storybook", "Airbrush Smooth", "Vintage Desgastado", "Bordado / Puntada", "Collage Cut-Paper"],
   musica_ritmo_col: ["Retro 80s Neon", "Y2K / Cyber", "Vaporwave", "Retro 70s", "Risograph", "Stencil Urbano", "Grunge / DIY", "Surf / Skate 90s", "Cómic / Halftone", "Collage Cut-Paper"],
-  oficios_emprendimiento_col: ["Vintage Desgastado", "Blueprint / Technical", "Hand-Drawn", "Retro 70s", "Folk Popular", "Bordado / Puntada", "Brutalist", "Risograph", "Collage Cut-Paper", "Minimal Modern"],
+  oficios_emprendimiento_col: ["Vintage Desgastado", "Blueprint / Technical", "Hand-Drawn", "Retro 70s", "Folk Popular", "Bordado / Puntada", "Brutalist", "Risograph", "Collage Cut-Paper", "Minimal Modern", "Vector Flat / Plano vectorial", "CMYK Safe Gamut / Gamut CMYK seguro"],
   familia_roles_col: ["Folk Popular", "Kids Storybook", "Hand-Drawn", "Acuarela Suelta", "Bordado / Puntada", "Collage Cut-Paper", "Retro 70s", "Airbrush Smooth", "Papercraft 3D", "Vintage Desgastado"],
   deporte_barra_col: ["Brutalist", "Cómic / Halftone", "Retro 80s Neon", "Stencil Urbano", "Airbrush Smooth", "Surf / Skate 90s", "Pixel / 8-bit", "Grabado / Linóleo", "Retro 70s", "Y2K / Cyber"],
   fe_popular_col: ["Folk Popular", "Vitral / Mosaico", "Barroco Ornamental", "Bordado / Puntada", "Grabado / Linóleo", "Hand-Drawn", "Foil Stamp / Metallic", "Vintage Desgastado", "Ukiyo-e / Woodblock", "Acuarela Suelta"],
@@ -525,7 +553,7 @@ const STYLE_CANDIDATES = {
 };
 
 /* ============================================================
-   STYLE_POOLS — Instrucciones de dirección artística por estilo
+   STYLE_POOLS â€” Instrucciones de dirección artística por estilo
    Vocabulario 100% comercial/secular. Sin referencias religiosas.
    ============================================================ */
 
@@ -535,7 +563,7 @@ const STYLE_POOLS = {
     composicion: ["asimétrica orgánica con peso inferior", "circular abierto hacia un lado", "vertical con elementos que caen", "fragmentada en zonas de densidad distinta", "flujo de izquierda a derecha como crecimiento", "espiral suave desde el centro"],
     textoPrincipal: ["lettering manual que crece como tallo", "título formado por ramas entrelazadas", "palabra única como centro de una flor abierta", "texto en arco suave entre hojas", "lettering que parece escrito con tinta de planta", "título que brota desde la base del símbolo"],
     textoApoyo: ["segundo nivel como cita de herbario en tipografía amplia y legible: se lee desde lejos, no es una etiqueta diminuta", "frase clave del nicho que sigue el contorno de una hoja con peso suficiente para sostenerse junto al título", "texto de apoyo como raíz visual del título: ancho, firme, terroso, presente", "línea de fundamento en tinta vegetal con cuerpo medio-alto, integrada al panel botánico", "escritura que se lee como parte del dibujo, con tamaño de diseño y no de pie de página", "segundo texto como suelo del que nace el símbolo: sólido, legible, sin perder carácter", "frase de identidad que bordea el marco sin encogerse: ocupa su propia franja", "cita de oficio tejida entre tallos con cuerpo tipográfico considerable"],
-    textoTerciario: ["tercer nivel: dato de serie corto con serifa de campo, legible sin esfuerzo", "apéndice de identidad en cinta vegetal, cuerpo medio, honra la página", "marca de colección (serie y número) como sello botánico en tipografía de lectura", "frase corta de cierre como ex libris vegetal, clara y ancha", "tríptico de identidad en caligrafía de herbario: ORIGEN · OFICIO · IMPACTO, cada uno legible"],
+    textoTerciario: ["tercer nivel: dato de serie corto con serifa de campo, legible sin esfuerzo", "apéndice de identidad en cinta vegetal, cuerpo medio, honra la página", "marca de colección (serie y número) como sello botánico en tipografía de lectura", "frase corta de cierre como ex libris vegetal, clara y ancha", "tríptico de identidad en caligrafía de herbario: ORIGEN Â· OFICIO Â· IMPACTO, cada uno legible"],
     tecnica: ["Botanical Illustration", "Hand-Drawn línea fina", "Watercolor Texture", "Línea suelta tipo tinta diluida", "Grabado botánico", "Gouache mate"],
     relacion: ["texto crece desde el símbolo como una planta", "símbolo enmarca el texto de forma natural", "texto y símbolo se entrelazan sin competir", "texto de apoyo actúa como suelo del que nace el símbolo"]
   },
@@ -598,7 +626,7 @@ const STYLE_POOLS = {
     composicion: ["negative space dominante", "central minimalista", "asimétrica con mucho aire", "peso extremo en un solo punto", "vacío como protagonista activo", "equilibrio de una sola tensión"],
     textoPrincipal: ["microtipografía funcional de una sola palabra", "texto alineado al borde con precisión", "palabra en peso ultra ligero, muy controlada", "solo la frase esencial, sin adorno", "tipografía que desaparece hasta que se necesita", "lettering de un solo trazo"],
     textoApoyo: ["única línea secundaria precisa: cuerpo medio, funcional, con autoridad", "texto de apoyo que funciona como firma de verdad: sobrio, amplio, legible", "segundo nivel casi invisible pero legible: existe porque carga peso conceptual", "fundamento integrado al símbolo con tipografía clara y contenida", "línea de cierre en una sola frase: ancho, aire, y lectura perfecta", "frase destacada como única segunda línea: sin adorno, con verdad", "texto de apoyo flotando con margen generoso: presencia en silencio", "frase esencial en peso medio: lo mínimo con todo el peso"],
-    textoTerciario: ["tercer nivel: dato de serie esencial, mínima pero legible", "dominio y número de serie como funda tipográfica: claro y discreto", "una palabra de cierre como remate, en tipografía de lectura", "tríptico de identidad en tres palabras: ORIGEN · OFICIO · IMPACTO, separadas con aire", "línea de continuidad de la serie, breve, en tipo legible"],
+    textoTerciario: ["tercer nivel: dato de serie esencial, mínima pero legible", "dominio y número de serie como funda tipográfica: claro y discreto", "una palabra de cierre como remate, en tipografía de lectura", "tríptico de identidad en tres palabras: ORIGEN Â· OFICIO Â· IMPACTO, separadas con aire", "línea de continuidad de la serie, breve, en tipo legible"],
     tecnica: ["Monoline", "Geometric Construction", "Line Art de un solo trazo", "Vector puro sin textura", "Etched line", "Blind emboss + un trazo"],
     relacion: ["texto y símbolo separados por espacio deliberado", "símbolo explica el texto sin decorarlo", "texto de apoyo es la única ancla verbal necesaria", "el símbolo y el texto de apoyo forman un solo sistema"]
   },
@@ -680,7 +708,7 @@ const STYLE_POOLS = {
     textoPrincipal: ["título en cartela central de talla dorada", "lettering de bronce fundido", "texto en versalitas romanas dentro de filacteria", "título con capitular iluminada", "palabra dorada sobre nube de gloria", "lettering de placa de altar"],
     textoApoyo: ["frase clave en romana de grabado: cuerpo amplio, aire clásico", "texto de apoyo en cartela secundaria: legible a un paso", "segundo nivel en versalitas espaciadas con aire de catálogo", "fundamento como inscripción de base del retablo: firme y clara", "línea de verdad en banda inferior con filetes dorados", "frase destacada en letra de catálogo, palabra por palabra", "segundo texto como leyenda de medallón: completa y legible", "frase de cierre en dorado sobre sombra: presencia plena"],
     textoTerciario: ["tercer nivel: dato de serie en placa de bronce, legible", "sello de serie como marca de taller barroco", "tríptico de identidad en tres medallones con gloria rotulada", "dedicatoria en cartela inferior", "dominio en escudo secundario"],
-    tecnica: ["Claroscuro dramático", "Talla dorada", "Óleo con luz dirigida", "Grabado barroco", "Filacteria tallada", "Gloria de nubes"],
+    tecnica: ["Claroscuro dramático", "Talla dorada", "Ã“leo con luz dirigida", "Grabado barroco", "Filacteria tallada", "Gloria de nubes"],
     relacion: ["el texto tiene su cartela: jerarquía de retablo", "la gloria del símbolo ilumina la palabra", "texto de apoyo es la base tallada que sostiene el clamor", "todo orna, nada esconde: cada palabra a la vista"]
   },
   "Vintage Desgastado": {
@@ -862,6 +890,116 @@ const STYLE_POOLS = {
     textoTerciario: ["tercer nivel: dato de serie en placa plana, legible", "sello de serie como etiqueta de lavado reinterpretada", "tríptico de identidad en tres prints rotulados", "fecha de edición en el cuello de la prenda", "dominio en la etiqueta inferior"],
     tecnica: ["Puff print", "Tinta expandida", "Relieve redondeado", "Brillo mate", "Serigrafía de base", "Doble capa de altura"],
     relacion: ["la Palabra se hizo carne y se toca: el relieve es encarnación", "el texto plano y el símbolo elevado se jerarquizan sin competir", "la sombra del puff ordena la lectura", "fe tangible: se ve y se siente"]
+  },
+
+  /* ===== STYLE_POOLS DTF / SUBLIMACIÃ“N â€” Producción real ===== */
+  "Indexed Palette / Paleta indizada": {
+    arquitectura: ["composición de paleta fija con bloques de color definidos", "retícula de 16-32 colores con separación clara", "diseño modular por zonas de tinta", "campo de color indexado con bordes nítidos", "estructura de capas por color RIP", "composición de archivo listo para plotter"],
+    composicion: ["bloques de color plano sin transiciones", "zonas separadas por contorno fino", "central con paleta dominante definida", "simétrica de áreas de tinta", "peso por saturación de cada zona", "apilada en capas de color"],
+    textoPrincipal: ["título en 1-2 tintas planas con contorno", "lettering de color sólido con borde de contraste", "texto en tinta dominante sobre fondo de segunda tinta", "palabra con relleno plano y sombra de 1 tinta", "título que usa la paleta fija sin excepciones", "lettering de vector con nodos limpios"],
+    textoApoyo: ["frase clave en tinta plana secundaria: cuerpo amplio, borde limpio, RIP directo", "texto de apoyo en la tercera tinta de la paleta: contraste garantizado", "segundo nivel en tinta oscura sobre zona clara: cada palabra entera", "fundamento en la tinta base del diseño: firme, legible, sin conversión", "línea de verdad en el color de mayor contraste de la paleta", "frase destacada en tinta sólida: palabra por palabra, sin degradado", "segundo texto en la tinta de acento: clara y con cuerpo", "frase de cierre en la tinta más oscura sobre la más clara: presencia total"],
+    textoTerciario: ["tercer nivel: dato de serie en tinta plana, legible", "sello de serie como marca de color del taller", "tríptico de identidad en tres tintas rotuladas", "fecha de edición en pie de paleta", "dominio en la tinta de fondo"],
+    tecnica: ["Paleta indizada 16-32", "RIP directo", "Tinta plana", "Separación por color", "Sin degradados", "Archivo listo para plotter"],
+    relacion: ["cada tinta tiene su zona: orden de producción", "el texto vive en la tinta que se lee", "símbolo y texto comparten la misma economía de tintas", "menos tintas, más verdad"]
+  },
+  "Vector Flat / Plano vectorial": {
+    arquitectura: ["diseño vectorial de formas puras sin textura", "composición de curvas bezier limpias", "campo de color sólido con nodos mínimos", "estructura geométrica de precisión", "emblema de trazado perfecto", "diseño escalable de línea a valla"],
+    composicion: ["formas puras sin ruido", "central de vector con aire", "simétrica matemática", "peso por masa de forma", "curvas que guían la lectura", "negativo activo entre formas"],
+    textoPrincipal: ["título vectorial de trazo convertido a curva", "lettering de contorno cerrado perfecto", "texto en forma sólida sin imperfecciones", "palabra de peso uniforme", "título que escala de pin a pancarta", "lettering de nodo limpio"],
+    textoApoyo: ["frase clave en vector sólido: cuerpo amplio, nodos limpios, corte perfecto", "texto de apoyo en trazado cerrado: cada letra entera, sin puentes rotos", "segundo nivel en peso medio vectorial: legible a cualquier escala", "fundamento como forma de texto convertida: firme y cortable", "línea de verdad en curva cerrada: contraste total", "frase destacada en sólido: palabra por palabra nítida", "segundo texto en vector con contorno: presencia firme", "frase de cierre en masa tipográfica: se lee a 1cm y a 10m"],
+    textoTerciario: ["tercer nivel: dato de serie en vector, legible", "sello de serie como marca de corte", "tríptico de identidad en tres formas rotuladas", "fecha de edición en pie vectorial", "dominio en trazado secundario"],
+    tecnica: ["Vector puro", "Curvas bezier", "Sin raster", "Nodos mínimos", "Escala infinita", "Corte por plotter"],
+    relacion: ["la forma pura no necesita adorno", "el texto es forma: se corta, se pega, se vende", "símbolo y texto nacen del mismo trazado", "precisión matemática, verdad eterna"]
+  },
+  "Spot Color Simulated / Tintas planas simuladas": {
+    arquitectura: ["composición de simulación CMYK + tintas especiales", "capas de proceso y spot separadas visualmente", "campo de cuatricromía con acento spot", "estructura de prueba de color", "diseño de 4 + 1 tintas", "composición de sobreimpresión controlada"],
+    composicion: ["capas de color proceso con spot encima", "central con acento de tinta especial", "simétrica de registro", "peso en el spot que corona", "transparencias de multiply simulado", "profundidad por sobreimpresión"],
+    textoPrincipal: ["título en tinta spot sobre base CMYK", "lettering de 100K con acento spot", "texto en negro enriquecido con detalle", "palabra con sobreimpresión de barniz simulado", "título que demuestra la gama extendida", "lettering de prueba de color"],
+    textoApoyo: ["frase clave en negro 100K: cuerpo amplio, registro perfecto, legible", "texto de apoyo en la tinta spot: el acento sostiene la lectura", "segundo nivel en gris de cuatricromía balanceado: cada palabra entera", "fundamento en tinta proceso sólida: firme y predecible", "línea de verdad en el negro más profundo del archivo", "frase destacada en spot: palabra por palabra con brillo especial", "segundo texto en gris cálido de CMYK: clara", "frase de cierre en negro sobre el color más claro: contraste pleno"],
+    textoTerciario: ["tercer nivel: dato de serie en negro puro, legible", "sello de serie como marca de registro", "tríptico de identidad en tres tintas rotuladas", "fecha de edición en pie de prueba", "dominio en tinta de proceso"],
+    tecnica: ["CMYK + spot", "Sobreimpresión", "Negro 100K", "Prueba de color", "Registro de tintas", "Gama extendida"],
+    relacion: ["el proceso construye, el spot corona", "el texto vive en el negro que no falla", "símbolo a color, verdad en negro", "simulación honesta de lo que saldrá"]
+  },
+  "Halftone Controlled / Tramado controlado": {
+    arquitectura: ["composición de trama AM/FM con ángulo definido", "campo de puntos con lineatura controlada", "diseño de medios tonos sin moiré", "estructura de roseta invisible", "gradiente simulado por densidad de punto", "composición de 1 tinta = múltiples tonos"],
+    composicion: ["densidad de punto que crea volumen", "central con trama radial controlada", "simétrica de lineatura uniforme", "peso por tamaño de punto", "transición de punto a sólido", "aire entre puntos que respira"],
+    textoPrincipal: ["título sólido sobre campo de trama", "lettering con relleno de puntos gruesos", "texto en negativo sobre trama densa", "palabra con contorno que corta la trama", "título que flota sobre el tramado", "lettering de punto grueso legible"],
+    textoApoyo: ["frase clave en sólido sobre trama clara: cuerpo amplio, la trama nunca la toca", "texto de apoyo en negativo sobre trama densa: contraste garantizado", "segundo nivel en tinta sólida con borde: cada palabra entera", "fundamento en zona de reserva blanca: la trama se abre para la verdad", "línea de cierre en sólido con la trama como fondo, nunca encima", "frase destacada en banda sólida: palabra por palabra nítida", "segundo texto con contorno blanco sobre puntos: clara", "frase de cierre en negro pleno sobre el tramado más claro: presencia total"],
+    textoTerciario: ["tercer nivel: dato de serie en sólido, legible", "sello de serie como marca de lineatura", "tríptico de identidad en tres densidades rotuladas", "fecha de edición en zona de reserva", "dominio en banda sólida"],
+    tecnica: ["Trama AM/FM", "Lineatura controlada", "Ángulo anti-moiré", "Punto redondo/elíptico", "Reserva para texto", "1 tinta múltiples tonos"],
+    relacion: ["el punto construye el tono, el sólido guarda la palabra", "la trama es atmósfera, el texto es ancla", "símbolo en puntos, verdad en sólido", "economía de tinta, riqueza de tono"]
+  },
+  "Knockout / Reserva blanca": {
+    arquitectura: ["diseño con reservas calculadas para base oscura", "composición de knockout con puentes de tinta", "campo oscuro con ventanas de reserva", "estructura de negativo para DTF", "emblema con fondo transparente funcional", "diseño que respeta la tela oscura"],
+    composicion: ["reservas que definen la forma", "central con ventana de tela", "simétrica de knockout", "peso en la tinta, aire en la reserva", "puentes que sostienen las islas", "contraste de impreso vs tela"],
+    textoPrincipal: ["título en tinta sobre reserva calculada", "lettering con knockout interior", "texto que usa la tela como parte del diseño", "palabra con contraforma de reserva", "título que flota sobre el oscuro", "lettering de reserva inteligente"],
+    textoApoyo: ["frase clave en tinta con reserva propia: cuerpo amplio, la tela oscura no la traga", "texto de apoyo con contorno de reserva: cada palabra entera y separada del fondo", "segundo nivel en tinta clara con knockout: contraste garantizado", "fundamento en la tinta más clara del diseño: firme sobre oscuro", "línea de verdad con halo de reserva: se lee a distancia", "frase destacada en tinta con borde de aire: palabra por palabra", "segundo texto en color claro sólido: clara", "frase de cierre en blanco puro sobre el fondo más oscuro: máxima lectura"],
+    textoTerciario: ["tercer nivel: dato de serie en tinta clara, legible", "sello de serie como marca de reserva", "tríptico de identidad en tres knockouts rotulados", "fecha de edición en zona de tinta", "dominio en banda clara"],
+    tecnica: ["Knockout calculado", "Reserva para DTF", "Puentes de tinta", "Base oscura respetada", "0 tinta donde no imprime", "Contraste sobre oscuro"],
+    relacion: ["la tela oscura es parte del diseño", "la reserva es silencio que hace hablar la tinta", "símbolo impreso, fondo honesto", "menos tinta, más tela, toda la verdad"]
+  },
+  "Choke/Spread Trapping": {
+    arquitectura: ["diseño con trapping calculado entre colores", "composición de registro con tolerancia", "capas con choke y spread definidos", "estructura de colores adyacentes con solape", "emblema de registro perfecto", "diseño a prueba de desregistro"],
+    composicion: ["colores que se solapan con intención", "central con trapping radial", "simétrica de registro", "peso en el color dominante que se expande", "bordes con solape invisible", "tolerancia de máquina integrada"],
+    textoPrincipal: ["título con trapping hacia el fondo", "lettering con choke que lo protege", "texto en color que se expande sobre el fondo", "palabra con borde de tolerancia", "título a prueba de movimiento de plancha", "lettering de registro seguro"],
+    textoApoyo: ["frase clave con trapping calculado: cuerpo amplio, sin líneas blancas en los bordes", "texto de apoyo en color con spread sobre el fondo: cada palabra entera y sellada", "segundo nivel con choke interior: la letra se protege del fondo", "fundamento con solape de 0.5pt: firme, sin huecos", "línea de verdad con registro perfecto: el color la abraza", "frase destacada con tolerancia de máquina: palabra por palabra sólida", "segundo texto con borde expandido: clara", "frase de cierre con trapping total: presencia sin fisuras"],
+    textoTerciario: ["tercer nivel: dato de serie con trapping, legible", "sello de serie como marca de registro", "tríptico de identidad en tres traps rotulados", "fecha de edición en zona de solape", "dominio en banda de registro"],
+    tecnica: ["Choke calculado", "Spread controlado", "Tolerancia 0.5pt", "Registro perfecto", "Sin líneas blancas", "A prueba de máquina"],
+    relacion: ["los colores se abrazan sin dejar huecos", "el trapping es el pacto entre tintas", "símbolo y texto sellados contra el desregistro", "tolerancia técnica, intolerancia al error visible"]
+  },
+  "Distress Production / Desgaste de producción": {
+    arquitectura: ["diseño con desgaste repetible y controlado", "composición de textura de producción uniforme", "campo de distress con patrón definido", "estructura de tinta fantasma predecible", "emblema con desgaste en zonas no críticas", "diseño que envejece igual en cada tirada"],
+    composicion: ["desgaste en bordes, sólido en el centro", "central con textura uniforme", "simétrica de erosión controlada", "peso en lo sólido, aire en lo gastado", "transición gradual de tinta a tela", "textura que no toca el texto"],
+    textoPrincipal: ["título con desgaste solo en bordes", "lettering sólido con textura en el relleno", "texto que sobrevive al distress", "palabra con grano uniforme", "título de tinta fantasma legible", "lettering de producción con carácter"],
+    textoApoyo: ["frase clave en sólido protegido: cuerpo amplio, el desgaste la rodea pero no la toca", "texto de apoyo con textura ligera: cada palabra entera y legible", "segundo nivel en tinta con grano uniforme: contraste mantenido", "fundamento en la zona más sólida: firme, el distress es marco", "línea de verdad en sólido total: la textura es fondo", "frase destacada en tinta con carácter: palabra por palabra clara", "segundo texto con desgaste mínimo: clara", "frase de cierre en el área de máxima densidad: presencia total"],
+    textoTerciario: ["tercer nivel: dato de serie en sólido, legible", "sello de serie como marca de tirada", "tríptico de identidad en tres texturas rotuladas", "fecha de edición en zona sólida", "dominio en banda de producción"],
+    tecnica: ["Distress repetible", "Textura uniforme", "Zonas protegidas", "Tinta fantasma", "Patrón definido", "Tirada consistente"],
+    relacion: ["el desgaste es marco, nunca contenido", "la textura envejece el diseño, no la verdad", "símbolo con historia, texto con presente", "cada tirada igual: producción, no accidente"]
+  },
+  "White Ink Optimized / Tinta blanca optimizada": {
+    arquitectura: ["diseño con capa blanca mínima y calculada", "composición de underbase optimizada", "campo de blanco solo donde se necesita", "estructura de choke en la base blanca", "emblema con base blanca recortada", "diseño que minimiza tinta sin perder opacidad"],
+    composicion: ["blanco recortado 1px dentro del color", "central con underbase precisa", "simétrica de base", "peso en el color, la base es cimiento", "zonas de blanco parcial por densidad", "ahorro de tinta integrado"],
+    textoPrincipal: ["título con underbase recortada", "lettering con base blanca ajustada", "texto opaco con mínima base", "palabra con blanco solo en su silueta", "título que no desperdicia tinta", "lettering de producción eficiente"],
+    textoApoyo: ["frase clave con base blanca precisa: cuerpo amplio, opacidad total, sin exceso", "texto de apoyo con underbase recortada: cada palabra entera y opaca", "segundo nivel con blanco solo en su forma: contraste garantizado", "fundamento con capa mínima: firme, sin agrietar", "línea de verdad con base optimizada: se lee y dura", "frase destacada con blanco calculado: palabra por palabra sólida", "segundo texto con underbase eficiente: clara", "frase de cierre con la base justa: presencia sin desperdicio"],
+    textoTerciario: ["tercer nivel: dato de serie con base mínima, legible", "sello de serie como marca de optimización", "tríptico de identidad en tres bases rotuladas", "fecha de edición en zona de base", "dominio en banda optimizada"],
+    tecnica: ["Underbase mínima", "Choke 1px", "Opacidad calculada", "Sin exceso", "Curado rápido", "Ahorro de tinta"],
+    relacion: ["la base sostiene sin desperdiciar", "el blanco es cimiento invisible", "símbolo opaco, costo controlado", "eficiencia que no se ve pero se cobra"]
+  },
+  "CMYK Safe Gamut / Gamut CMYK seguro": {
+    arquitectura: ["diseño 100% dentro de gamut imprimible", "composición de colores seguros sin sorpresas", "campo de CMYK puro sin RGB", "estructura de prueba blanda aprobada", "emblema de color predecible", "diseño WYSIWYG de pantalla a tela"],
+    composicion: ["colores planos de gama segura", "central con el color más vivo permitido", "simétrica de armonía CMYK", "peso por saturación imprimible", "transiciones dentro de gamut", "contraste real, no de monitor"],
+    textoPrincipal: ["título en el negro más profundo imprimible", "lettering en color de gama segura", "texto sin sorpresas de conversión", "palabra WYSIWYG", "título que sale igual que se ve", "lettering de prueba aprobada"],
+    textoApoyo: ["frase clave en negro rico controlado: cuerpo amplio, sin manchas, legible", "texto de apoyo en color seguro: cada palabra entera, sale como se ve", "segundo nivel en gris balanceado CMYK: contraste real", "fundamento en tinta predecible: firme, sin conversión sorpresa", "línea de verdad en el color más fiable del archivo", "frase destacada en gama segura: palabra por palabra fiel", "segundo texto en tono aprobado: clara", "frase de cierre en negro total imprimible: presencia garantizada"],
+    textoTerciario: ["tercer nivel: dato de serie en negro seguro, legible", "sello de serie como marca de gamut", "tríptico de identidad en tres gamas rotuladas", "fecha de edición en zona segura", "dominio en banda de color fiel"],
+    tecnica: ["100% CMYK", "Sin RGB", "Prueba blanda", "WYSIWYG", "Negro controlado", "Sin sorpresas"],
+    relacion: ["lo que ves es lo que sale", "el gamut es el pacto entre pantalla y tela", "símbolo fiel, texto fiel", "cero sorpresas en la plancha"]
+  },
+  "Metallic Foil Ready / Listo para foil": {
+    arquitectura: ["diseño con áreas planas para adhesivo foil", "composición de zonas foil y zonas de tinta", "campo de foil con registro de adhesivo", "estructura de dos pasadas: adhesivo + foil", "emblema con acento metálico", "diseño de lujo producible"],
+    composicion: ["zonas foil en los acentos, tinta en la base", "central con medallón foil", "simétrica de brillo", "peso en el metal que corona", "contraste mate vs brillo", "reserva para la pasada foil"],
+    textoPrincipal: ["título en foil sobre base de tinta", "lettering metálico con base sólida", "texto con acento foil en inicial", "palabra que brilla en la luz", "título de dos pasadas", "lettering premium"],
+    textoTerciario: ["tercer nivel: dato de serie en tinta, legible", "sello de serie como marca de foil", "tríptico de identidad en tres acabados rotulados", "fecha de edición en zona de tinta", "dominio en banda base"],
+    tecnica: ["Adhesivo foil", "Áreas planas", "Dos pasadas", "Registro foil", "Mate vs brillo", "Acabado premium"],
+    textoApoyo: ["frase clave en tinta sólida: el foil está en el título, la lectura en el apoyo", "texto de apoyo con peso: contraste garantizado", "segundo nivel en banda con filete: cuerpo completo", "fundamento como base del brillo: cada palabra legible", "línea de verdad en tinta sobre la base: se lee siempre", "frase destacada en panel liso: palabra por palabra", "segundo texto en tinta oscura: el complemento del brillo", "frase de cierre en tinta sólida: presencia plena"],
+    relacion: ["el foil corona, la tinta sostiene", "el brillo es acento, la palabra es base", "símbolo de lujo, texto de lectura", "dos pasadas, un solo mensaje"]
+  },
+  "Glitter Zone / Zona glitter": {
+    arquitectura: ["diseño con zona plana para base glitter", "composición de área glitter delimitada", "campo de partícula con borde de contención", "estructura de base + glitter", "emblema con acento de brillo", "diseño de fiesta producible"],
+    composicion: ["zona glitter en el acento principal", "central con explosión de brillo contenida", "simétrica de partícula", "peso en el brillo que atrae", "borde que contiene la partícula", "contraste de brillo vs mate"],
+    textoPrincipal: ["título con base glitter en el relleno", "lettering de partícula brillante", "texto que captura la luz", "palabra de fiesta", "título que brilla en movimiento", "lettering de celebración"],
+    textoTerciario: ["tercer nivel: dato de serie en tinta, legible", "sello de serie como marca glitter", "tríptico de identidad en tres brillos rotulados", "fecha de edición en zona de tinta", "dominio en banda base"],
+    tecnica: ["Base glitter", "Zona delimitada", "Partícula contenida", "Sin detalle fino", "Brillo en movimiento", "Acabado fiesta"],
+    textoApoyo: ["frase clave en tinta sólida: el glitter está en el símbolo, la lectura en el apoyo", "texto de apoyo con peso: contraste garantizado", "segundo nivel en banda sólida: cuerpo completo", "fundamento en tinta plana: cada palabra legible", "línea de verdad en sólido: se lee siempre", "frase destacada en panel liso: palabra por palabra", "segundo texto en tinta oscura: clara", "frase de cierre en tinta sólida: presencia plena"],
+    relacion: ["el glitter celebra, la tinta informa", "el brillo es fiesta, la palabra es mensaje", "símbolo que brilla, texto que se lee", "partícula contenida, mensaje libre"]
+  },
+  "Glow Zone / Zona fosforescente": {
+    arquitectura: ["diseño con capa fosforescente sobre blanco", "composición de zona glow delimitada", "campo de fósforo con base blanca", "estructura de día/noche: visible siempre", "emblema que brilla en la oscuridad", "diseño de doble lectura"],
+    composicion: ["zona glow en el símbolo principal", "central con carga de luz", "simétrica de fósforo", "peso en lo que brilla de noche", "doble lectura: día y noche", "contraste de luz propia vs reflejada"],
+    textoPrincipal: ["título con capa glow sobre base blanca", "lettering fosforescente", "texto que brilla en la oscuridad", "palabra de luz propia", "título de doble lectura", "lettering nocturno"],
+    textoTerciario: ["tercer nivel: dato de serie en tinta, legible", "sello de serie como marca glow", "tríptico de identidad en tres luces rotuladas", "fecha de edición en zona de tinta", "dominio en banda base"],
+    tecnica: ["Capa fosforescente", "Base blanca", "Doble lectura", "Carga de luz", "Brillo nocturno", "Zona delimitada"],
+    textoApoyo: ["frase clave en tinta sólida: el glow está en el símbolo, la lectura en el apoyo", "texto de apoyo con peso: contraste garantizado de día", "segundo nivel en banda sólida: cuerpo completo", "fundamento en tinta plana: cada palabra legible", "línea de verdad en sólido: se lee con luz y sin ella", "frase destacada en panel liso: palabra por palabra", "segundo texto en tinta oscura: clara", "frase de cierre en tinta sólida: presencia plena"],
+    relacion: ["la luz propia guía en la oscuridad", "el glow es señal, la tinta es mensaje", "símbolo que alumbra, texto que orienta", "doble lectura: de día informa, de noche brilla"]
   }
 };
 
@@ -902,7 +1040,21 @@ const STYLE_COLOR_PREF = {
   "Irezumi / Wabori": ["tinta / ritual", "noche / contraste", "industrial"],
   "Tattoo Old School": ["retro vibrante", "tinta / ritual", "noche / contraste"],
   "Foil Stamp / Metallic": ["dorado / premium", "noche / contraste", "mínimo frío"],
-  "Puff Print / 3D Ink": ["retro vibrante", "neón / cyber", "tierra cálida"]
+  "Puff Print / 3D Ink": ["retro vibrante", "neón / cyber", "tierra cálida"],
+
+  /* ===== COLOR DTF / SUBLIMACIÃ“N ===== */
+  "Indexed Palette / Paleta indizada": ["industrial", "mínimo frío", "noche / contraste", "retro vibrante"],
+  "Vector Flat / Plano vectorial": ["mínimo frío", "retro vibrante", "noche / contraste"],
+  "Spot Color Simulated / Tintas planas simuladas": ["noche / contraste", "industrial", "dorado / premium"],
+  "Halftone Controlled / Tramado controlado": ["tinta / ritual", "industrial", "mínimo frío"],
+  "Knockout / Reserva blanca": ["noche / contraste", "mínimo frío", "industrial"],
+  "Choke/Spread Trapping": ["industrial", "noche / contraste", "retro vibrante"],
+  "Distress Production / Desgaste de producción": ["tierra cálida", "industrial", "papel / suave"],
+  "White Ink Optimized / Tinta blanca optimizada": ["mínimo frío", "industrial", "noche / contraste"],
+  "CMYK Safe Gamut / Gamut CMYK seguro": ["retro vibrante", "noche / contraste", "mínimo frío"],
+  "Metallic Foil Ready / Listo para foil": ["dorado / premium", "noche / contraste", "mínimo frío"],
+  "Glitter Zone / Zona glitter": ["neón / cyber", "retro vibrante", "dorado / premium"],
+  "Glow Zone / Zona fosforescente": ["noche / contraste", "neón / cyber", "mínimo frío"]
 };
 
 const STYLE_TIPO_PREF = {
@@ -942,7 +1094,21 @@ const STYLE_TIPO_PREF = {
   "Irezumi / Wabori": ["Display caligráfica expresiva", "Itálica solemne", "Gótica blackletter", "Serif moderna alto contraste"],
   "Tattoo Old School": ["Slab pesada de oficio", "Serif clásica titulada", "Grotesca black condensada", "Stencil de plantilla"],
   "Foil Stamp / Metallic": ["Serif moderna alto contraste", "Serif clásica titulada", "Itálica solemne", "Display caligráfica expresiva"],
-  "Puff Print / 3D Ink": ["Rounded amable", "Grotesca black condensada", "Slab pesada de oficio", "Custom modular geométrica"]
+  "Puff Print / 3D Ink": ["Rounded amable", "Grotesca black condensada", "Slab pesada de oficio", "Custom modular geométrica"],
+
+  /* ===== TIPO DTF / SUBLIMACIÃ“N ===== */
+  "Indexed Palette / Paleta indizada": ["Grotesca black condensada", "Sans humanista limpia", "Mono técnica", "Custom modular geométrica"],
+  "Vector Flat / Plano vectorial": ["Sans humanista limpia", "Custom modular geométrica", "Grotesca black condensada", "Rounded amable"],
+  "Spot Color Simulated / Tintas planas simuladas": ["Serif moderna alto contraste", "Sans humanista limpia", "Mono técnica", "Slab pesada de oficio"],
+  "Halftone Controlled / Tramado controlado": ["Grotesca black condensada", "Slab pesada de oficio", "Custom modular geométrica", "Sans humanista limpia"],
+  "Knockout / Reserva blanca": ["Sans humanista limpia", "Grotesca black condensada", "Rounded amable", "Mono técnica"],
+  "Choke/Spread Trapping": ["Grotesca black condensada", "Sans humanista limpia", "Slab pesada de oficio", "Mono técnica"],
+  "Distress Production / Desgaste de producción": ["Slab pesada de oficio", "Manuscrita de cuaderno", "Grotesca black condensada", "Sans humanista limpia"],
+  "White Ink Optimized / Tinta blanca optimizada": ["Sans humanista limpia", "Grotesca black condensada", "Mono técnica", "Rounded amable"],
+  "CMYK Safe Gamut / Gamut CMYK seguro": ["Sans humanista limpia", "Serif moderna alto contraste", "Grotesca black condensada", "Mono técnica"],
+  "Metallic Foil Ready / Listo para foil": ["Serif clásica titulada", "Serif moderna alto contraste", "Display caligráfica expresiva", "Itálica solemne"],
+  "Glitter Zone / Zona glitter": ["Rounded amable", "Display caligráfica expresiva", "Script de pluma", "Grotesca black condensada"],
+  "Glow Zone / Zona fosforescente": ["Grotesca black condensada", "Mono técnica", "Sans humanista limpia", "Rounded amable"]
 };
 
 /* Compatibilidad global */

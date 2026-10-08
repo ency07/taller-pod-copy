@@ -1,13 +1,13 @@
 'use strict';
 
 /* ============================================================
-   MOTOR NÃšCLEO â€” OrquestaciÃ³n Multi-Mercado POD
+   MOTOR NÃšCLEO â€” Orquestación Multi-Mercado POD
    Integra: mercados, audiencias, bancos, estilos, productos, memoria.
-   Genera prompt denso con locks, anti-repeticiÃ³n y reglas legales.
-   NO contiene datos. Solo lÃ³gica de orquestaciÃ³n.
+   Genera prompt denso con locks, anti-repetición y reglas legales.
+   NO contiene datos. Solo lógica de orquestación.
    ============================================================ */
 
-/* --- Referencias a mÃ³dulos externos (cargados antes) --- */
+/* --- Referencias a módulos externos (cargados antes) --- */
 const _MARKETS = typeof POD_MARKETS !== 'undefined' ? POD_MARKETS : {};
 const _AUD_PROFILES = typeof AUD_PROFILES !== 'undefined' ? AUD_PROFILES : {};
 const _AUD_NAMES = typeof AUD_NAMES !== 'undefined' ? AUD_NAMES : Object.keys(_AUD_PROFILES);
@@ -139,9 +139,9 @@ function readStateFromDOM() {
   MOTOR_STATE.audienceSet = v('audienceSet', 'Auto');
   MOTOR_STATE.audienceMulti = v('audienceMulti', 'no');
   MOTOR_STATE.dominio = v('dominio', 'auto');
-  // "Familia de la imagen" (#domImagen): antes no se leÃ­a en ningÃºn lado.
+  // "Familia de la imagen" (#domImagen): antes no se leía en ningún lado.
   MOTOR_STATE.domImagen = v('domImagen', 'Auto');
-  // DetecciÃ³n auto solo si el usuario deja Auto: lee estructura de bancos, no quemado en motor
+  // Detección auto solo si el usuario deja Auto: lee estructura de bancos, no quemado en motor
   try {
     if (typeof detectarDominio === 'function') {
       MOTOR_STATE.dominioDetectado = detectarDominio(MOTOR_STATE.concept, MOTOR_STATE.message, MOTOR_STATE.market);
@@ -166,7 +166,7 @@ function readStateFromDOM() {
   }
 }
 
-/* --- ResoluciÃ³n de audiencias --- */
+/* --- Resolución de audiencias --- */
 /* Audiencias permitidas por mercado + region + subnicho. */
 function getCurrentAudiencePool() {
   const market = MOTOR_STATE.market;
@@ -221,7 +221,7 @@ function resolveAudiences() {
   return result;
 }
 
-/* --- ResoluciÃ³n de estilos --- */
+/* --- Resolución de estilos --- */
 function _styleCandidatesForContext() {
   const subniche = MOTOR_STATE.subniche;
   const recommended = subniche !== 'auto' && _STYLE_CANDIDATES[subniche]
@@ -234,6 +234,57 @@ function _styleCandidatesForContext() {
     candidates = candidates.filter(function (e) { return allow.indexOf(e) !== -1; });
   }
   return candidates;
+}
+
+/**
+ * Contador de uso global de estilos para garantizar cobertura de cola larga.
+ * Los estilos no usados hace más generaciones suben prioridad.
+ * Usa clave dedicada (no interfiere con memoria creativa existente).
+ * Delega a memoria-local.js si expone getStyleUsageCounter/recordStyleUse.
+ */
+function _getStyleUsageScore(style) {
+  try {
+    if (typeof getStyleUsageCounter === 'function') {
+      const c = getStyleUsageCounter(MOTOR_STATE.market, MOTOR_STATE.product) || {};
+      const usage = c[style] || 0;
+      return Math.max(0, 100 - usage * 15);
+    }
+    const memKeyFn = typeof memKey === 'function' ? memKey : _memKey;
+    const key = memKeyFn(['styleUsage', MOTOR_STATE.market, MOTOR_STATE.region || 'global', MOTOR_STATE.product]);
+    const c = _memGetJSON(key, {}) || {};
+    const usage = c[style] || 0;
+    // Menos uso = score más alto (prioridad). Máx 100, mín 0.
+    return Math.max(0, 100 - usage * 15);
+  } catch (e) { return 50; }
+}
+
+/**
+ * Registra el uso de un estilo en memoria local.
+ */
+function _recordStyleUse(style) {
+  try {
+    if (typeof recordStyleUse === 'function') { recordStyleUse(MOTOR_STATE.market, MOTOR_STATE.product, style); return; }
+    const memKeyFn = typeof memKey === 'function' ? memKey : _memKey;
+    const key = memKeyFn(['styleUsage', MOTOR_STATE.market, MOTOR_STATE.region || 'global', MOTOR_STATE.product]);
+    const c = _memGetJSON(key, {}) || {};
+    c[style] = (c[style] || 0) + 1;
+    // Decaimiento: reduce todos ligeramente para que los no usados suban
+    Object.keys(c).forEach(function (s) {
+      c[s] = Math.max(0, c[s] - 0.1);
+    });
+    _memSetJSON(key, c);
+  } catch (e) {}
+}
+
+function _pickWeighted(pool, weights) {
+  if (!pool.length) return '';
+  const total = pool.reduce(function (sum, _, i) { return sum + (weights[i] || 1); }, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < pool.length; i++) {
+    r -= (weights[i] || 1);
+    if (r <= 0) return pool[i];
+  }
+  return pool[pool.length - 1];
 }
 
 function resolveEstilos(audsPerKey) {
@@ -256,21 +307,66 @@ function resolveEstilos(audsPerKey) {
     const baseAud = audsPerKey[K[0]] || 'unisex_nacional';
     const basePref = (typeof AUD_STYLE_PREF !== 'undefined' ? AUD_STYLE_PREF[baseAud] : []) || [];
     const preferred = candidates.filter(function (e) { return basePref.indexOf(_getStyleBase(e)) !== -1; });
-    const base = Object.values(fixed)[0] || _pick(preferred.length ? preferred : candidates);
+    const pool = preferred.length ? preferred : candidates;
+    const weights = pool.map(function (e) { return basePref.indexOf(_getStyleBase(e)) !== -1 ? 3 : 1; });
+    const base = Object.values(fixed)[0] || _pickWeighted(pool, weights);
     auto.forEach(function (k) { fixed[k] = base; });
     return fixed;
   }
 
   const used = new Set(Object.values(fixed));
-  auto.forEach(function (k) {
+  const autoKeys = auto.slice();
+  
+  // Cuota: al menos 1 de cada 3 fichas fuera del top-3 de su audiencia
+  const quotaNeeded = Math.max(1, Math.ceil(autoKeys.length / 3));
+  let quotaUsed = 0;
+
+  autoKeys.forEach(function (k, idx) {
     const aud = audsPerKey[k] || 'unisex_nacional';
     const pref = (typeof AUD_STYLE_PREF !== 'undefined' ? AUD_STYLE_PREF[aud] : []) || [];
-    let pool = candidates.filter(function (e) { return pref.indexOf(_getStyleBase(e)) !== -1 && !used.has(e); });
-    if (!pool.length) pool = candidates.filter(function (e) { return !used.has(e); });
-    if (!pool.length) pool = candidates.slice();
-    const pick = _pick(pool);
+    const top3 = pref.slice(0, 3);
+    
+    const isLast = idx === autoKeys.length - 1;
+    const mustExplore = (quotaUsed < quotaNeeded) && (isLast || Math.random() < 0.4);
+    
+    // Nivel 1: bias fuerte (pref - used) - peso 3
+    const biasPool = candidates.filter(function (e) {
+      return pref.indexOf(_getStyleBase(e)) !== -1 && !used.has(e);
+    });
+    // Nivel 2: exploración (candidates - used - bias) - peso 2
+    const explorePool = candidates.filter(function (e) {
+      return !used.has(e) && biasPool.indexOf(e) === -1;
+    });
+    // Nivel 3: garantía cola larga (candidates - used) - peso 1 + score uso
+    const fallbackPool = candidates.filter(function (e) { return !used.has(e); });
+
+    let pick;
+    if (mustExplore && explorePool.length) {
+      // Forzar exploración: elegir de explorePool con peso por score de uso
+      const weights = explorePool.map(function (e) { return 2 + _getStyleUsageScore(e) / 25; });
+      pick = _pickWeighted(explorePool, weights);
+      quotaUsed++;
+    } else if (biasPool.length && Math.random() < 0.7) {
+      // 70% bias hacia pref de audiencia
+      const weights = biasPool.map(function (e) { return 3; });
+      pick = _pickWeighted(biasPool, weights);
+    } else if (explorePool.length) {
+      // Exploración normal
+      const weights = explorePool.map(function (e) { return 2 + _getStyleUsageScore(e) / 50; });
+      pick = _pickWeighted(explorePool, weights);
+      if (!biasPool.length) quotaUsed++;
+    } else if (fallbackPool.length) {
+      // Garantía cola larga
+      const weights = fallbackPool.map(function (e) { return 1 + _getStyleUsageScore(e) / 100; });
+      pick = _pickWeighted(fallbackPool, weights);
+    } else {
+      // Fallback total (no debería pasar)
+      pick = _pick(candidates);
+    }
+
     fixed[k] = pick;
     used.add(pick);
+    _recordStyleUse(pick);
   });
   return fixed;
 }
@@ -329,11 +425,11 @@ function resolveTextImageModes(estilos, audsPerKey) {
 function dominioEfectivo() {
   // 1) Dominio fijado a mano manda siempre.
   if (MOTOR_STATE.dominio && MOTOR_STATE.dominio !== 'auto') return MOTOR_STATE.dominio;
-  // 2) "Familia de la imagen" elegida a mano en modo variaciÃ³n (#domImagen).
+  // 2) "Familia de la imagen" elegida a mano en modo variación (#domImagen).
   if (MOTOR_STATE.workflowMode === 'variation' && MOTOR_STATE.domImagen && MOTOR_STATE.domImagen !== 'Auto') {
     return MOTOR_STATE.domImagen;
   }
-  // 3) DetecciÃ³n automÃ¡tica del concepto/mensaje.
+  // 3) Detección automática del concepto/mensaje.
   return MOTOR_STATE.dominioDetectado && MOTOR_STATE.dominioDetectado !== 'auto' ? MOTOR_STATE.dominioDetectado : null;
 }
 
@@ -356,13 +452,13 @@ function _normalizeTxt(s) {
 /* Subnicho elegido por el usuario, o detectado del concepto+mensaje
    RESTRINGIDO a los subnichos del mercado activo.
    Antes, con subnicho 'Auto' el pool era solo OBJECT_BANK_COMMON (20 objetos)
-   en todos los mercados: por eso salÃ­an siempre los mismos objetos. */
+   en todos los mercados: por eso salían siempre los mismos objetos. */
 function effectiveSubniche() {
   if (MOTOR_STATE.subniche && MOTOR_STATE.subniche !== 'auto') return MOTOR_STATE.subniche;
 
-  // Mercado de un solo subnicho (gospel): no depende de la detecciÃ³n por
-  // keywords. Antes, un concepto en otro idioma devolvÃ­a null y el pool
-  // quedaba VACÃO (0 objetos) porque gospel no admite el banco comÃºn.
+  // Mercado de un solo subnicho (gospel): no depende de la detección por
+  // keywords. Antes, un concepto en otro idioma devolvía null y el pool
+  // quedaba VACÍO (0 objetos) porque gospel no admite el banco común.
   const ids = _marketSubnicheIds();
   const uniq = ids.filter(function (v, i) { return ids.indexOf(v) === i; });
   if (uniq.length === 1) return uniq[0];
@@ -398,9 +494,9 @@ function subnicheForDominio(dom) {
   return d.subniche_global || null;
 }
 
-/* Regiones cuyo banco (getBankForSubniche usa la REGIÃ“N) estÃ¡ en inglÃ©s.
+/* Regiones cuyo banco (getBankForSubniche usa la REGIÃ“N) está en inglés.
    Si el mercado no declara idioma ('auto'), hay que inferirlo por la misma
-   regiÃ³n o el banco comÃºn quedaba en espaÃ±ol junto a un subnicho en inglÃ©s
+   región o el banco común quedaba en español junto a un subnicho en inglés
    (mercado "custom": pool con 20 objetos ES + 4 EN). */
 const _EN_BANK_REGIONS = ['global', 'us', 'uk', 'ca', 'au', 'anglo', 'universal_en'];
 
@@ -452,8 +548,8 @@ function getObjectPool() {
     if (allowed) pool = getBankForSubniche(sub, MOTOR_STATE.region, MOTOR_STATE.market);
   }
 
-  // Red de seguridad: gospel NO concatena el banco comÃºn, asÃ­ que un pool
-  // vacÃ­o salÃ­a con objetos "â€”" en las 3 fichas. Siempre queda su banco propio.
+  // Red de seguridad: gospel NO concatena el banco común, así que un pool
+  // vacío salía con objetos "â€”" en las 3 fichas. Siempre queda su banco propio.
   if (gospel && !pool.length && typeof getBankForSubniche === 'function') {
     const gid = MOTOR_STATE.market === 'gospel_en' ? 'gospel_en' : 'gospel_es';
     try { pool = getBankForSubniche(gid, MOTOR_STATE.region, MOTOR_STATE.market) || []; } catch (e) {}
@@ -461,20 +557,20 @@ function getObjectPool() {
 
   const personalObjs = _getPersonalObjects(MOTOR_STATE.market, sub || 'auto');
   pool = pool.concat(personalObjs);
-  // Banco comÃºn genÃ©rico: PROHIBIDO en gospel (mezclaba secular con doctrinal y
-  // hacÃ­a predominar gospel en otros). Y en mercados EN va el comÃºn en inglÃ©s:
-  // OBJECT_BANK_COMMON estÃ¡ Ã­ntegramente en espaÃ±ol y se filtraba al pool EN.
+  // Banco común genérico: PROHIBIDO en gospel (mezclaba secular con doctrinal y
+  // hacía predominar gospel en otros). Y en mercados EN va el común en inglés:
+  // OBJECT_BANK_COMMON está íntegramente en español y se filtraba al pool EN.
   if (!gospel) pool = pool.concat(_commonBankForMarket());
 
   return [...new Set(pool.filter(Boolean))];
 }
 
-/* --- ConstrucciÃ³n de candidato --- */
+/* --- Construcción de candidato --- */
 /* Elegir un valor de eje sin repetir el de las variantes anteriores de ESTE
    candidato. Las preferencias (sesgo de audiencia/producto) son sesgo, no
-   candado: si el sesgo ya se agotÃ³, se amplÃ­a al pool completo. Sin esto,
-   formaSimbolo salÃ­a siempre de los 2 valores de formaPref de una misma
-   audiencia compartida â†’ jamÃ¡s habÃ­a 3 valores distintos â†’ ejesOk=false
+   candado: si el sesgo ya se agotó, se amplía al pool completo. Sin esto,
+   formaSimbolo salía siempre de los 2 valores de formaPref de una misma
+   audiencia compartida â†’ jamás había 3 valores distintos â†’ ejesOk=false
    siempre â†’ generateSet() nunca marcaba passed=true (comprobado: 0/3000). */
 function _pickFresh(biasPool, fullPool, used) {
   const bias = (biasPool || []).filter(function (x) { return used.indexOf(x) === -1; });
@@ -507,9 +603,9 @@ function buildCandidate(audsPerKey) {
 
     // Objeto
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
-      v.objeto = 'SIN OBJETO â€” composiciÃ³n tipogrÃ¡fica pura';
+      v.objeto = 'SIN OBJETO â€” composición tipográfica pura';
     } else if (conservarSimb) {
-      v.objeto = '(sÃ­mbolo de la imagen REDIBUJADO: misma funciÃ³n simbÃ³lica; prohibido copiar silueta)';
+      v.objeto = '(símbolo de la imagen REDIBUJADO: misma función simbólica; prohibido copiar silueta)';
     } else {
       let obj, g = 0;
       do {
@@ -520,27 +616,27 @@ function buildCandidate(audsPerKey) {
     }
     usedThisSet.add(v.objeto);
 
-    // Pools de direcciÃ³n artÃ­stica
+    // Pools de dirección artística
     const styleBase = _getStyleBase(v.estilo);
     const sp = _STYLE_POOLS[styleBase] || {};
 
-    v.arquitectura = _pick(sp.arquitectura || _POOLS.arquitectura || ['composiciÃ³n central']);
+    v.arquitectura = _pick(sp.arquitectura || _POOLS.arquitectura || ['composición central']);
     v.composicion = _pick(sp.composicion || _POOLS.composicion || ['central']);
-    v.textoPrincipal = _pick(sp.textoPrincipal || ['tÃ­tulo principal con peso visual']);
+    v.textoPrincipal = _pick(sp.textoPrincipal || ['título principal con peso visual']);
 
     if (textosImagen) {
       v.textoApoyo = '(conservar literalmente las palabras secundarias de la imagen)';
       v.textoTerciario = '(conservar referencia legible si existe)';
     } else if (textosMensaje) {
-      v.textoApoyo = '(mantener la misma idea secundaria; reformular sin aÃ±adir)';
+      v.textoApoyo = '(mantener la misma idea secundaria; reformular sin añadir)';
       v.textoTerciario = '(conservar referencia si existe; no inventar)';
     } else {
       v.textoApoyo = _pick(sp.textoApoyo || _TEXTO_FALLBACK_SECULAR.textoApoyo || ['texto de apoyo con peso']);
       v.textoTerciario = _pick(sp.textoTerciario || _TEXTO_FALLBACK_SECULAR.textoTerciario || ['dato de serie legible']);
     }
 
-    v.tecnica = _pick(sp.tecnica || ['tÃ©cnica mixta']);
-    v.relacion = _pick(sp.relacion || ['texto y sÃ­mbolo integrados']);
+    v.tecnica = _pick(sp.tecnica || ['técnica mixta']);
+    v.relacion = _pick(sp.relacion || ['texto y símbolo integrados']);
 
     // Decisiones estructurales
     const productBias = _PRODUCT_BIAS[MOTOR_STATE.product] || {};
@@ -574,7 +670,7 @@ function buildCandidate(audsPerKey) {
 
     v.integracionTexto = _pickFresh(_INTEGRACION, _INTEGRACION, usedAxes.integracionTexto);
     usedAxes.integracionTexto.push(v.integracionTexto);
-    v.distribucionTexto = _pick(_POOLS.distribucionTexto || ['texto integrado al sÃ­mbolo']);
+    v.distribucionTexto = _pick(_POOLS.distribucionTexto || ['texto integrado al símbolo']);
     v.jerarquia = _pick(_POOLS.jerarquia || ['Balanceado']);
     const productDensity = productBias.density || [];
     const audienceDensity = (typeof AUD_DENSITY_PREF !== 'undefined' ? AUD_DENSITY_PREF[v.audiencia] : []) || [];
@@ -641,7 +737,7 @@ function buildCandidate(audsPerKey) {
   return set;
 }
 
-/* --- Scoring y selecciÃ³n --- */
+/* --- Scoring y selección --- */
 function scoreSet(set) {
   const fields = ['estilo', 'layout', 'tipografia', 'formaSimbolo', 'tratamiento', 'integracionTexto', 'objeto', 'familiaColor'];
   const pairs = [[0, 1], [0, 2], [1, 2]];
@@ -677,7 +773,7 @@ function scoreSet(set) {
   };
 }
 
-/* --- Loop de generaciÃ³n --- */
+/* --- Loop de generación --- */
 let LAST_RESULT = null;
 function memLocksMarket() {
   try { return MOTOR_STATE.market + '|' + MOTOR_STATE.region; } catch (e) { return MOTOR_STATE.market; }
@@ -687,10 +783,10 @@ function memPatternMarket() {
   try { d = dominioEfectivo() || MOTOR_STATE.subniche || 'auto'; } catch (e) {}
   return MOTOR_STATE.market + '|' + MOTOR_STATE.region + '|' + d;
 }
-/* Conflicto de memoria visual: Â¿alguna variante repite un patrÃ³n ya usado en
+/* Conflicto de memoria visual: Â¿alguna variante repite un patrón ya usado en
    este mercado/producto? Antes solo se avisaba DESPUÃ‰S de elegir (el anti-
-   repeticiÃ³n no servÃ­a de nada). Ahora es condiciÃ³n de aceptaciÃ³n y solo se
-   evalÃºa cuando el resto de controles ya pasÃ³. */
+   repetición no servía de nada). Ahora es condición de aceptación y solo se
+   evalúa cuando el resto de controles ya pasó. */
 function _patternConflictsOf(cand) {
   let bad = 0;
   K.forEach(function (k) {
@@ -731,8 +827,8 @@ function generateSet() {
     const ok = m.diversity >= 55 && estilosOk && m.objUnique && ejesOk && pertinenciaOk
       && _patternConflictsOf(cand) === 0;
 
-    // Rankings SEPARADOS: antes un candidato rechazado subÃ­a bestTotal y
-    // bloqueaba a los vÃ¡lidos (passed quedaba false aunque hubiera vÃ¡lidos).
+    // Rankings SEPARADOS: antes un candidato rechazado subía bestTotal y
+    // bloqueaba a los válidos (passed quedaba false aunque hubiera válidos).
     if (m.total > bestTotal) { bestTotal = m.total; best = cand; bestScore = m; }
     if (ok && m.total > bestOkTotal) { bestOkTotal = m.total; bestOk = cand; bestOkScore = m; }
   }
@@ -742,11 +838,11 @@ function generateSet() {
 
   if (!best) {
     const statusEl = document.getElementById('status');
-    if (statusEl) statusEl.innerHTML = '<span class="bad">No se logrÃ³ ningÃºn candidato vÃ¡lido. Reintenta.</span>';
+    if (statusEl) statusEl.innerHTML = '<span class="bad">No se logró ningún candidato válido. Reintenta.</span>';
     return null;
   }
 
-  // Anti-repeticiÃ³n por patrÃ³n visual
+  // Anti-repetición por patrón visual
   K.forEach(function (k) {
     const pattern = {
       estilo: _getStyleBase(best[k].estilo),
@@ -758,7 +854,7 @@ function generateSet() {
     const conflict = _findPatternConflicts(pattern, memPatternMarket(), MOTOR_STATE.product);
     if (!conflict.ok) {
       // Si hay conflicto, intentar regenerar esa ficha (simplificado: aceptar con advertencia)
-      console.warn('[Motor] Conflicto de patrÃ³n en ' + N[K.indexOf(k)] + ': ' + conflict.maxMatches + ' ejes coincidentes');
+      console.warn('[Motor] Conflicto de patrón en ' + N[K.indexOf(k)] + ': ' + conflict.maxMatches + ' ejes coincidentes');
     }
     _recordPattern(best[k], memPatternMarket(), MOTOR_STATE.product, { serie: MOTOR_STATE.serie, subniche: MOTOR_STATE.subniche });
   });
@@ -860,14 +956,14 @@ function formatPrompt(result) {
   if (MOTOR_STATE.market === 'global_en' || MOTOR_STATE.market === 'global_es') {
     o += 'SANDBOX: solo bancos globales del idioma del mercado. Prohibidos regionalismos colombianos y simbolismo gospel doctrinal.\n';
   }
-  o += 'DIFERENCIA DURA: layout, tipografÃ­a, tratamiento, forma del sÃ­mbolo y fondo NUNCA se repiten entre A/B/C.\n';
+  o += 'DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo y fondo NUNCA se repiten entre A/B/C.\n';
   o += 'TEXTOS: tres niveles con peso real, todos legibles; PROHIBIDO microtexto decorativo.\n';
-  o += 'AUDIENCIA: cada perfil gobierna decisiones visibles. Si al quitarla el diseÃ±o no cambia, RECHAZAR.\n\n';
+  o += 'AUDIENCIA: cada perfil gobierna decisiones visibles. Si al quitarla el diseño no cambia, RECHAZAR.\n\n';
 
   K.forEach(function (k, i) {
     const v = set[k];
     o += '### ' + N[i] + ' Â· ' + v.estilo + ' Â· ' + v.audiencia + '\n';
-    o += 'JERARQUÃA: ' + v.jerarquiaVisual + '\n';
+    o += 'JERARQUÍA: ' + v.jerarquiaVisual + '\n';
     o += 'OBJETO: ' + v.objeto + '\n';
     o += 'DIRECCIÃ“N: ' + v.arquitectura + '; ' + v.composicion + '; ' + v.layout + '\n';
     o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
@@ -998,16 +1094,16 @@ function renderGates(result) {
   const m = result.score;
   let html = '';
   html += '<span class="badge ' + (m.diversity >= 55 ? 'good' : 'bad') + '">Diferencia: ' + m.diversity + '/100</span>';
-  html += '<span class="badge ' + (m.fitAudienciaMin >= 50 ? 'good' : 'bad') + '">Audiencia mÃ­n: ' + m.fitAudienciaMin + '/100</span>';
-  html += '<span class="badge ' + (m.fitProductoMin >= 40 ? 'good' : 'bad') + '">Producto mÃ­n: ' + m.fitProductoMin + '/100</span>';
+  html += '<span class="badge ' + (m.fitAudienciaMin >= 50 ? 'good' : 'bad') + '">Audiencia mín: ' + m.fitAudienciaMin + '/100</span>';
+  html += '<span class="badge ' + (m.fitProductoMin >= 40 ? 'good' : 'bad') + '">Producto mín: ' + m.fitProductoMin + '/100</span>';
   html += '<span class="badge ' + (m.estilos.length >= 3 ? 'good' : 'warn') + '">' + m.estilos.length + ' estilos distintos</span>';
-  html += '<span class="badge ' + (m.objUnique ? 'good' : 'bad') + '">Objetos Ãºnicos</span>';
+  html += '<span class="badge ' + (m.objUnique ? 'good' : 'bad') + '">Objetos únicos</span>';
   html += '<span class="badge ' + (m.familias.length >= 3 ? 'good' : 'warn') + '">Colores distintos</span>';
 
   gateEl.innerHTML = html;
 }
 
-/* --- FunciÃ³n principal: Crear los 3 diseÃ±os --- */
+/* --- Función principal: Crear los 3 diseños --- */
 function crearLos3Disenos() {
   const statusEl = document.getElementById('status');
   const outEl = document.getElementById('out');
@@ -1042,12 +1138,12 @@ async function copiarPrompt() {
   const outEl = document.getElementById('out');
   const statusEl = document.getElementById('status');
   if (!outEl || !outEl.value) {
-    if (statusEl) statusEl.innerHTML = '<span class="bad">No hay prompt. Primero crea los 3 diseÃ±os.</span>';
+    if (statusEl) statusEl.innerHTML = '<span class="bad">No hay prompt. Primero crea los 3 diseños.</span>';
     return;
   }
   try {
     await navigator.clipboard.writeText(outEl.value);
-    if (statusEl) statusEl.innerHTML = '<span class="good">Prompt copiado. PÃ©galo en tu IA de imagen.</span>';
+    if (statusEl) statusEl.innerHTML = '<span class="good">Prompt copiado. Pégalo en tu IA de imagen.</span>';
   } catch (e) {
     try { outEl.select(); document.execCommand('copy'); if (statusEl) statusEl.innerHTML = '<span class="good">Copiado con fallback.</span>'; }
     catch (e2) { if (statusEl) statusEl.innerHTML = '<span class="bad">No se pudo copiar. Usa Ctrl+C.</span>'; }
@@ -1060,13 +1156,13 @@ function limpiarFichas() {
   const gate = document.getElementById('gate');
   const out = document.getElementById('out');
   const status = document.getElementById('status');
-  if (cards) cards.innerHTML = '<div class="empty-state">Genera los 3 diseÃ±os para ver las fichas aquÃ­.</div>';
-  if (gate) gate.innerHTML = '<span class="badge">AÃºn no hay diseÃ±os</span>';
+  if (cards) cards.innerHTML = '<div class="empty-state">Genera los 3 diseños para ver las fichas aquí.</div>';
+  if (gate) gate.innerHTML = '<span class="badge">Aún no hay diseños</span>';
   if (out) out.value = '';
   if (status) status.textContent = 'Fichas limpias. La memoria de patrones sigue activa.';
 }
 
-/* --- Borrar memoria (con doble confirmaciÃ³n) --- */
+/* --- Borrar memoria (con doble confirmación) --- */
 function borrarMemoria() {
   if (!_confirmDestructive('Â¿Borrar toda la memoria de patrones, locks e historial de este mercado/producto?', 'BORRAR')) return;
   if (typeof clearPatternMemory === 'function') clearPatternMemory(memPatternMarket(), MOTOR_STATE.product);
