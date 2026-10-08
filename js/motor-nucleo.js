@@ -1,7 +1,7 @@
 'use strict';
 
 /* ============================================================
-   MOTOR NÃšCLEO â€” Orquestación Multi-Mercado POD
+   MOTOR NÚCLEO — Orquestación Multi-Mercado POD
    Integra: mercados, audiencias, bancos, estilos, productos, memoria.
    Genera prompt denso con locks, anti-repetición y reglas legales.
    NO contiene datos. Solo lógica de orquestación.
@@ -71,7 +71,7 @@ function _pickDistinct(keys, pool) {
 }
 
 function _getStyleBase(s) {
-  return String(s || '').split(' Ã— ')[0].trim();
+  return String(s || '').split(' × ')[0].trim();
 }
 
 function _matchesPreference(preferences, value) {
@@ -376,10 +376,10 @@ function resolveEstilos(audsPerKey) {
 function resolveTextImageModes(estilos, audsPerKey) {
   const locks = _loadLocks(memLocksMarket(), MOTOR_STATE.product);
   const MODES = {
-    SOLO_TEXTO: 'TIPO 1 Â· Solo texto',
-    TEXTO_DOMINANTE: 'TIPO 2 Â· Texto dominante',
-    BALANCEADO: 'TIPO 3 Â· Balanceado',
-    OBJETO_DOMINANTE: 'TIPO 4 Â· Objeto dominante'
+    SOLO_TEXTO: 'TIPO 1 · Solo texto',
+    TEXTO_DOMINANTE: 'TIPO 2 · Texto dominante',
+    BALANCEADO: 'TIPO 3 · Balanceado',
+    OBJETO_DOMINANTE: 'TIPO 4 · Objeto dominante'
   };
   const result = {};
   const auto = [];
@@ -497,7 +497,7 @@ function subnicheForDominio(dom) {
   return d.subniche_global || null;
 }
 
-/* Regiones cuyo banco (getBankForSubniche usa la REGIÃ“N) está en inglés.
+/* Regiones cuyo banco (getBankForSubniche usa la REGIÓN) está en inglés.
    Si el mercado no declara idioma ('auto'), hay que inferirlo por la misma
    región o el banco común quedaba en español junto a un subnicho en inglés
    (mercado "custom": pool con 20 objetos ES + 4 EN). */
@@ -552,7 +552,7 @@ function getObjectPool() {
   }
 
   // Red de seguridad: gospel NO concatena el banco común, así que un pool
-  // vacío salía con objetos "â€”" en las 3 fichas. Siempre queda su banco propio.
+  // vacío salía con objetos "—" en las 3 fichas. Siempre queda su banco propio.
   if (gospel && !pool.length && typeof getBankForSubniche === 'function') {
     const gid = MOTOR_STATE.market === 'gospel_en' ? 'gospel_en' : 'gospel_es';
     try { pool = getBankForSubniche(gid, MOTOR_STATE.region, MOTOR_STATE.market) || []; } catch (e) {}
@@ -606,7 +606,7 @@ function buildCandidate(audsPerKey) {
 
     // Objeto
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
-      v.objeto = 'SIN OBJETO â€” composición tipográfica pura';
+      v.objeto = 'SIN OBJETO — composición tipográfica pura';
     } else if (conservarSimb) {
       v.objeto = '(símbolo de la imagen REDIBUJADO: misma función simbólica; prohibido copiar silueta)';
     } else {
@@ -615,7 +615,7 @@ function buildCandidate(audsPerKey) {
         obj = _pick(objectPool);
         g++;
       } while (usedThisSet.has(obj) && g < 30);
-      v.objeto = obj || 'â€”';
+      v.objeto = obj || '—';
     }
     usedThisSet.add(v.objeto);
 
@@ -701,7 +701,7 @@ function buildCandidate(audsPerKey) {
       const modePool = _COLOR_MODES.filter(function (m) { return preferredModes.indexOf(m) !== -1; });
       const modo = _pick(modePool.length ? modePool : _COLOR_MODES);
       const esquema = _hexScheme(pal, modo);
-      v.paleta = pal + ' â€” fondo ' + esquema.bg + ' Â· dominante ' + esquema.dom + ' Â· acento ' + esquema.acc + ' Â· tinta ' + esquema.ink + ' (modo: ' + modo + ')';
+      v.paleta = pal + ' — fondo ' + esquema.bg + ' · dominante ' + esquema.dom + ' · acento ' + esquema.acc + ' · tinta ' + esquema.ink + ' (modo: ' + modo + ')';
       v.familiaColor = fam;
       v._esquema = esquema;
     }
@@ -786,8 +786,8 @@ function memPatternMarket() {
   try { d = dominioEfectivo() || MOTOR_STATE.subniche || 'auto'; } catch (e) {}
   return MOTOR_STATE.market + '|' + MOTOR_STATE.region + '|' + d;
 }
-/* Conflicto de memoria visual: Â¿alguna variante repite un patrón ya usado en
-   este mercado/producto? Antes solo se avisaba DESPUÃ‰S de elegir (el anti-
+/* Conflicto de memoria visual: ¿alguna variante repite un patrón ya usado en
+   este mercado/producto? Antes solo se avisaba DESPUÉS de elegir (el anti-
    repetición no servía de nada). Ahora es condición de aceptación y solo se
    evalúa cuando el resto de controles ya pasó. */
 function _patternConflictsOf(cand) {
@@ -942,7 +942,8 @@ function formatPrompt(result) {
     productRule += ' ' + capRules[MOTOR_STATE.capApplication || 'auto'];
   }
   const mockupRule = typeof getMockupRule === 'function' ? getMockupRule(MOTOR_STATE.product) : '';
-  const isPatron = MOTOR_STATE.designMode === 'patron' && !isVar;
+  const supportsPattern = ['MOCHILA', 'TOTE BAG', 'FUNDA MÓVIL'].indexOf(MOTOR_STATE.product) !== -1;
+  const isPatron = MOTOR_STATE.designMode === 'patron' && !isVar && supportsPattern;
   const tplActive = _activeTemplateSafe();
   let o = '';
   if (isVar) {
@@ -995,6 +996,7 @@ function formatPrompt(result) {
     o += 'TEMPLATE: ' + tplActive.nombre + ' (' + tplActive.producto + ') | ZONAS: ' + zones;
     if (tplActive.notas) o += ' | NOTAS: ' + tplActive.notas;
     o += '\n';
+    if (isPatron && tplActive.imagen) o += 'REFERENCIA DE PLANTILLA: el archivo guardado en el editor no esta incluido en este texto. Adjuntalo manualmente al chat de la IA de imagen para que pueda usarlo.\n';
   }
   if (MOTOR_STATE.market === 'gospel_es' || MOTOR_STATE.market === 'gospel_en') {
     o += 'DOCTRINA: Trinitario (Padre, Hijo, Espiritu Santo) y cristocentrico. Cruz y resurreccion al centro. PROHIBIDO prosperidad magica, decretos, angeles como centro, santos mediadores, esoterismo, horoscopo, energia. Sin region: universal.\n';
@@ -1016,15 +1018,15 @@ function formatPrompt(result) {
 
   K.forEach(function (k, i) {
     const v = set[k];
-    o += '### ' + N[i] + ' Â· ' + v.estilo + ' Â· ' + v.audiencia + '\n';
+    o += '### ' + N[i] + ' · ' + v.estilo + ' · ' + v.audiencia + '\n';
     o += 'JERARQUÍA: ' + v.jerarquiaVisual + '\n';
     o += 'OBJETO: ' + v.objeto + '\n';
-    o += 'DIRECCIÃ“N: ' + v.arquitectura + '; ' + v.composicion + '; ' + v.layout + '\n';
+    o += 'DIRECCIÓN: ' + v.arquitectura + '; ' + v.composicion + '; ' + v.layout + '\n';
     o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
     o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
-    o += 'TEXTO: ' + v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' Â· ' + v.tipografia + '\n';
+    o += 'TEXTO: ' + v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia + '\n';
     o += 'PALETA: ' + v.paleta + '\n';
-    o += 'PERTINENCIA: audiencia ' + (v.fitAudiencia || 0) + '/100 Â· producto ' + (v.fitProducto || 0) + '/100\n';
+    o += 'COINCIDENCIA DE REGLAS DEL PROMPT (no evalua la imagen final): audiencia ' + (v.fitAudiencia || 0) + '/100; producto ' + (v.fitProducto || 0) + '/100\n';
     if (isPatron) {
       o += 'TILE: motivo (' + v.objeto + ') en estilo ' + v.estilo + ' (' + v.tecnica + ') sobre fondo ' + (v.familiaColor || 'del producto') + '\n';
       o += 'REPETICIÓN: ' + (MOTOR_STATE.repeatType || 'medio salto') + ' | ESCALA MOTIVO: ' + _patronScale() + ' | APLICACIÓN: ' + _patronAplicacion(tplActive, v.placement) + '\n';
@@ -1097,7 +1099,7 @@ function renderCards(result) {
       html += '</div>';
     }
 
-    html += '<div class="fit-bar">Pertinencia: audiencia <span class="val">' + (v.fitAudiencia || 0) + '/100</span> Â· producto <span class="val">' + (v.fitProducto || 0) + '/100</span></div>';
+    html += '<div class="fit-bar" title="Compara las reglas del prompt con preferencias configuradas; no revisa la imagen generada ni certifica produccion.">Reglas del prompt: audiencia <span class="val">' + (v.fitAudiencia || 0) + '/100</span> · producto <span class="val">' + (v.fitProducto || 0) + '/100</span></div>';
 
     card.innerHTML = html;
     root.appendChild(card);
@@ -1167,7 +1169,7 @@ function crearLos3Disenos() {
   const statusEl = document.getElementById('status');
   const outEl = document.getElementById('out');
 
-  if (statusEl) statusEl.innerHTML = '<span class="blue">Generando 3 direccionesâ€¦</span>';
+  if (statusEl) statusEl.innerHTML = '<span class="blue">Generando 3 direcciones…</span>';
 
   try {
     const result = generateSet();
@@ -1181,7 +1183,7 @@ function crearLos3Disenos() {
 
     if (statusEl) {
       if (result.passed) {
-        statusEl.innerHTML = '<span class="good">Listo: los tres pasan el control de diferencia Â· Prompt armado abajo</span>';
+        statusEl.innerHTML = '<span class="good">Listo: los tres pasan el control de diferencia · Prompt armado abajo</span>';
       } else {
         statusEl.innerHTML = '<span class="warn">Listo con advertencia: revisa el control de calidad</span>';
       }
@@ -1223,7 +1225,7 @@ function limpiarFichas() {
 
 /* --- Borrar memoria (con doble confirmación) --- */
 function borrarMemoria() {
-  if (!_confirmDestructive('Â¿Borrar toda la memoria de patrones, locks e historial de este mercado/producto?', 'BORRAR')) return;
+  if (!_confirmDestructive('¿Borrar toda la memoria de patrones, locks e historial de este mercado/producto?', 'BORRAR')) return;
   if (typeof clearPatternMemory === 'function') clearPatternMemory(memPatternMarket(), MOTOR_STATE.product);
   if (typeof clearLocks === 'function') clearLocks(memLocksMarket(), MOTOR_STATE.product);
   limpiarFichas();

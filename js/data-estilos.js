@@ -1,7 +1,7 @@
 ﻿'use strict';
 
 /* ============================================================
-   DATA ESTILOS â€” 38 estilos visuales POD
+   DATA ESTILOS — 49 estilos y recursos visuales POD
    Paletas, tipografías, tratamientos, pools de dirección.
    Vocabulario 100% comercial. Sin referencias religiosas.
    ============================================================ */
@@ -45,7 +45,7 @@ const ESTILO_INFO = {
   "Foil Stamp / Metallic": "oro estampado, relieve, reflejo dirigido, fondo limpio",
   "Puff Print / 3D Ink": "tinta expandida, relieve redondeado, brillo mate, tangible",
 
-  /* ===== ESTILOS DTF / SUBLIMACIÃ“N - Producción real ===== */
+  /* ===== ESTILOS DTF / SUBLIMACIÓN - Producción real ===== */
   "Indexed Palette / Paleta indizada": "paleta fija 16-32 colores, RIP directo, colores consistentes",
   "Vector Flat / Plano vectorial": "sin degradados, contornos nítidos, escala infinita, ideal corte/plotter",
   "Spot Color Simulated / Tintas planas simuladas": "simula separaciones CMYK + tintas especiales en un solo archivo",
@@ -101,7 +101,7 @@ const SATURACION = {
   "Foil Stamp / Metallic": ["oro por oro sin jerarquía", "reflejo que borra el texto"],
   "Puff Print / 3D Ink": ["relieve sin jerarquía", "expansión que deforma la letra"],
 
-  /* ===== SATURACIÃ“N DTF / SUBLIMACIÃ“N ===== */
+  /* ===== SATURACIÓN DTF / SUBLIMACIÓN ===== */
   "Indexed Palette / Paleta indizada": ["paleta excesiva que rompe el RIP", "colores fuera de gamut sin conversión"],
   "Vector Flat / Plano vectorial": ["degradados simulados que no son planos", "puntos de ancla excesivos que ensucian el corte"],
   "Spot Color Simulated / Tintas planas simuladas": ["tintas extra que no separan", "simulación que no coincide con impresión real"],
@@ -129,7 +129,7 @@ const LAYOUTS = [
   "Sangrado total: masa a sangre en dos o tres lados; el texto cae en la esquina opuesta",
   "Sello descentrado: emblema pequeño en un cuadrante; gran vacío dominante",
   "Split 2/3-1/3: dos campos verticales; símbolo en uno, texto en el otro",
-  "Ã“rbita radial: textos giran en órbita alrededor del símbolo; lectura circular",
+  "Órbita radial: textos giran en órbita alrededor del símbolo; lectura circular",
   "Arco y cúpula: masa bajo un arco; textos siguiendo la curva superior",
   "Escalinata: bloques escalonados en descenso; el texto vive entre peldaños",
   "Tríptico de bandas: tres bandas horizontales con jerarquía distinta; el símbolo ocupa la central"
@@ -194,10 +194,10 @@ const COLOR_FAMILIES = {
     "Terracota / Crema / Verde oliva",
     "Dorado suave / Terracota / Marfil",
     "Coral suave / Arena / Verde oliva",
-    "Ã“xido / Arena / Crema"
+    "Óxido / Arena / Crema"
   ],
   "bosque / sage": [
-    "Oliva / Arena / Ã“xido suave",
+    "Oliva / Arena / Óxido suave",
     "Rosa Empolvado / Verde Salvia / Crema",
     "Verde bosque / Crema / Cobre",
     "Lavanda / Sage / Crema cálida",
@@ -227,10 +227,10 @@ const COLOR_FAMILIES = {
   ],
   "industrial": [
     "Carbón / Gris Frío / Negro",
-    "Ã“xido / Carbón",
+    "Óxido / Carbón",
     "Concreto / Negro + un acento industrial",
     "Amarillo Industrial / Negro / Concreto",
-    "Negro / Blanco sucio / Ã“xido"
+    "Negro / Blanco sucio / Óxido"
   ],
   "tinta / ritual": [
     "Monocromo Negro / Marfil",
@@ -283,8 +283,8 @@ const HEX_DE_PALETA = {
   "Terracota / Crema / Verde oliva": ["#B5563B", "#F2E4CE", "#71753F", "#2C241A"],
   "Dorado suave / Terracota / Marfil": ["#D8B36A", "#B5563B", "#F4EEDF", "#2E2418"],
   "Coral suave / Arena / Verde oliva": ["#E08A6D", "#E8D9BE", "#7A7E4C", "#2F2A20"],
-  "Ã“xido / Arena / Crema": ["#B45A2E", "#DCC49B", "#F4EAD8", "#2E2318"],
-  "Oliva / Arena / Ã“xido suave": ["#75764A", "#DCC9A6", "#C07A4A", "#2C2A1E"],
+  "Óxido / Arena / Crema": ["#B45A2E", "#DCC49B", "#F4EAD8", "#2E2318"],
+  "Oliva / Arena / Óxido suave": ["#75764A", "#DCC9A6", "#C07A4A", "#2C2A1E"],
   "Rosa Empolvado / Verde Salvia / Crema": ["#D9AFA8", "#A8B5A0", "#F6EFE2", "#3A342C"],
   "Verde bosque / Crema / Cobre": ["#2F4A38", "#F2E8D2", "#B0713F", "#1C2A20"],
   "Lavanda / Sage / Crema cálida": ["#B4A7C9", "#A8B5A0", "#F6EFE2", "#342E3A"],
@@ -306,10 +306,10 @@ const HEX_DE_PALETA = {
   "Gris Frío / Negro + acento neón": ["#1A1E24", "#0B0D12", "#E0409A", "#3E4650"],
   "Cian / Magenta / Negro": ["#20C8D8", "#D838B8", "#0E0C14", "#4A4458"],
   "Carbón / Gris Frío / Negro": ["#2A2E34", "#8A9098", "#14161A", "#D8DCE0"],
-  "Ã“xido / Carbón": ["#B0562E", "#22262C", "#E8DCCE", "#4A3428"],
+  "Óxido / Carbón": ["#B0562E", "#22262C", "#E8DCCE", "#4A3428"],
   "Concreto / Negro + un acento industrial": ["#B8BCC2", "#14161A", "#E8A020", "#3A4048"],
   "Amarillo Industrial / Negro / Concreto": ["#E8B820", "#14161A", "#B8BCC2", "#3A3220"],
-  "Negro / Blanco sucio / Ã“xido": ["#14161A", "#E8E4DC", "#B0562E", "#3A3E44"],
+  "Negro / Blanco sucio / Óxido": ["#14161A", "#E8E4DC", "#B0562E", "#3A3E44"],
   "Monocromo Negro / Marfil": ["#14141A", "#F2ECDD", "#4A4A50", "#8A887C"],
   "Negro + Rojo Sangre / Crema": ["#14141A", "#A82820", "#F2E8D5", "#3A2A28"],
   "Sepia / Tinta Antigua": ["#3A2C1E", "#C8B896", "#F0E6D0", "#5E4630"],
@@ -401,7 +401,7 @@ const POOLS = {
     "Pacto / sello / marca"
   ],
   negativeSpace: [
-    "Ã“rbita y vacío central",
+    "Órbita y vacío central",
     "Bloques de respiración laterales",
     "Campo de tinta con margen vivo",
     "Vacíos verticales que guían la lectura",
@@ -565,7 +565,7 @@ const STYLE_CANDIDATES = {
 };
 
 /* ============================================================
-   STYLE_POOLS â€” Instrucciones de dirección artística por estilo
+   STYLE_POOLS — Instrucciones de dirección artística por estilo
    Vocabulario 100% comercial/secular. Sin referencias religiosas.
    ============================================================ */
 
@@ -575,7 +575,7 @@ const STYLE_POOLS = {
     composicion: ["asimétrica orgánica con peso inferior", "circular abierto hacia un lado", "vertical con elementos que caen", "fragmentada en zonas de densidad distinta", "flujo de izquierda a derecha como crecimiento", "espiral suave desde el centro"],
     textoPrincipal: ["lettering manual que crece como tallo", "título formado por ramas entrelazadas", "palabra única como centro de una flor abierta", "texto en arco suave entre hojas", "lettering que parece escrito con tinta de planta", "título que brota desde la base del símbolo"],
     textoApoyo: ["segundo nivel como cita de herbario en tipografía amplia y legible: se lee desde lejos, no es una etiqueta diminuta", "frase clave del nicho que sigue el contorno de una hoja con peso suficiente para sostenerse junto al título", "texto de apoyo como raíz visual del título: ancho, firme, terroso, presente", "línea de fundamento en tinta vegetal con cuerpo medio-alto, integrada al panel botánico", "escritura que se lee como parte del dibujo, con tamaño de diseño y no de pie de página", "segundo texto como suelo del que nace el símbolo: sólido, legible, sin perder carácter", "frase de identidad que bordea el marco sin encogerse: ocupa su propia franja", "cita de oficio tejida entre tallos con cuerpo tipográfico considerable"],
-    textoTerciario: ["tercer nivel: dato de serie corto con serifa de campo, legible sin esfuerzo", "apéndice de identidad en cinta vegetal, cuerpo medio, honra la página", "marca de colección (serie y número) como sello botánico en tipografía de lectura", "frase corta de cierre como ex libris vegetal, clara y ancha", "tríptico de identidad en caligrafía de herbario: ORIGEN Â· OFICIO Â· IMPACTO, cada uno legible"],
+    textoTerciario: ["tercer nivel: dato de serie corto con serifa de campo, legible sin esfuerzo", "apéndice de identidad en cinta vegetal, cuerpo medio, honra la página", "marca de colección (serie y número) como sello botánico en tipografía de lectura", "frase corta de cierre como ex libris vegetal, clara y ancha", "tríptico de identidad en caligrafía de herbario: ORIGEN · OFICIO · IMPACTO, cada uno legible"],
     tecnica: ["Botanical Illustration", "Hand-Drawn línea fina", "Watercolor Texture", "Línea suelta tipo tinta diluida", "Grabado botánico", "Gouache mate"],
     relacion: ["texto crece desde el símbolo como una planta", "símbolo enmarca el texto de forma natural", "texto y símbolo se entrelazan sin competir", "texto de apoyo actúa como suelo del que nace el símbolo"]
   },
@@ -638,7 +638,7 @@ const STYLE_POOLS = {
     composicion: ["negative space dominante", "central minimalista", "asimétrica con mucho aire", "peso extremo en un solo punto", "vacío como protagonista activo", "equilibrio de una sola tensión"],
     textoPrincipal: ["microtipografía funcional de una sola palabra", "texto alineado al borde con precisión", "palabra en peso ultra ligero, muy controlada", "solo la frase esencial, sin adorno", "tipografía que desaparece hasta que se necesita", "lettering de un solo trazo"],
     textoApoyo: ["única línea secundaria precisa: cuerpo medio, funcional, con autoridad", "texto de apoyo que funciona como firma de verdad: sobrio, amplio, legible", "segundo nivel casi invisible pero legible: existe porque carga peso conceptual", "fundamento integrado al símbolo con tipografía clara y contenida", "línea de cierre en una sola frase: ancho, aire, y lectura perfecta", "frase destacada como única segunda línea: sin adorno, con verdad", "texto de apoyo flotando con margen generoso: presencia en silencio", "frase esencial en peso medio: lo mínimo con todo el peso"],
-    textoTerciario: ["tercer nivel: dato de serie esencial, mínima pero legible", "dominio y número de serie como funda tipográfica: claro y discreto", "una palabra de cierre como remate, en tipografía de lectura", "tríptico de identidad en tres palabras: ORIGEN Â· OFICIO Â· IMPACTO, separadas con aire", "línea de continuidad de la serie, breve, en tipo legible"],
+    textoTerciario: ["tercer nivel: dato de serie esencial, mínima pero legible", "dominio y número de serie como funda tipográfica: claro y discreto", "una palabra de cierre como remate, en tipografía de lectura", "tríptico de identidad en tres palabras: ORIGEN · OFICIO · IMPACTO, separadas con aire", "línea de continuidad de la serie, breve, en tipo legible"],
     tecnica: ["Monoline", "Geometric Construction", "Line Art de un solo trazo", "Vector puro sin textura", "Etched line", "Blind emboss + un trazo"],
     relacion: ["texto y símbolo separados por espacio deliberado", "símbolo explica el texto sin decorarlo", "texto de apoyo es la única ancla verbal necesaria", "el símbolo y el texto de apoyo forman un solo sistema"]
   },
@@ -720,7 +720,7 @@ const STYLE_POOLS = {
     textoPrincipal: ["título en cartela central de talla dorada", "lettering de bronce fundido", "texto en versalitas romanas dentro de filacteria", "título con capitular iluminada", "palabra dorada sobre nube de gloria", "lettering de placa de altar"],
     textoApoyo: ["frase clave en romana de grabado: cuerpo amplio, aire clásico", "texto de apoyo en cartela secundaria: legible a un paso", "segundo nivel en versalitas espaciadas con aire de catálogo", "fundamento como inscripción de base del retablo: firme y clara", "línea de verdad en banda inferior con filetes dorados", "frase destacada en letra de catálogo, palabra por palabra", "segundo texto como leyenda de medallón: completa y legible", "frase de cierre en dorado sobre sombra: presencia plena"],
     textoTerciario: ["tercer nivel: dato de serie en placa de bronce, legible", "sello de serie como marca de taller barroco", "tríptico de identidad en tres medallones con gloria rotulada", "dedicatoria en cartela inferior", "dominio en escudo secundario"],
-    tecnica: ["Claroscuro dramático", "Talla dorada", "Ã“leo con luz dirigida", "Grabado barroco", "Filacteria tallada", "Gloria de nubes"],
+    tecnica: ["Claroscuro dramático", "Talla dorada", "Óleo con luz dirigida", "Grabado barroco", "Filacteria tallada", "Gloria de nubes"],
     relacion: ["el texto tiene su cartela: jerarquía de retablo", "la gloria del símbolo ilumina la palabra", "texto de apoyo es la base tallada que sostiene el clamor", "todo orna, nada esconde: cada palabra a la vista"]
   },
   "Vintage Desgastado": {
@@ -904,7 +904,7 @@ const STYLE_POOLS = {
     relacion: ["la Palabra se hizo carne y se toca: el relieve es encarnación", "el texto plano y el símbolo elevado se jerarquizan sin competir", "la sombra del puff ordena la lectura", "fe tangible: se ve y se siente"]
   },
 
-  /* ===== STYLE_POOLS DTF / SUBLIMACIÃ“N â€” Producción real ===== */
+  /* ===== STYLE_POOLS DTF / SUBLIMACIÓN — Producción real ===== */
   "Indexed Palette / Paleta indizada": {
     arquitectura: ["composición de paleta fija con bloques de color definidos", "retícula de 16-32 colores con separación clara", "diseño modular por zonas de tinta", "campo de color indexado con bordes nítidos", "estructura de capas por color RIP", "composición de archivo listo para plotter"],
     composicion: ["bloques de color plano sin transiciones", "zonas separadas por contorno fino", "central con paleta dominante definida", "simétrica de áreas de tinta", "peso por saturación de cada zona", "apilada en capas de color"],
@@ -1054,7 +1054,7 @@ const STYLE_COLOR_PREF = {
   "Foil Stamp / Metallic": ["dorado / premium", "noche / contraste", "mínimo frío"],
   "Puff Print / 3D Ink": ["retro vibrante", "neón / cyber", "tierra cálida"],
 
-  /* ===== COLOR DTF / SUBLIMACIÃ“N ===== */
+  /* ===== COLOR DTF / SUBLIMACIÓN ===== */
   "Indexed Palette / Paleta indizada": ["industrial", "mínimo frío", "noche / contraste", "retro vibrante"],
   "Vector Flat / Plano vectorial": ["mínimo frío", "retro vibrante", "noche / contraste"],
   "Spot Color Simulated / Tintas planas simuladas": ["noche / contraste", "industrial", "dorado / premium"],
@@ -1108,7 +1108,7 @@ const STYLE_TIPO_PREF = {
   "Foil Stamp / Metallic": ["Serif moderna alto contraste", "Serif clásica titulada", "Itálica solemne", "Display caligráfica expresiva"],
   "Puff Print / 3D Ink": ["Rounded amable", "Grotesca black condensada", "Slab pesada de oficio", "Custom modular geométrica"],
 
-  /* ===== TIPO DTF / SUBLIMACIÃ“N ===== */
+  /* ===== TIPO DTF / SUBLIMACIÓN ===== */
   "Indexed Palette / Paleta indizada": ["Grotesca black condensada", "Sans humanista limpia", "Mono técnica", "Custom modular geométrica"],
   "Vector Flat / Plano vectorial": ["Sans humanista limpia", "Custom modular geométrica", "Grotesca black condensada", "Rounded amable"],
   "Spot Color Simulated / Tintas planas simuladas": ["Serif moderna alto contraste", "Sans humanista limpia", "Mono técnica", "Slab pesada de oficio"],

@@ -1,7 +1,7 @@
 ﻿'use strict';
 
 /* ============================================================
-   DATA AUDIENCIAS â€” POD COMERCIAL COLOMBIA
+   DATA AUDIENCIAS — POD COMERCIAL COLOMBIA
    Audiencias diferenciadas por región + género + edad/etapa.
    No son decorativas: gobiernan estilo, tipografía, forma,
    tratamiento, layout, densidad, color y jerarquía.
@@ -382,7 +382,7 @@ const AUD_PROFILES = {
   /* ================= UNISEX NACIONAL ================= */
 
   unisex_nacional: {
-    label: "Unisex nacional â€” todas las edades",
+    label: "Unisex nacional — todas las edades",
     region: "nacional",
     genero: "unisex",
     edad: "amplia",
@@ -443,7 +443,7 @@ const AUD_PROFILES = {
     formaPref: ["tallado en bloque", "silueta sólida a una tinta"]
   },
   global_family_en: {
-    label: "Global Family â€” gift",
+    label: "Global Family — gift",
     region: "global",
     genero: "unisex",
     edad: "todas",
@@ -490,7 +490,7 @@ const AUD_PROFILES = {
     formaPref: ["tallado en bloque", "silueta sólida a una tinta"]
   },
   global_familia_es: {
-    label: "Global familia â€” regalo",
+    label: "Global familia — regalo",
     region: "global_es",
     genero: "unisex",
     edad: "todas",
@@ -507,7 +507,7 @@ const AUD_PROFILES = {
 
   /* ================= GOSPEL (3 ES + 3 EN, universales) ================= */
   gospel_joven_fe: {
-    label: "Gospel joven 16-28 â€” fe",
+    label: "Gospel joven 16-28 — fe",
     region: "universal_es",
     genero: "unisex",
     edad: "16-28",
@@ -522,7 +522,7 @@ const AUD_PROFILES = {
     formaPref: ["silueta sólida a una tinta", "contorno lineal calibrado"]
   },
   gospel_adulto_fe: {
-    label: "Gospel adulto 29-55 â€” fe",
+    label: "Gospel adulto 29-55 — fe",
     region: "universal_es",
     genero: "unisex",
     edad: "29-55",
@@ -537,7 +537,7 @@ const AUD_PROFILES = {
     formaPref: ["tallado en bloque", "silueta sólida a una tinta"]
   },
   gospel_familia_fe: {
-    label: "Gospel familia â€” fe",
+    label: "Gospel familia — fe",
     region: "universal_es",
     genero: "unisex",
     edad: "todas",
@@ -552,7 +552,7 @@ const AUD_PROFILES = {
     formaPref: ["orgánico gestual con pincel", "manchado acuoso"]
   },
   gospel_youth_faith: {
-    label: "Gospel Youth 16-28 â€” faith",
+    label: "Gospel Youth 16-28 — faith",
     region: "universal_en",
     genero: "unisex",
     edad: "16-28",
@@ -567,7 +567,7 @@ const AUD_PROFILES = {
     formaPref: ["silueta sólida a una tinta", "contorno lineal calibrado"]
   },
   gospel_adult_faith: {
-    label: "Gospel Adult 29-55 â€” faith",
+    label: "Gospel Adult 29-55 — faith",
     region: "universal_en",
     genero: "unisex",
     edad: "29-55",
@@ -582,7 +582,7 @@ const AUD_PROFILES = {
     formaPref: ["tallado en bloque", "silueta sólida a una tinta"]
   },
   gospel_family_faith: {
-    label: "Gospel Family â€” faith",
+    label: "Gospel Family — faith",
     region: "universal_en",
     genero: "unisex",
     edad: "all",
@@ -601,7 +601,7 @@ const AUD_PROFILES = {
 const AUD_NAMES = Object.keys(AUD_PROFILES);
 
 /* ============================================================
-   COMPATIBILIDAD POR REGIÃ“N
+   COMPATIBILIDAD POR REGIÓN
    ============================================================ */
 
 const REGION_AUDIENCES = {
@@ -685,7 +685,7 @@ const REGION_AUDIENCES = {
 };
 
 /* ============================================================
-   PREFERENCIAS DE DECISIÃ“N VISUAL POR AUDIENCIA
+   PREFERENCIAS DE DECISIÓN VISUAL POR AUDIENCIA
    ============================================================ */
 
 const AUD_HIERARCHY_PREF = {
@@ -928,7 +928,7 @@ const AUD_LAYOUT_PREF = {
   ],
   coste_joven_f: [
     "Editorial asimétrica",
-    "Ã“rbita radial",
+    "Órbita radial",
     "Tarjeta interior"
   ],
   coste_adulto_m: [
@@ -939,7 +939,7 @@ const AUD_LAYOUT_PREF = {
   coste_adulta_f: [
     "Arco y cúpula",
     "Tarjeta interior",
-    "Ã“rbita radial"
+    "Órbita radial"
   ],
   andino_joven_m: [
     "Editorial asimétrica",
@@ -962,7 +962,7 @@ const AUD_LAYOUT_PREF = {
     "Columna apilada"
   ],
   pacifico_raiz: [
-    "Ã“rbita radial",
+    "Órbita radial",
     "Editorial asimétrica",
     "Tarjeta interior"
   ],
@@ -973,11 +973,11 @@ const AUD_LAYOUT_PREF = {
   ],
   amazonia_territorio: [
     "Editorial asimétrica",
-    "Ã“rbita radial",
+    "Órbita radial",
     "Retícula áurea"
   ],
   infantil_col: [
-    "Ã“rbita radial",
+    "Órbita radial",
     "Arco y cúpula",
     "Tarjeta interior"
   ],
@@ -988,20 +988,20 @@ const AUD_LAYOUT_PREF = {
   ],
   global_young_en: ["Editorial asimétrica", "Sello descentrado", "Retícula áurea"],
   global_adult_en: ["Emblema circular", "Axial centrado", "Tarjeta interior"],
-  global_family_en: ["Tarjeta interior", "Ã“rbita radial", "Arco y cúpula"],
+  global_family_en: ["Tarjeta interior", "Órbita radial", "Arco y cúpula"],
   global_joven_es: ["Editorial asimétrica", "Sello descentrado", "Retícula áurea"],
   global_adulto_es: ["Emblema circular", "Axial centrado", "Tarjeta interior"],
-  global_familia_es: ["Tarjeta interior", "Ã“rbita radial", "Arco y cúpula"],
+  global_familia_es: ["Tarjeta interior", "Órbita radial", "Arco y cúpula"],
   gospel_joven_fe: ["Editorial asimétrica", "Tarjeta interior", "Retícula áurea"],
   gospel_adulto_fe: ["Arco y cúpula", "Emblema circular", "Tarjeta interior"],
-  gospel_familia_fe: ["Tarjeta interior", "Ã“rbita radial", "Arco y cúpula"],
+  gospel_familia_fe: ["Tarjeta interior", "Órbita radial", "Arco y cúpula"],
   gospel_youth_faith: ["Editorial asimétrica", "Tarjeta interior", "Retícula áurea"],
   gospel_adult_faith: ["Arco y cúpula", "Emblema circular", "Tarjeta interior"],
-  gospel_family_faith: ["Tarjeta interior", "Ã“rbita radial", "Arco y cúpula"]
+  gospel_family_faith: ["Tarjeta interior", "Órbita radial", "Arco y cúpula"]
 };
 
 /* ============================================================
-   HELPERS PÃšBLICOS
+   HELPERS PÚBLICOS
    ============================================================ */
 
 function getAudiencesForRegion(region) {

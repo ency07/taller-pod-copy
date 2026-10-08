@@ -307,6 +307,7 @@
     } else {
       el.textContent = '';
     }
+    if (typeof renderDesignToggle === 'function') renderDesignToggle();
   }
 
   /* Selector de banco destino (general o nombrado, Fase 2). */
@@ -1091,11 +1092,12 @@
      Solo mochila/bolso/funda tienen banco de templates; el resto usa placement. */
   function renderDesignToggle() {
     const el = $('designToggle');
+    const product = $('product') ? $('product').value : '';
+    const supportsPattern = ['MOCHILA', 'TOTE BAG', 'FUNDA MÓVIL'].indexOf(product) !== -1;
+    if (!supportsPattern && typeof MOTOR_STATE !== 'undefined' && MOTOR_STATE.designMode === 'patron') MOTOR_STATE.designMode = 'contacto';
     if (el) {
-      const modes = [
-        { val: 'contacto', label: 'Fichas (3 direcciones)' },
-        { val: 'patron', label: 'Patrón repetido' }
-      ];
+      const modes = [{ val: 'contacto', label: 'Fichas (3 direcciones)' }];
+      if (supportsPattern) modes.push({ val: 'patron', label: 'Patrón repetido' });
       el.innerHTML = '';
       modes.forEach(function (m) {
         const pill = document.createElement('span');
@@ -1111,9 +1113,11 @@
       });
     }
     const row = $('repeatRow');
-    if (row) {
-      row.style.display = (typeof MOTOR_STATE !== 'undefined' && MOTOR_STATE.designMode === 'patron') ? '' : 'none';
-    }
+    if (row) row.style.display = (supportsPattern && typeof MOTOR_STATE !== 'undefined' && MOTOR_STATE.designMode === 'patron') ? '' : 'none';
+    const help = $('designModeHelp');
+    if (help) help.textContent = supportsPattern
+      ? 'Patron repetido disponible para mochila, tote bag y funda movil. Adjunta tambien la plantilla al chat de imagen si quieres que la IA respete sus zonas.'
+      : 'El modo patron repetido aplica a mochila, tote bag y funda movil. Para este producto se usan fichas de direccion.';
   }
 
   /* ============================================================

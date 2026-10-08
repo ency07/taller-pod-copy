@@ -453,7 +453,7 @@
       phrases: [],
       updatedAt: new Date().toISOString()
     };
-    _saveNamedBanks(market, data);
+    if (!_saveNamedBanks(market, data)) return { ok: false, error: 'No se pudo guardar: el almacenamiento del navegador puede estar lleno.' };
     return { ok: true, id: id };
   }
 
@@ -480,7 +480,7 @@
     if (dup) return { ok: false, error: 'ya existe otro banco con ese nombre' };
     data.banks[id].name = clean;
     data.banks[id].updatedAt = new Date().toISOString();
-    _saveNamedBanks(market, data);
+    if (!_saveNamedBanks(market, data)) return { ok: false, error: 'No se pudo guardar: el almacenamiento del navegador puede estar lleno.' };
     return { ok: true };
   }
 
@@ -491,7 +491,7 @@
     Object.keys(data.active).forEach(function (ctx) {
       if (data.active[ctx] === id) delete data.active[ctx];
     });
-    _saveNamedBanks(market, data);
+    if (!_saveNamedBanks(market, data)) return { ok: false, error: 'No se pudo guardar: el almacenamiento del navegador puede estar lleno.' };
     return { ok: true };
   }
 
@@ -501,13 +501,20 @@
     if (!src) return { ok: false, error: 'el banco no existe' };
     const clean = String(newName || (src.name + ' copia')).trim();
     if (clean.length < 2) return { ok: false, error: 'nombre muy corto' };
-    const r = createPersonalBank(market, clean, src.subniche);
-    if (!r.ok) return r;
-    const fresh = _loadNamedBanks(market);
-    fresh.banks[r.id].objects = (src.objects || []).slice();
-    fresh.banks[r.id].phrases = (src.phrases || []).slice();
-    _saveNamedBanks(market, fresh);
-    return { ok: true, id: r.id };
+    const dup = Object.keys(data.banks).some(function (other) {
+      return String(data.banks[other].name || '').toLowerCase() === clean.toLowerCase();
+    });
+    if (dup) return { ok: false, error: 'ya existe un banco con ese nombre en este mercado' };
+    const newId = _newBankId();
+    data.banks[newId] = Object.assign({}, src, {
+      id: newId,
+      name: clean,
+      objects: (src.objects || []).slice(),
+      phrases: (src.phrases || []).slice(),
+      updatedAt: new Date().toISOString()
+    });
+    if (!_saveNamedBanks(market, data)) return { ok: false, error: 'No se pudo guardar la copia: el almacenamiento del navegador puede estar lleno.' };
+    return { ok: true, id: newId };
   }
 
   function saveToPersonalBank(market, id, entries) {
@@ -532,7 +539,7 @@
       bank[field] = current;
     });
     bank.updatedAt = new Date().toISOString();
-    _saveNamedBanks(market, data);
+    if (!_saveNamedBanks(market, data)) return { ok: false, error: 'No se pudo guardar: el almacenamiento del navegador puede estar lleno.', added: 0, duplicates: duplicates };
     return { ok: true, added: added, duplicates: duplicates };
   }
 
@@ -550,7 +557,7 @@
     if (id && !data.banks[id]) return { ok: false, error: 'el banco no existe' };
     if (id) data.active[ctx] = id;
     else delete data.active[ctx];
-    _saveNamedBanks(market, data);
+    if (!_saveNamedBanks(market, data)) return { ok: false, error: 'No se pudo guardar: el almacenamiento del navegador puede estar lleno.' };
     return { ok: true };
   }
 
@@ -795,7 +802,7 @@
       notas: String(d.notas || prev.notas || ''),
       updatedAt: new Date().toISOString()
     };
-    _saveTemplateBank(bank);
+    if (!_saveTemplateBank(bank)) return { ok: false, error: 'No se pudo guardar: el almacenamiento del navegador puede estar lleno.' };
     return { ok: true, id: id };
   }
 
@@ -806,7 +813,7 @@
     if (clean.length < 2) return { ok: false, error: 'nombre muy corto' };
     bank.templates[id].nombre = clean;
     bank.templates[id].updatedAt = new Date().toISOString();
-    _saveTemplateBank(bank);
+    if (!_saveTemplateBank(bank)) return { ok: false, error: 'No se pudo guardar: el almacenamiento del navegador puede estar lleno.' };
     return { ok: true };
   }
 
@@ -817,7 +824,7 @@
     Object.keys(bank.active).forEach(function (p) {
       if (bank.active[p] === id) delete bank.active[p];
     });
-    _saveTemplateBank(bank);
+    if (!_saveTemplateBank(bank)) return { ok: false, error: 'No se pudo guardar: el almacenamiento del navegador puede estar lleno.' };
     return { ok: true };
   }
 
@@ -840,7 +847,7 @@
     if (id && !bank.templates[id]) return { ok: false, error: 'template no existe' };
     if (id) bank.active[product] = id;
     else delete bank.active[product];
-    _saveTemplateBank(bank);
+    if (!_saveTemplateBank(bank)) return { ok: false, error: 'No se pudo guardar: el almacenamiento del navegador puede estar lleno.' };
     return { ok: true };
   }
 
@@ -904,14 +911,39 @@
           return;
         }
 
-        if (k.indexOf('|personalBank|') > -1) {
+        if (k.indexOf('|personalBanks|') > -1) {
+          const merged = { banks: {}, active: Object.assign({}, b.active || {}, a.active || {}) };
+          const ids = Object.keys(b.banks || {}).concat(Object.keys(a.banks || {}));
+          ids.forEach(function (id) {
+            const rb = (b.banks || {})[id], lb = (a.banks || {})[id];
+            if (!rb || !lb) { merged.banks[id] = lb || rb; return; }
+            const remoteTime = Date.parse(rb.updatedAt || '') || 0;
+            const localTime = Date.parse(lb.updatedAt || '') || 0;
+            const latest = localTime >= remoteTime ? lb : rb;
+            merged.banks[id] = Object.assign({}, rb, lb, {
+              name: latest.name || lb.name || rb.name,
+              subniche: latest.subniche || lb.subniche || rb.subniche,
+              objects: mergeArraysUnique(rb.objects, lb.objects),
+              phrases: mergeArraysUnique(rb.phrases, lb.phrases),
+              updatedAt: latest.updatedAt || lb.updatedAt || rb.updatedAt
+            });
+          });
+          out[k] = JSON.stringify(merged);
+        } else if (k.indexOf('|templateBank') > -1) {
+          const merged = { templates: {}, active: Object.assign({}, b.active || {}, a.active || {}) };
+          const ids = Object.keys(b.templates || {}).concat(Object.keys(a.templates || {}));
+          ids.forEach(function (id) {
+            const rt = (b.templates || {})[id], lt = (a.templates || {})[id];
+            if (!rt || !lt) { merged.templates[id] = lt || rt; return; }
+            const remoteTime = Date.parse(rt.updatedAt || '') || 0;
+            const localTime = Date.parse(lt.updatedAt || '') || 0;
+            merged.templates[id] = Object.assign({}, rt, lt, localTime >= remoteTime ? lt : rt);
+          });
+          out[k] = JSON.stringify(merged);
+        } else if (k.indexOf('|personalBank|') > -1) {
           const merged = {};
           const keys = Object.keys(b).concat(Object.keys(a));
-
-          keys.forEach(function (id) {
-            merged[id] = mergeArraysUnique(b[id], a[id]);
-          });
-
+          keys.forEach(function (id) { merged[id] = mergeArraysUnique(b[id], a[id]); });
           out[k] = JSON.stringify(merged);
         } else if (k.indexOf('|approvedDirections|') > -1) {
           out[k] = JSON.stringify(mergeArraysUnique(b, a).slice(-300));
