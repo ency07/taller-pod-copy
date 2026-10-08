@@ -399,10 +399,37 @@
 
     var sl = getSlots();
 
+    // Config de visión (la lee/escribe ia-analisis.js; defaults si no cargó).
+    var vcfg = { provider: 'auto', geminiModel: 'gemini-3.5-flash-lite', openrouterModel: 'google/gemma-4-31b-it:free', timeoutMs: 20000 };
+    try {
+      if (typeof window.PODVision !== 'undefined' && window.PODVision.getVisionConfig) {
+        vcfg = window.PODVision.getVisionConfig();
+      } else {
+        const vraw = LS.getItem('pod2_vision_cfg');
+        if (vraw) vcfg = Object.assign(vcfg, JSON.parse(vraw));
+      }
+    } catch (e) {}
+    var vprov = vcfg.provider, vtimeoutMs = vcfg.timeoutMs;
+    var vgmodel = vcfg.geminiModel, vomodel = vcfg.openrouterModel;
+
     panel.innerHTML =
       '<div style="font-weight:700;margin-bottom:4px">Revisor con IA (opcional)</div>' +
       '<div class="hint" style="margin:0 0 6px">La IA revisa la ficha escrita antes de generar; no ve ni califica la imagen final. Prioridad 1 es el modelo principal; los demás son respaldo si el proveedor falla.</div>' +
       '<div id="aiSlots">' + sl.map(slotHTML).join('') + '</div>' +
+      '<div style="font-weight:700;margin:10px 0 4px">Visión — analizar imagen</div>' +
+      '<div class="hint" style="margin:0 0 6px">OpenRouter :free verificado oct-2026 (50/día). Gemini directo: serie 3.x para proyectos nuevos. Groq no tiene visión free.</div>' +
+      '<div class="frow"><div><label>Proveedor visión</label><select id="ai-vprov">' +
+      ['auto', 'openrouter', 'gemini'].map(function (p) {
+        return '<option value="' + p + '"' + (vprov === p ? ' selected' : '') + '>' +
+          (p === 'auto' ? 'Automático (el que responda)' : p === 'openrouter' ? 'OpenRouter' : 'Gemini directo') + '</option>';
+      }).join('') + '</select></div>' +
+      '<div><label>Espera visión</label><select id="ai-vtimeout">' +
+      [15000, 20000, 30000].map(function (t) {
+        return '<option value="' + t + '"' + (vtimeoutMs === t ? ' selected' : '') + '>' + (t / 1000) + 's</option>';
+      }).join('') + '</select></div></div>' +
+      '<div class="frow"><div><label>Modelo Gemini</label><input id="ai-vgmodel" value="' + escA(vgmodel) + '"></div>' +
+      '<div><label>Modelo OpenRouter</label><input id="ai-vomodel" value="' + escA(vomodel) + '"></div></div>' +
+      '<div style="display:flex;gap:6px;align-items:center;margin:0 0 8px"><button id="ai-vtest" class="ghost">Probar conexión</button><span id="ai-vstatus" class="hint" style="margin:0"></span></div>' +
       '<label style="display:flex;align-items:center;gap:6px;margin:10px 0 4px"><input type="checkbox" id="ai-auto"' + (isAuto() ? ' checked' : '') + '> Revisar automáticamente al crear</label>' +
       '<label style="display:flex;align-items:center;gap:6px;margin:0 0 8px"><input type="checkbox" id="ai-apply"' + (autoApply() ? ' checked' : '') + '> Permitir que la IA cambie fichas automáticamente</label>' +
       '<div style="display:flex;gap:6px"><button id="ai-save" class="primary" style="flex:1;padding:8px">Guardar</button><button id="ai-close" class="ghost">Cerrar</button></div>';
@@ -415,10 +442,35 @@
       LS.setItem(SLOTS_KEY, JSON.stringify(arr));
       LS.setItem(AUTO_KEY, panel.querySelector('#ai-auto').checked ? '1' : '0');
       LS.setItem(APPLY_KEY, panel.querySelector('#ai-apply').checked ? '1' : '0');
+      LS.setItem('pod2_vision_cfg', JSON.stringify({
+        provider: panel.querySelector('#ai-vprov').value,
+        geminiModel: panel.querySelector('#ai-vgmodel').value.trim() || 'gemini-3.5-flash-lite',
+        openrouterModel: panel.querySelector('#ai-vomodel').value.trim() || 'google/gemma-4-31b-it:free',
+        timeoutMs: parseInt(panel.querySelector('#ai-vtimeout').value, 10) || 20000
+      }));
 
       var b = document.getElementById('aiCfgB');
       if (b) b.textContent = activeSlots().length + ' activos';
       panel.style.display = 'none';
+    };
+
+    panel.querySelector('#ai-vtest').onclick = function () {
+      var st = panel.querySelector('#ai-vstatus');
+      var btn = panel.querySelector('#ai-vtest');
+      if (st) st.textContent = 'Probando...';
+      if (btn) btn.disabled = true;
+      function done(msg) {
+        if (st) st.textContent = msg;
+        if (btn) btn.disabled = false;
+      }
+      try {
+        if (typeof window.testVisionConnection !== 'function') { done('Visión no cargada (ia-analisis.js).'); return; }
+        window.testVisionConnection().then(function (r) {
+          done((r.ok ? 'OK: ' : 'FALLO: ') + r.message);
+        }).catch(function (e) {
+          done('FALLO: ' + ((e && e.message) || e));
+        });
+      } catch (e) { done('FALLO: ' + e.message); }
     };
 
     panel.querySelector('#ai-close').onclick = function () {
@@ -485,5 +537,6 @@
   /* --- Exposición global --- */
   window.runAudit = runAudit;
   window.openAIPanel = openPanel;
+  window.getAISlots = getSlots;
 
 })();

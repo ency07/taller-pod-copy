@@ -332,7 +332,8 @@
 
   /* Lee el slot Gemini del MISMO almacén que el panel de claves (ia-revisor.js:
      SLOTS_KEY 'pod2_ai_slots'). Antes leía 'pod_u_ai_slots', llave que ningún
-     código escribe, así que la visión nunca encontraba la clave configurada. */
+     código escribe, así que la visión nunca encontraba la clave configurada.
+     (Compatibilidad: el flujo nuevo usa getVisionSlots + pickVisionTarget.) */
   function getGeminiSlot() {
     try {
       const raw = localStorage.getItem('pod2_ai_slots');
@@ -347,6 +348,306 @@
     }
   }
 
+  /* ===== VISIÓN multi-proveedor (verificado 8-oct-2026) =====
+     - Gemini directo: tier free vigente; serie 2.5 en retirada (solo usuarios
+       previos) → default nuevo gemini-3.5-flash-lite. Defaults de slots intactos.
+     - OpenRouter :free: 50 req/día (1000 con $10 crédito), 20 RPM, interfaz
+       OpenAI-compatible. Modelos visión verificados oct-2026.
+     - Groq: SIN visión free (modelos retirados 2025-04) → no se usa aquí. */
+  var VISION_KEY = 'pod2_vision_cfg';
+  var VISION_DEAD_MODELS = {
+    'llama-3.3-70b-versatile': 'openai/gpt-oss-20b',
+    'google/gemini-2.0-flash-exp': 'google/gemini-2.5-flash',
+    'gemini-2.0-flash': 'gemini-2.5-flash',
+    'gemini-2.0-flash-001': 'gemini-2.5-flash',
+    'gemini-2.0-flash-lite': 'gemini-2.5-flash',
+    'gemini-2.0-flash-lite-001': 'gemini-2.5-flash',
+    'gemini-1.5-flash': 'gemini-2.5-flash',
+    'gemini-1.5-flash-001': 'gemini-2.5-flash',
+    'gemini-1.5-pro': 'gemini-2.5-flash'
+  };
+  var VISION_DEFAULTS = {
+    provider: 'auto',
+    geminiModel: 'gemini-3.5-flash-lite',
+    openrouterModel: 'google/gemma-4-31b-it:free',
+    timeoutMs: 20000
+  };
+  var VISION_FALLBACK_OR = ['google/gemma-4-31b-it:free', 'nvidia/nemotron-3-nano-omni-30b:free'];
+
+  function getVisionConfig() {
+    try {
+      const raw = localStorage.getItem(VISION_KEY);
+      if (!raw) return Object.assign({}, VISION_DEFAULTS);
+      const c = JSON.parse(raw);
+      return {
+        provider: ['auto', 'gemini', 'openrouter'].indexOf(c.provider) !== -1 ? c.provider : 'auto',
+        geminiModel: String(c.geminiModel || VISION_DEFAULTS.geminiModel),
+        openrouterModel: String(c.openrouterModel || VISION_DEFAULTS.openrouterModel),
+        timeoutMs: [15000, 20000, 30000].indexOf(c.timeoutMs) !== -1 ? c.timeoutMs : 20000
+      };
+    } catch (e) { return Object.assign({}, VISION_DEFAULTS); }
+  }
+
+  function migrateVisionModel(m) {
+    return (m && VISION_DEAD_MODELS[m]) ? VISION_DEAD_MODELS[m] : m;
+  }
+
+  /* Lee slots del panel (ia-revisor expone window.getAISlots); fallback a
+     lectura directa para no romper si el revisor no cargó. */
+  function getVisionSlots() {
+    try {
+      if (typeof window.getAISlots === 'function') {
+        const a = window.getAISlots();
+        if (Array.isArray(a)) return a.filter(function (s) { return s && s.key && s.model; });
+      }
+    } catch (e) {}
+    try {
+      const raw = localStorage.getItem('pod2_ai_slots');
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return arr.filter(function (s) { return s && s.key && s.model; });
+    } catch (e) {}
+    return [];
+  }
+
+  /* Pura y testeable: elige objetivo según config + alcance real de red.
+     auto = Gemini si Google responde; si no, OpenRouter; último recurso Gemini. */
+  function pickVisionTarget(slots, cfg, reach) {
+    const c = cfg || VISION_DEFAULTS;
+    const r = reach || {};
+    const g = (slots || []).filter(function (s) { return s.provider === 'Gemini'; })[0] || null;
+    const o = (slots || []).filter(function (s) { return s.provider === 'OpenRouter'; })[0] || null;
+    function gem() {
+      if (!g) return null;
+      return { kind: 'gemini', model: migrateVisionModel(c.geminiModel || g.model), key: g.key, timeoutMs: g.timeoutMs || c.timeoutMs };
+    }
+    function oro() {
+      if (!o) return null;
+      return { kind: 'openrouter', model: c.openrouterModel, key: o.key, timeoutMs: o.timeoutMs || c.timeoutMs };
+    }
+    if (c.provider === 'gemini') return gem() || oro();
+    if (c.provider === 'openrouter') return oro() || gem();
+    if (r.google !== false && gem()) return gem();
+    if (oro()) return oro();
+    return gem();
+  }
+
+  function otherVisionTarget(slots, cfg, current) {
+    const c = cfg || VISION_DEFAULTS;
+    const g = (slots || []).filter(function (s) { return s.provider === 'Gemini'; })[0] || null;
+    const o = (slots || []).filter(function (s) { return s.provider === 'OpenRouter'; })[0] || null;
+    if (current && current.kind === 'gemini') {
+      if (!o) return null;
+      return { kind: 'openrouter', model: c.openrouterModel, key: o.key, timeoutMs: o.timeoutMs || c.timeoutMs };
+    }
+    if (current && current.kind === 'openrouter') {
+      if (!g) return null;
+      return { kind: 'gemini', model: migrateVisionModel(c.geminiModel || g.model), key: g.key, timeoutMs: g.timeoutMs || c.timeoutMs };
+    }
+    return null;
+  }
+
+  async function fetchWithTimeout(url, opts, ms) {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const t = controller ? setTimeout(function () { controller.abort(); }, ms || 20000) : null;
+    try {
+      const o2 = Object.assign({}, opts);
+      if (controller) o2.signal = controller.signal;
+      return await fetch(url, o2);
+    } finally { if (t) clearTimeout(t); }
+  }
+
+  /* Pre-flight 5s: distingue "red bloqueada" de "clave/modelo".
+     Un 4xx cuenta como ALCANCE (conecta, pero la clave/modelo falla). */
+  async function preflightVision(timeoutMs) {
+    const ms = timeoutMs || 5000;
+    async function ping(url) {
+      const t0 = Date.now();
+      try {
+        await fetchWithTimeout(url, { method: 'GET' }, ms);
+        return { ok: true, ms: Date.now() - t0 };
+      } catch (e) { return { ok: false, ms: Date.now() - t0 }; }
+    }
+    const results = await Promise.all([
+      ping('https://generativelanguage.googleapis.com/v1beta/models?key=AIzaSyTESTCONNECTIVITY'),
+      ping('https://openrouter.ai/api/v1/models')
+    ]);
+    return { google: results[0].ok, openrouter: results[1].ok, ms: { google: results[0].ms, openrouter: results[1].ms } };
+  }
+
+  /* Reduce a 1024px lado largo, JPEG q0.85: 20MB → ~300-600KB. */
+  function downscaleImage(file) {
+    return new Promise(function (resolve) {
+      try {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = function () {
+          try {
+            const max = 1024;
+            const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+            const sc = Math.min(1, max / Math.max(w, h));
+            const cw = Math.max(1, Math.round(w * sc)), ch = Math.max(1, Math.round(h * sc));
+            const cv = document.createElement('canvas');
+            cv.width = cw; cv.height = ch;
+            cv.getContext('2d').drawImage(img, 0, 0, cw, ch);
+            URL.revokeObjectURL(url);
+            const parts = cv.toDataURL('image/jpeg', 0.85).split(',');
+            resolve({ base64: parts[1], mimeType: 'image/jpeg' });
+          } catch (e) { resolve(null); }
+        };
+        img.onerror = function () { try { URL.revokeObjectURL(url); } catch (e) {} resolve(null); };
+        img.src = url;
+      } catch (e) { resolve(null); }
+    });
+  }
+
+  function visionHttpMessage(status, provider) {
+    if (status === 401 || status === 403) return 'Clave inválida o sin permiso (HTTP ' + status + '). Revisa la clave en la barra IA.';
+    if (status === 404) return 'Modelo retirado o inexistente (HTTP 404). Cambia el modelo en la barra IA.';
+    if (status === 429) return 'Límite del tier free (HTTP 429). Espera un minuto o sube de tier.';
+    if (status >= 500) return 'El proveedor falló (HTTP ' + status + '). Reintenta en un momento.';
+    return provider + ' respondió HTTP ' + status + '.';
+  }
+
+  function parseVisionJson(text, provider) {
+    try { return JSON.parse(text); }
+    catch (e) {
+      const cleaned = String(text).replace(/```json/gi, '').replace(/```/g, '').trim();
+      const start = cleaned.indexOf('{'), end = cleaned.lastIndexOf('}');
+      const sliced = (start > -1 && end > start) ? cleaned.slice(start, end + 1) : cleaned;
+      try { return JSON.parse(sliced); }
+      catch (e2) { throw new Error('Respuesta no-JSON de ' + provider + '. Reintenta.'); }
+    }
+  }
+
+  async function callGeminiVision(target, fileData, prompt) {
+    const body = {
+      contents: [{ role: 'user', parts: [{ text: prompt }, { inlineData: { mimeType: fileData.mimeType, data: fileData.base64 } }] }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2048, responseMimeType: 'application/json' }
+    };
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
+      encodeURIComponent(target.model) + ':generateContent?key=' + encodeURIComponent(target.key);
+    let lastErr = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const response = await fetchWithTimeout(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        }, target.timeoutMs);
+        if (!response.ok) {
+          let detail = '';
+          try {
+            const eb = await response.json();
+            detail = eb && eb.error && eb.error.message ? ': ' + eb.error.message : '';
+          } catch (e) {}
+          const err = new Error(visionHttpMessage(response.status, 'Gemini') + detail);
+          err.httpStatus = response.status;
+          throw err;
+        }
+        const data = await response.json();
+        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+          throw new Error('Respuesta vacía de Gemini.');
+        }
+        return parseVisionJson(data.candidates[0].content.parts[0].text, 'Gemini');
+      } catch (e) {
+        if (e && (e.httpStatus === 401 || e.httpStatus === 403 || e.httpStatus === 404)) throw e;
+        lastErr = e;
+      }
+    }
+    if (lastErr && lastErr.name === 'AbortError') {
+      throw new Error('Gemini no respondió en ' + Math.round(target.timeoutMs / 1000) + 's (2 intentos). ¿Red bloqueada hacia Google? Prueba OpenRouter en la barra IA.');
+    }
+    throw lastErr;
+  }
+
+  async function callOpenRouterVision(target, fileData, prompt) {
+    const url = 'https://openrouter.ai/api/v1/chat/completions';
+    const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + target.key };
+    try {
+      if (typeof location !== 'undefined' && location.href) {
+        headers['HTTP-Referer'] = location.href;
+        headers['X-Title'] = 'Taller POD';
+      }
+    } catch (e) {}
+    const body = {
+      model: target.model,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          { type: 'image_url', image_url: { url: 'data:' + fileData.mimeType + ';base64,' + fileData.base64 } }
+        ]
+      }],
+      temperature: 0.2,
+      max_tokens: 2048
+    };
+    let lastErr = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const response = await fetchWithTimeout(url, {
+          method: 'POST', headers: headers, body: JSON.stringify(body)
+        }, target.timeoutMs);
+        if (!response.ok) {
+          let detail = '';
+          try {
+            const eb = await response.json();
+            detail = eb && eb.error && eb.error.message ? ': ' + eb.error.message : '';
+          } catch (e) {}
+          const err = new Error(visionHttpMessage(response.status, 'OpenRouter') + detail);
+          err.httpStatus = response.status;
+          throw err;
+        }
+        const data = await response.json();
+        const text = data.choices && data.choices[0] && data.choices[0].message
+          ? data.choices[0].message.content : '';
+        if (!text) throw new Error('Respuesta vacía de OpenRouter.');
+        return parseVisionJson(text, 'OpenRouter');
+      } catch (e) {
+        if (e && (e.httpStatus === 401 || e.httpStatus === 403 || e.httpStatus === 404)) throw e;
+        lastErr = e;
+      }
+    }
+    if (lastErr && lastErr.name === 'AbortError') {
+      throw new Error('OpenRouter no respondió en ' + Math.round(target.timeoutMs / 1000) + 's (2 intentos). Revisa tu conexión.');
+    }
+    throw lastErr;
+  }
+
+  /* Ping real mínimo para el botón "Probar conexión": preflight + 1 texto corto. */
+  async function testVisionConnection() {
+    const cfg = getVisionConfig();
+    const slots = getVisionSlots();
+    let reach = { google: true, openrouter: true };
+    try { reach = await preflightVision(5000); } catch (e) {}
+    const target = pickVisionTarget(slots, cfg, reach);
+    if (!target) return { ok: false, message: 'Sin claves con modelo. Configura la barra IA.' };
+    try {
+      if (target.kind === 'gemini') {
+        const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
+          encodeURIComponent(target.model) + ':generateContent?key=' + encodeURIComponent(target.key);
+        const r = await fetchWithTimeout(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: 'Responde solo: ok' }] }] })
+        }, 15000);
+        if (!r.ok) return { ok: false, message: visionHttpMessage(r.status, 'Gemini') };
+      } else {
+        const r = await fetchWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + target.key },
+          body: JSON.stringify({ model: target.model, messages: [{ role: 'user', content: 'Responde solo: ok' }], max_tokens: 5 })
+        }, 15000);
+        if (!r.ok) return { ok: false, message: visionHttpMessage(r.status, 'OpenRouter') };
+      }
+      return { ok: true, message: target.kind + ' / ' + target.model + ' responde (red OK).' };
+    } catch (e) {
+      if (e && e.name === 'AbortError') {
+        return { ok: false, message: 'Timeout: la red no llega a ' + target.kind + ' (¿bloqueo geográfico?).' };
+      }
+      return { ok: false, message: String((e && e.message) || e) };
+    }
+  }
+
   async function analyzeImageWithVision() {
     const fileInput = $('imageUpload');
     const statusEl = $('imageAnalysisStatus');
@@ -357,15 +658,32 @@
       return;
     }
 
-    const slot = getGeminiSlot();
-    if (!slot) {
+    const cfg = getVisionConfig();
+    const slots = getVisionSlots();
+    if (!slots.length) {
       if (statusEl) {
-        statusEl.innerHTML = '<span class="bad">Configura una clave de Gemini en la barra IA para usar visión.</span>';
+        statusEl.innerHTML = '<span class="bad">Configura una clave en la barra IA (Gemini u OpenRouter) para usar visión.</span>';
       }
       return;
     }
 
-    if (statusEl) statusEl.textContent = 'Analizando imagen con Gemini Vision...';
+    // Pre-flight solo en auto: elige el proveedor que SÍ responde en vez de
+    // esperar 20s contra un endpoint bloqueado. Fijado manual = directo.
+    let reach = { google: true, openrouter: true };
+    if (cfg.provider === 'auto') {
+      if (statusEl) statusEl.textContent = 'Verificando conexión (Google / OpenRouter)...';
+      try { reach = await preflightVision(5000); } catch (e) {}
+    }
+    const target = pickVisionTarget(slots, cfg, reach);
+    if (!target) {
+      if (statusEl) {
+        statusEl.innerHTML = '<span class="bad">Sin proveedor de visión con clave. Configura la barra IA.</span>';
+      }
+      return;
+    }
+    const targetLabel = target.kind === 'openrouter' ? 'OpenRouter' : 'Gemini';
+
+    if (statusEl) statusEl.textContent = 'Analizando imagen con ' + targetLabel + ' Vision (' + target.model + ')...';
 
     const file = fileInput.files[0];
     if (!file.type || !/^image\/(png|jpeg|webp|gif)$/i.test(file.type)) {
@@ -378,7 +696,9 @@
     }
 
     try {
-      const fileData = await fileToBase64(file);
+      // Downscale primero (20MB → ~400KB); fallback al original si falla canvas.
+      let fileData = await downscaleImage(file);
+      if (!fileData) fileData = await fileToBase64(file);
 
       const marketId = $('market') ? $('market').value : 'global_en';
       const regionId = $('region') ? $('region').value : 'global';
@@ -396,63 +716,21 @@
         '"esencia_a_conservar": "detalles visuales clave que deben mantenerse en una variación"' +
         '}';
 
-      const body = {
-        contents: [{
-          role: 'user',
-          parts: [
-            { text: prompt },
-            { inlineData: { mimeType: fileData.mimeType, data: fileData.base64 } }
-          ]
-        }],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 2048,
-          responseMimeType: 'application/json'
-        }
-      };
-
-      const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
-        encodeURIComponent(slot.model) + ':generateContent?key=' + encodeURIComponent(slot.key);
-
-      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      const timeout = controller ? setTimeout(function () { controller.abort(); }, 45000) : null;
-      let response;
-      try {
-        response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-          signal: controller ? controller.signal : undefined
-        });
-      } finally {
-        if (timeout) clearTimeout(timeout);
-      }
-      if (!response.ok) {
-        let detail = '';
-        try {
-          const errorBody = await response.json();
-          detail = errorBody && errorBody.error && errorBody.error.message ? ': ' + errorBody.error.message : '';
-        } catch (e) {}
-        throw new Error('Gemini respondio HTTP ' + response.status + detail);
-      }
-
-      const data = await response.json();
-
-      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-        throw new Error('Respuesta vacía de Gemini');
-      }
-
-      const text = data.candidates[0].content.parts[0].text;
       let analysis;
-
       try {
-        analysis = JSON.parse(text);
-      } catch (parseErr) {
-        const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-        const start = cleaned.indexOf('{');
-        const end = cleaned.lastIndexOf('}');
-        const sliced = (start > -1 && end > start) ? cleaned.slice(start, end + 1) : cleaned;
-        analysis = JSON.parse(sliced);
+        analysis = target.kind === 'openrouter'
+          ? await callOpenRouterVision(target, fileData, prompt)
+          : await callGeminiVision(target, fileData, prompt);
+      } catch (e1) {
+        // Failover al otro proveedor si tiene clave (no 401/403/404: esos no reintentan).
+        const other = otherVisionTarget(slots, cfg, target);
+        if (!other) throw e1;
+        if (statusEl) {
+          statusEl.textContent = 'Reintentando con ' + (other.kind === 'openrouter' ? 'OpenRouter' : 'Gemini') + ' (' + other.model + ')...';
+        }
+        analysis = other.kind === 'openrouter'
+          ? await callOpenRouterVision(other, fileData, prompt)
+          : await callGeminiVision(other, fileData, prompt);
       }
 
       // Vincular el analisis al archivo exacto; cambiar imagen invalida su resultado.
@@ -818,5 +1096,16 @@
   window.analyzeImageWithVision = analyzeImageWithVision;
   window.cascadeUpdate = cascadeUpdate;
   window.savePersonalBankFromUI = savePersonalBankFromUI;
+  window.testVisionConnection = testVisionConnection;
+  window.PODVision = {
+    getVisionConfig: getVisionConfig,
+    migrateVisionModel: migrateVisionModel,
+    getVisionSlots: getVisionSlots,
+    pickVisionTarget: pickVisionTarget,
+    otherVisionTarget: otherVisionTarget,
+    preflightVision: preflightVision,
+    VISION_DEFAULTS: VISION_DEFAULTS,
+    VISION_FALLBACK_OR: VISION_FALLBACK_OR
+  };
 
 })();
