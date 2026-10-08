@@ -86,6 +86,48 @@ const PRODUCT_BIAS = {
     mockup: "taza con asa visible en vista frontal y tres cuartos, mas vista plana del arte",
     safeMargin: "deja margen en el area imprimible y confirma la plantilla exacta del proveedor"
   },
+  "MOCHILA": {
+    trat: ["HEAVY", "MODERN"],
+    layout: [
+      "Emblema circular",
+      "Axial centrado",
+      "Banda horizontal",
+      "Tarjeta interior"
+    ],
+    density: ["Balanced", "Minimal"],
+    hierarchy: ["OBJETO_DOMINANTE", "BALANCEADO"],
+    scale: "motivo contenido para panel frontal o bolsillo delantero; un solo foco reconocible; cero escenas completas; detalle medio viable en lona o poliéster; lectura clara a distancia social",
+    mockup: "mochila frontal y tres cuartos + acercamiento del panel impreso",
+    safeMargin: "respetar cierres, costuras, correas y bordes del bolsillo; no extender el arte sobre herrajes"
+  },
+  "TOTE BAG": {
+    trat: ["SOFT", "MODERN"],
+    layout: [
+      "Axial centrado",
+      "Emblema circular",
+      "Editorial asimétrica",
+      "Tarjeta interior"
+    ],
+    density: ["Balanced", "Minimal"],
+    hierarchy: ["BALANCEADO", "TEXTO_DOMINANTE", "OBJETO_DOMINANTE"],
+    scale: "arte para cara frontal plana y amplia; admite composición generosa o patrón repetido en modelos de sublimación; detalle medio viable en tela; cero microtexto",
+    mockup: "bolso de frente plano + vista tres cuartos con asas visibles",
+    safeMargin: "respetar asas, costuras laterales y dobladillo inferior; no invadir la zona de las asas"
+  },
+  "FUNDA MÓVIL": {
+    trat: ["MODERN", "SOFT"],
+    layout: [
+      "Axial centrado",
+      "Tarjeta interior",
+      "Sello descentrado",
+      "Emblema circular"
+    ],
+    density: ["Minimal", "Balanced"],
+    hierarchy: ["OBJETO_DOMINANTE", "BALANCEADO"],
+    scale: "arte para trasera pequeña de funda; motivo compacto de trazo grueso; texto mínimo o nulo; cero microtexto y cero detalle fino; el recorte de cámara manda sobre la composición",
+    mockup: "funda en vista trasera plana + tres cuartos sobre teléfono",
+    safeMargin: "respetar recorte de cámara, bordes curvos y botones laterales; nada indispensable bajo el recorte"
+  },
   "DISPLATE": {
     trat: ["MODERN", "HEAVY"],
     layout: [
@@ -111,12 +153,18 @@ const PLACEMENT = {
   "GORRA": "panel frontal de la gorra; composición compacta y centrada, respetando costuras, curva y visera",
   "ILUSTRACION PREMIUM APPAREL": "lienzo completo 4:5 sobre textil premium",
   "MUG": "zona imprimible de taza; diseno legible de frente y separado del asa",
+  "MOCHILA": "panel frontal o bolsillo delantero; composición contenida respetando cierres, costuras y correas",
+  "TOTE BAG": "cara frontal centrada en área plana amplia; admite repetición en modelos de sublimación",
+  "FUNDA MÓVIL": "trasera completa respetando recorte de cámara y bordes curvos",
   "DISPLATE": "lienzo rectangular completo con margen de marco; pieza de pared, no prenda"
 };
 
 const PRODUCT_RULES = {
   "GORRA": "GORRA: diseña dentro del panel frontal pequeño y ligeramente curvo. Usa un foco claro, silueta reconocible a tamaño reducido y texto breve; conserva legibilidad y evita microtexto. Ajusta el detalle a una aplicación viable para gorra (bordado, parche o impresión) según el estilo; no supongas que todos los acabados son bordado. No extiendas el arte sobre costuras, visera ni paneles laterales salvo que se pida explícitamente. En la lámina de presentación muestra gorras reales de frente y en vista tres cuartos, con un acercamiento del área impresa o bordada.",
   "MUG": "MUG: crea arte para taza con asa, no lamina plana. Mantén el foco principal en el area visible, evita texto indispensable sobre el asa y conserva lectura en la curvatura. No inventes medidas ni afirmes que la plantilla esta validada; varia segun proveedor.",
+  "MOCHILA": "MOCHILA: diseña para panel frontal o bolsillo delantero, no lienzo libre. Un solo foco reconocible; no extiendas el arte sobre cierres, costuras, correas ni herrajes. Detalle medio viable en lona o poliéster. La plantilla exacta varía según proveedor y modelo.",
+  "TOTE BAG": "TOTE BAG: diseña para cara frontal plana y amplia. Respeta asas, costuras laterales y dobladillo. En modelos de sublimación se permite patrón repetido en toda la superficie; en algodón estándar, composición centrada. No afirmes medidas; varían por proveedor.",
+  "FUNDA MÓVIL": "FUNDA MÓVIL: diseña para trasera pequeña con recorte de cámara. Trazo grueso, motivo compacto, texto mínimo o nulo; prohibido microtexto y detalle fino. Nada indispensable bajo el recorte de cámara ni sobre bordes curvos o botones. La plantilla varía por modelo de teléfono.",
   "DISPLATE": "DISPLATE: esto NO es una camiseta ni un estampado textil. Diseña una obra mural premium para impresión sobre metal. Usa composición rectangular completa (full-bleed permitido). Respeta margen de seguridad mínimo del 5% en los cuatro bordes para montaje. Permite detalle alto, atmósfera, textura rica y fondo completo. La lectura debe funcionar tanto de cerca como de lejos. No uses lógica de pecho, espalda, panel frontal ni placement textil. El mockup debe mostrar la lámina en pared o ambiente real, nunca sobre cuerpo humano. Evita texto pegado a los bordes. La paleta debe ser sólida y limpia para impresión metálica."
 };
 
@@ -126,6 +174,9 @@ const PRODUCT_MOCKUP_RULES = {
   "HOODIE": "dos mockups de hoodie (uno oscuro y otro claro); vista frontal y espalda",
   "GORRA": "dos mockups de gorra (vista frontal y tres cuartos) y acercamiento del panel con el acabado elegido",
   "MUG": "taza con asa visible en vista frontal y tres cuartos, mas vista plana del arte",
+  "MOCHILA": "dos mockups de mochila (frontal y tres cuartos) y acercamiento del panel impreso",
+  "TOTE BAG": "dos mockups de bolso (frente plano y tres cuartos con asas visibles)",
+  "FUNDA MÓVIL": "dos mockups de funda (trasera plana y tres cuartos sobre teléfono)",
   "ILUSTRACION PREMIUM APPAREL": "dos mockups de prenda premium o presentación textil enmarcada",
   "DISPLATE": "dos mockups de placa mural metálica: uno frontal plano y otro en ambiente real (pared, habitación, setup)"
 };
@@ -159,10 +210,16 @@ function isHeadwear(product) {
 }
 
 function isTextile(product) {
-  return product !== "DISPLATE" && product !== "MUG";
+  return product !== "DISPLATE" && product !== "MUG" && product !== "FUNDA MÓVIL";
 }
 function isDrinkware(product) {
   return product === "MUG";
+}
+function isCase(product) {
+  return product === "FUNDA MÓVIL";
+}
+function isBag(product) {
+  return product === "MOCHILA" || product === "TOTE BAG";
 }
 
 function getProductScaleDirective(product) {
@@ -181,3 +238,5 @@ window.PLACEMENT = PLACEMENT;
 window.PRODUCT_RULES = PRODUCT_RULES;
 window.PRODUCT_MOCKUP_RULES = PRODUCT_MOCKUP_RULES;
 window.isDrinkware = isDrinkware;
+window.isCase = isCase;
+window.isBag = isBag;

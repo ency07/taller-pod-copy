@@ -546,6 +546,143 @@
   }
 
   /* ============================================================
+     BANCO DE TEMPLATES — Patrón repetido por producto
+     Solo: MOCHILA, TOTE BAG, FUNDA MÓVIL.
+     Cada template: { id, nombre, producto, imagen (dataURL), zonas, notas, updatedAt }.
+     Zonas por defecto por producto; 'usar' | 'opcional' | 'excluir' | 'precaucion'.
+     ============================================================ */
+
+  const TEMPLATE_PRODUCTS = ['MOCHILA', 'TOTE BAG', 'FUNDA MÓVIL'];
+  const TEMPLATE_MAX_IMAGE_BYTES = 700 * 1024;
+
+  const TEMPLATE_DEFAULT_ZONES = {
+    'MOCHILA': [
+      { id: 'panel_frontal', label: 'Panel frontal', uso: 'usar' },
+      { id: 'bolsillo', label: 'Bolsillo delantero', uso: 'usar' },
+      { id: 'laterales', label: 'Laterales', uso: 'opcional' },
+      { id: 'correas_herrajes', label: 'Correas y herrajes', uso: 'excluir' },
+      { id: 'base', label: 'Base', uso: 'excluir' }
+    ],
+    'TOTE BAG': [
+      { id: 'cara_frontal', label: 'Cara frontal', uso: 'usar' },
+      { id: 'cara_trasera', label: 'Cara trasera', uso: 'usar' },
+      { id: 'fuelle', label: 'Fuelle / laterales', uso: 'opcional' },
+      { id: 'asas', label: 'Asas', uso: 'excluir' },
+      { id: 'dobladillo', label: 'Dobladillo inferior', uso: 'excluir' }
+    ],
+    'FUNDA MÓVIL': [
+      { id: 'area_total', label: 'Área total trasera', uso: 'usar' },
+      { id: 'recorte_camara', label: 'Recorte de cámara', uso: 'excluir' },
+      { id: 'bordes', label: 'Bordes curvos', uso: 'precaucion' },
+      { id: 'botones', label: 'Botones laterales', uso: 'excluir' }
+    ]
+  };
+
+  function _loadTemplateBank() {
+    const raw = getJSON(memKey(['templateBank']), null);
+    if (raw && raw.templates && raw.active) return raw;
+    return { templates: {}, active: {} };
+  }
+
+  function _saveTemplateBank(bank) {
+    return setJSON(memKey(['templateBank']), bank || { templates: {}, active: {} });
+  }
+
+  function _newTemplateId() {
+    try {
+      if (typeof Date !== 'undefined' && Date.now) {
+        return 'tpl_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+      }
+    } catch (e) {}
+    return 'tpl_' + String(Math.floor(Math.random() * 1e9));
+  }
+
+  function listTemplates(product) {
+    const bank = _loadTemplateBank();
+    const all = Object.keys(bank.templates).map(function (id) { return bank.templates[id]; });
+    const filtered = product ? all.filter(function (t) { return t.producto === product; }) : all;
+    filtered.sort(function (a, b) { return String(a.nombre || '').localeCompare(String(b.nombre || '')); });
+    return filtered;
+  }
+
+  function getTemplate(id) {
+    if (!id) return null;
+    const bank = _loadTemplateBank();
+    return bank.templates[id] || null;
+  }
+
+  function saveTemplate(data) {
+    const d = data || {};
+    if (TEMPLATE_PRODUCTS.indexOf(d.producto) === -1) {
+      return { ok: false, error: 'producto no admitido para templates (solo MOCHILA, TOTE BAG, FUNDA MÓVIL)' };
+    }
+    const nombre = String(d.nombre || '').trim();
+    if (nombre.length < 2) return { ok: false, error: 'el template necesita un nombre (mínimo 2 caracteres)' };
+    if (d.imagen && String(d.imagen).length > TEMPLATE_MAX_IMAGE_BYTES) {
+      return { ok: false, error: 'imagen muy pesada (máx ~700KB tras reducir); usa una plantilla más liviana' };
+    }
+    const bank = _loadTemplateBank();
+    const id = d.id && bank.templates[d.id] ? d.id : _newTemplateId();
+    const prev = bank.templates[id] || {};
+    bank.templates[id] = {
+      id: id,
+      nombre: nombre,
+      producto: d.producto,
+      imagen: d.imagen || prev.imagen || '',
+      zonas: Array.isArray(d.zonas) && d.zonas.length ? d.zonas : (prev.zonas || defaultTemplateZones(d.producto)),
+      notas: String(d.notas || prev.notas || ''),
+      updatedAt: new Date().toISOString()
+    };
+    _saveTemplateBank(bank);
+    return { ok: true, id: id };
+  }
+
+  function renameTemplate(id, nombre) {
+    const bank = _loadTemplateBank();
+    if (!bank.templates[id]) return { ok: false, error: 'template no existe' };
+    const clean = String(nombre || '').trim();
+    if (clean.length < 2) return { ok: false, error: 'nombre muy corto' };
+    bank.templates[id].nombre = clean;
+    bank.templates[id].updatedAt = new Date().toISOString();
+    _saveTemplateBank(bank);
+    return { ok: true };
+  }
+
+  function deleteTemplate(id) {
+    const bank = _loadTemplateBank();
+    if (!bank.templates[id]) return { ok: false, error: 'template no existe' };
+    delete bank.templates[id];
+    Object.keys(bank.active).forEach(function (p) {
+      if (bank.active[p] === id) delete bank.active[p];
+    });
+    _saveTemplateBank(bank);
+    return { ok: true };
+  }
+
+  function defaultTemplateZones(product) {
+    const z = TEMPLATE_DEFAULT_ZONES[product] || [];
+    return z.map(function (x) { return { id: x.id, label: x.label, uso: x.uso }; });
+  }
+
+  function getActiveTemplate(product) {
+    if (!product) return null;
+    const bank = _loadTemplateBank();
+    const id = bank.active[product];
+    if (!id || !bank.templates[id]) return null;
+    return bank.templates[id];
+  }
+
+  function setActiveTemplate(product, id) {
+    if (TEMPLATE_PRODUCTS.indexOf(product) === -1) return { ok: false, error: 'producto no admitido' };
+    const bank = _loadTemplateBank();
+    if (id && !bank.templates[id]) return { ok: false, error: 'template no existe' };
+    if (id) bank.active[product] = id;
+    else delete bank.active[product];
+    _saveTemplateBank(bank);
+    return { ok: true };
+  }
+
+  /* ============================================================
      EXPORT / IMPORT / FUSIÓN
      ============================================================ */
 
@@ -758,6 +895,17 @@
   window.getStyleUsageCounter = getStyleUsageCounter;
   window.recordStyleUse = recordStyleUse;
   window.clearStyleUsage = clearStyleUsage;
+
+  window.TEMPLATE_PRODUCTS = TEMPLATE_PRODUCTS;
+  window.TEMPLATE_DEFAULT_ZONES = TEMPLATE_DEFAULT_ZONES;
+  window.listTemplates = listTemplates;
+  window.getTemplate = getTemplate;
+  window.saveTemplate = saveTemplate;
+  window.renameTemplate = renameTemplate;
+  window.deleteTemplate = deleteTemplate;
+  window.defaultTemplateZones = defaultTemplateZones;
+  window.getActiveTemplate = getActiveTemplate;
+  window.setActiveTemplate = setActiveTemplate;
 
   window.mergeArraysUnique = mergeArraysUnique;
   window.exportMemoryObject = exportMemoryObject;

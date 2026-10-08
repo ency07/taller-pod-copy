@@ -270,6 +270,25 @@
     } catch (e) {}
   }
 
+  /* Template activo (banco de templates: mochila/bolso/funda).
+     Muestra qué plantilla usará el motor para el producto elegido. */
+  function updateTemplateHint() {
+    var el = $('tplActiveHint');
+    if (!el) return;
+    var prod = $('product') ? $('product').value : '';
+    var tpl = null;
+    try {
+      if (typeof getActiveTemplate === 'function') tpl = getActiveTemplate(prod);
+    } catch (e) { tpl = null; }
+    if (tpl) {
+      el.innerHTML = 'Template activo: <b>' + tpl.nombre.replace(/</g, '&lt;') + '</b> (' + tpl.producto + '). El prompt citará sus zonas. <a href="editor-bancos.html" target="_blank" rel="noopener">Cambiar</a>';
+    } else if (prod === 'MOCHILA' || prod === 'TOTE BAG' || prod === 'FUNDA MÓVIL') {
+      el.innerHTML = 'Sin template para ' + prod + '. <a href="editor-bancos.html" target="_blank" rel="noopener">Sube la plantilla</a> para no generar a ciegas.';
+    } else {
+      el.textContent = '';
+    }
+  }
+
   function cascadeUpdate() {
     // H1: la región se valida y normaliza ANTES de derivar el resto.
     updateRegionSelect();
@@ -280,6 +299,7 @@
     updatePbDomSelect();
     updateDominioSelect();
     updateDomImagenSelect();
+    updateTemplateHint();
 
     if (typeof window !== 'undefined' && window.PODNav) {
       try {
@@ -582,6 +602,7 @@
     on('concept', 'input', updateDominioHelp);
     on('message', 'input', updateDominioHelp);
     on('dominio', 'change', updateDominioHelp);
+    on('product', 'change', updateTemplateHint);
 
     // Análisis de imagen
     on('btnAnalyzeImage', 'click', analyzeImageWithVision);

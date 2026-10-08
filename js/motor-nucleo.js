@@ -947,6 +947,21 @@ function formatPrompt(result) {
   if (legalDir) o += 'LEGAL: ' + legalDir + '\n';
   if (productRule) o += 'PRODUCTO: ' + productRule + '\n';
   if (mockupRule) o += 'PRESENTACION: ' + mockupRule + '\n';
+  // Template activo (banco de templates: mochila/bolso/funda). Ancla el diseño
+  // a zonas reales en vez de generar a ciegas.
+  try {
+    if (typeof getActiveTemplate === 'function') {
+      const tpl = getActiveTemplate(MOTOR_STATE.product);
+      if (tpl) {
+        const zones = (tpl.zonas || []).map(function (z) {
+          return z.label + ' [' + z.uso + ']';
+        }).join('; ');
+        o += 'TEMPLATE: ' + tpl.nombre + ' (' + tpl.producto + ') | ZONAS: ' + zones;
+        if (tpl.notas) o += ' | NOTAS: ' + tpl.notas;
+        o += '\n';
+      }
+    }
+  } catch (e) {}
   if (MOTOR_STATE.market === 'gospel_es' || MOTOR_STATE.market === 'gospel_en') {
     o += 'DOCTRINA: Trinitario (Padre, Hijo, Espiritu Santo) y cristocentrico. Cruz y resurreccion al centro. PROHIBIDO prosperidad magica, decretos, angeles como centro, santos mediadores, esoterismo, horoscopo, energia. Sin region: universal.\n';
   }

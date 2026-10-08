@@ -337,6 +337,50 @@
     </div>
 
     <div class="card">
+      <label>Banco de templates — patrón repetido (solo mochila, bolso, funda)</label>
+      <div class="hint" style="margin-top: 0; margin-bottom: 12px;">Sube la plantilla plana de cada producto para saber dónde cae el patrón. Una plantilla activa por producto; el motor la cita en el prompt.</div>
+      <div class="field-row">
+        <div class="field">
+          <label for="tplProduct">Producto</label>
+          <select id="tplProduct">
+            <option value="MOCHILA">MOCHILA</option>
+            <option value="TOTE BAG">TOTE BAG</option>
+            <option value="FUNDA MÓVIL">FUNDA MÓVIL</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tplName">Nombre del template</label>
+          <input id="tplName" placeholder="Ej: Mochila urbana frente 2026" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="tplFile">Plantilla (imagen: plano, outline o foto del producto)</label>
+        <input id="tplFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+        <div class="hint">Se reduce sola a 800px para no llenar el almacenamiento.</div>
+      </div>
+      <div class="field">
+        <label>Vista previa</label>
+        <img id="tplPreview" alt="" style="display:none;max-width:100%;max-height:220px;border:1px solid var(--line);border-radius:var(--r);" />
+      </div>
+      <div class="field">
+        <label>Zonas de este producto</label>
+        <div id="tplZones" class="bank-display" style="max-height:150px;"></div>
+      </div>
+      <div class="field">
+        <label for="tplNotes">Notas (opcional)</label>
+        <textarea id="tplNotes" rows="2" placeholder="Ej: el bolsillo es pequeño; el motivo va solo al frente"></textarea>
+      </div>
+      <div class="actions">
+        <button id="btnSaveTpl" class="primary">Guardar template</button>
+        <button id="btnClearTpl" class="ghost">Limpiar</button>
+      </div>
+      <div class="field" style="margin-top: 14px;">
+        <label>Templates guardados (clic en activar para usarlo en el taller)</label>
+        <div id="tplList"></div>
+      </div>
+    </div>
+
+    <div class="card">
       <label>Zona de peligro</label>
       <div class="actions" style="margin-top: 0;">
         <button id="btnClearSubniche" class="ghost" style="color: var(--bad); border-color: rgba(248,113,113,0.3);">Vaciar banco de este subnicho</button>
@@ -661,6 +705,107 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
         tell('Todo el banco personal del mercado fue vaciado.', 'info');
       }
 
+      /* ============================================================
+         BANCO DE TEMPLATES — patrón repetido (mochila/bolso/funda)
+         ============================================================ */
+      var tplDataUrl = '';
+
+      function tplProduct() {
+        return $('tplProduct') ? $('tplProduct').value : 'MOCHILA';
+      }
+
+      function renderTplZones() {
+        var el = $('tplZones');
+        if (!el) return;
+        var zones = (typeof defaultTemplateZones === 'function')
+          ? defaultTemplateZones(tplProduct()) : [];
+        if (!zones.length) { el.textContent = '(sin zonas para este producto)'; return; }
+        el.textContent = zones.map(function (z) {
+          return '• ' + z.label + ' — ' + z.uso.toUpperCase();
+        }).join('\n');
+      }
+
+      function downscaleImage(file, cb) {
+        try {
+          var img = new Image();
+          var url = URL.createObjectURL(file);
+          img.onload = function () {
+            try {
+              var max = 800;
+              var w = img.naturalWidth || img.width;
+              var h = img.naturalHeight || img.height;
+              var scale = Math.min(1, max / Math.max(w, h));
+              var cw = Math.max(1, Math.round(w * scale));
+              var ch = Math.max(1, Math.round(h * scale));
+              var canvas = document.createElement('canvas');
+              canvas.width = cw; canvas.height = ch;
+              canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+              URL.revokeObjectURL(url);
+              cb(canvas.toDataURL('image/jpeg', 0.75));
+            } catch (e) { cb(null); }
+          };
+          img.onerror = function () { URL.revokeObjectURL(url); cb(null); };
+          img.src = url;
+        } catch (e) { cb(null); }
+      }
+
+      function renderTplList() {
+        var el = $('tplList');
+        if (!el || typeof listTemplates !== 'function') return;
+        var items = listTemplates();
+        if (!items.length) { el.innerHTML = '<div class="hint">Todavía no hay templates. Sube la plantilla plana de tu mochila, bolso o funda.</div>'; return; }
+        var html = '';
+        items.forEach(function (t) {
+          var active = (typeof getActiveTemplate === 'function' && getActiveTemplate(t.producto) && getActiveTemplate(t.producto).id === t.id);
+          html += '<div style="display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:var(--r);padding:8px;margin-bottom:8px;">'
+            + (t.imagen ? '<img src="' + t.imagen + '" style="width:56px;height:56px;object-fit:cover;border-radius:4px;" />' : '')
+            + '<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">' + t.nombre.replace(/</g, '&lt;') + '</div>'
+            + '<div class="hint" style="margin:0;">' + t.producto + (active ? ' · <b>ACTIVO</b>' : '') + '</div></div>'
+            + '<button class="ghost" data-tpl-act="' + t.id + '">' + (active ? 'Quitar' : 'Activar') + '</button>'
+            + '<button class="ghost" data-tpl-del="' + t.id + '" style="color:var(--bad);">Borrar</button>'
+            + '</div>';
+        });
+        el.innerHTML = html;
+        Array.prototype.forEach.call(el.querySelectorAll('[data-tpl-act]'), function (b) {
+          b.addEventListener('click', function () {
+            var id = b.getAttribute('data-tpl-act');
+            var cur = getActiveTemplate(tplProductOf(id));
+            if (cur && cur.id === id) setActiveTemplate(tplProductOf(id), null);
+            else setActiveTemplate(tplProductOf(id), id);
+            renderTplList();
+          });
+        });
+        Array.prototype.forEach.call(el.querySelectorAll('[data-tpl-del]'), function (b) {
+          b.addEventListener('click', function () {
+            if (!confirm('¿Borrar este template?')) return;
+            deleteTemplate(b.getAttribute('data-tpl-del'));
+            renderTplList();
+          });
+        });
+      }
+
+      function tplProductOf(id) {
+        var t = (typeof getTemplate === 'function') ? getTemplate(id) : null;
+        return t ? t.producto : tplProduct();
+      }
+
+      function saveTpl() {
+        var name = $('tplName') ? $('tplName').value.trim() : '';
+        var notes = $('tplNotes') ? $('tplNotes').value.trim() : '';
+        if (name.length < 2) { tell('Ponle un nombre al template (mínimo 2 caracteres).', 'bad'); return; }
+        if (!tplDataUrl) { tell('Elige la imagen de la plantilla primero.', 'bad'); return; }
+        var r = saveTemplate({ nombre: name, producto: tplProduct(), imagen: tplDataUrl, notas: notes });
+        if (!r.ok) { tell(r.error || 'No se pudo guardar.', 'bad'); return; }
+        setActiveTemplate(tplProduct(), r.id);
+        tplDataUrl = '';
+        if ($('tplName')) $('tplName').value = '';
+        if ($('tplNotes')) $('tplNotes').value = '';
+        if ($('tplFile')) $('tplFile').value = '';
+        var pv = $('tplPreview'); if (pv) { pv.src = ''; pv.style.display = 'none'; }
+        renderTplList();
+        tell('Template guardado y activado para ' + tplProduct() + '.', 'good');
+      }
+
       /* --- Wire --- */
       function init() {
         fillMarkets();
@@ -706,6 +851,30 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
 
         $('btnClearSubniche').addEventListener('click', clearSubnicheBank);
         $('btnClearAll').addEventListener('click', clearAllBank);
+
+        /* Templates: patrón repetido */
+        renderTplZones();
+        renderTplList();
+        if ($('tplProduct')) $('tplProduct').addEventListener('change', renderTplZones);
+        if ($('tplFile')) $('tplFile').addEventListener('change', function () {
+          var f = this.files && this.files[0];
+          if (!f) return;
+          if (!/^image\/(png|jpeg|webp|gif)$/i.test(f.type || '')) { tell('Formato no compatible. Usa PNG, JPG, WEBP o GIF.', 'bad'); return; }
+          downscaleImage(f, function (url) {
+            if (!url) { tell('No se pudo leer la imagen.', 'bad'); return; }
+            tplDataUrl = url;
+            var pv = $('tplPreview');
+            if (pv) { pv.src = url; pv.style.display = 'block'; }
+          });
+        });
+        if ($('btnSaveTpl')) $('btnSaveTpl').addEventListener('click', saveTpl);
+        if ($('btnClearTpl')) $('btnClearTpl').addEventListener('click', function () {
+          tplDataUrl = '';
+          if ($('tplName')) $('tplName').value = '';
+          if ($('tplNotes')) $('tplNotes').value = '';
+          if ($('tplFile')) $('tplFile').value = '';
+          var pv = $('tplPreview'); if (pv) { pv.src = ''; pv.style.display = 'none'; }
+        });
       }
 
       if (document.readyState === 'loading') {
