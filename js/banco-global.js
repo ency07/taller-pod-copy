@@ -145,7 +145,151 @@
       'compass held steady with no north yet',
       'door standing wide open in daylight',
       'small boat pushed off from shallow water'
-    ]
+    ],
+    streetwear: [
+      'oversized hoodie holding its own shadow',
+      'small chest hit stamped left of heart',
+      'back print too loud for the front',
+      'cargo pocket deep enough for everything',
+      'sneaker sole worn flat on one side',
+      'beanie pulled low over the eyes',
+      'drop tag hanging from a fresh hem',
+      'chain swinging over washed black cotton',
+      'utility vest with every strap fastened',
+      'blank box chest hit waiting for a voice'
+    ],
+    tattoo_lifestyle: [
+      'tattoo machine humming over a steady wrist',
+      'needle grouping lined up like soldiers',
+      'ink caps poured in three honest blacks',
+      'flash sheet pinned crooked on the wall',
+      'stencil paper holding yesterday drawing',
+      'fresh wrap shining over new lines',
+      'rose in blackwork with no color at all',
+      'sleeve half finished and fully committed',
+      'aftercare balm open beside clean gauze',
+      'shop chair worn where thousands sat'
+    ],
+    motorcycle_biker: [
+      'engine cooling loud after a long run',
+      'helmet resting on a mirrored tank',
+      'chain oiled and ready for miles',
+      'highway line running straight to nowhere',
+      'leather vest with one blank patch',
+      'piston kept as a paperweight',
+      'headlight beam cutting the night open',
+      'throttle hand scarred by sun and wind',
+      'road curve signed but never tamed',
+      'kickstand down on gravel and dust'
+    ],
+    vanlife_nomad: [
+      'van parked where the signal dies',
+      'solar panel drinking the noon sun',
+      'roof rack carrying a boat and a plan',
+      'campfire small enough to hold in talk',
+      'mountain road folded into the mirror',
+      'string lights wired to a second battery',
+      'coffee pot blackened by a hundred dawns',
+      'map with more circles than roads',
+      'side door open to a private valley',
+      'tire tracks ending at the water edge'
+    ],
+    plant_parent: [
+      'monstera leaf wider than the window',
+      'watering can with a bent copper spout',
+      'terracotta pot still warm from the kiln',
+      'propagation jar lined on the sill',
+      'pothos trailing past the bookshelf',
+      'mist bottle fogging the morning leaves',
+      'hands dark with honest soil',
+      'new leaf unrolling overnight',
+      'moss pole holding a climbing stem',
+      'seedling tray under a cheap grow light'
+    ],
+    booktok_reader: [
+      'book cracked open at the good part',
+      'spines lined by color not author',
+      'window nook with a permanent dent',
+      'ribbon bookmark hanging past the edge',
+      'coffee ring on chapter twelve',
+      'library ladder missing its third rung',
+      'candle burned to the plot twist',
+      'margins full of underlined arguments',
+      'tbr pile taller than the lamp',
+      'dust jacket folded as a bookmark'
+    ],
+    gaming_setup: [
+      'keyboard glowing through tired fingers',
+      'headset resting on its wooden stand',
+      'monitor light painting the dark room',
+      'controller with one worn thumbstick',
+      'desk cleared for exactly one mission',
+      'led strip bleeding color down the wall',
+      'pc tower breathing through glass',
+      'keycap pulled for a deep clean',
+      'stream deck with one red button',
+      'cables braided into a single line'
+    ],
+    coffee_culture: [
+      'portafilter locked with a practiced twist',
+      'latte heart poured without looking',
+      'chemex dripping slow on a scale',
+      'roaster drum still warm at dawn',
+      'burlap sack stamped with one origin',
+      'tamper leveled by a flat palm',
+      'ceramic cup thick enough to hold heat',
+      'cold brew steeping since last night',
+      'grinder set two clicks finer',
+      'first crack sounding like applause'
+    ],
+    skate_culture: [
+      'deck chipped exactly where it lands',
+      'wheels flat-spotted from one powerslide',
+      'grip tape blackened by a season',
+      'halfpipe lip waxed before dawn',
+      'concrete ledge polished by attempts',
+      'pusher silhouette against traffic',
+      'truck tightened with a pocket tool',
+      'session ending when the lights buzz on',
+      'shoe torn open at the ollie spot',
+      'curb painted but skated anyway'
+    ],
+    surf_culture: [
+      'wave curling shut like a kept secret',
+      'board stuck upright in wet sand',
+      'wax comb hanging from a cord',
+      'palm leaning over the whole break',
+      'sunset session with no one paddling in',
+      'leash coiled beside bare feet',
+      'swell lines marching past the point',
+      'salt dried white on a dark back',
+      'dawn patrol first through the shorebreak',
+      'beach shower running cold and free'
+    ],
+    crypto_web3: [
+      'ledger book with no bank on the cover',
+      'key split into twelve quiet words',
+      'nodes agreeing across dark oceans',
+      'block sealed on top of the last one',
+      'wallet cold enough to forget',
+      'chart that only climbs in dreams',
+      'contract with no one to call',
+      'coin stamped with circuit lines',
+      'whitepaper folded into a paper plane',
+      'full signal where no bank ever came'
+    ],
+    ai_tech: [
+      'cursor blinking where the idea lands',
+      'neural nodes lit like a small city',
+      'robot hand meeting a human one halfway',
+      'chip with streets instead of circuits',
+      'prompt typed before coffee cools',
+      'data stream braided into one thread',
+      'face made of a thousand thumbnails',
+      'server humming through the night shift',
+      'algorithm pruned like a bonsai tree',
+      'future arriving without asking first'
+    ],
   };
 
   /* ---------------- EVERGREEN · ESPAÑOL ---------------- */
@@ -269,7 +413,151 @@
       'brújula firme todavía sin norte',
       'puerta parada abierta a plena luz del día',
       'bote pequeño empujado desde el agua poco profunda'
-    ]
+    ],
+    streetwear: [
+      'hoodie oversized que sostiene su propia sombra',
+      'pequeño estampado al pecho lado corazón',
+      'espalda impresa que grita lo que el frente calla',
+      'bolsillo cargo hondo para todo',
+      'suela de tenis gastada de un lado',
+      'gorro bajo hasta los ojos',
+      'etiqueta de drop colgando del dobladillo',
+      'cadena sobre algodón negro lavado',
+      'chaleco utilitario con todo abrochado',
+      'recuadro vacío esperando una voz'
+    ],
+    tattoo_lifestyle: [
+      'máquina zumbando sobre muñeca firme',
+      'agujas alineadas como soldados',
+      'copas de tinta en tres negros honestos',
+      'flash chueco clavado en la pared',
+      'papel de plantilla con el dibujo de ayer',
+      'plástico fresco brillando sobre líneas nuevas',
+      'rosa en blackwork sin nada de color',
+      'manga a medias y compromiso total',
+      'bálsamo abierto junto a gasa limpia',
+      'silla del estudio gastada por miles'
+    ],
+    motorcycle_biker: [
+      'motor enfriándose tras rodada larga',
+      'casco sobre el tanque cromado',
+      'cadena aceitada lista para kilómetros',
+      'línea de carretera recta hacia nada',
+      'chaleco de cuero con un parche en blanco',
+      'pistón de pisapapeles',
+      'faro abriendo la noche en dos',
+      'mano de acelerador marcada por sol y viento',
+      'curva señalada pero nunca domada',
+      'pata abajo sobre grava y polvo'
+    ],
+    vanlife_nomad: [
+      'van donde muere la señal',
+      'panel solar bebiendo el sol del mediodía',
+      'parrilla con bote y con plan',
+      'fogata pequeña para conversar',
+      'carretera de montaña doblada en el espejo',
+      'luces de serie con segunda batería',
+      'cafetera ennegrecida por cien amaneceres',
+      'mapa con más círculos que carreteras',
+      'puerta lateral abierta a un valle privado',
+      'huellas de llanta hasta el agua'
+    ],
+    plant_parent: [
+      'hoja de monstera más ancha que la ventana',
+      'regadera de pico de cobre doblado',
+      'maceta de barro tibia de horno',
+      'frascos de esquejes en el alféizar',
+      'potos colgando de la repisa',
+      'atomizador nublando hojas de mañana',
+      'manos oscuras de tierra honesta',
+      'hoja nueva abriéndose de noche',
+      'tutor de musgo para tallo trepador',
+      'semillero bajo luz barata'
+    ],
+    booktok_reader: [
+      'libro abierto en la mejor parte',
+      'lomos ordenados por color',
+      'rincón de ventana con hueco permanente',
+      'cinta de marcapáginas colgando',
+      'cerco de café en el capítulo doce',
+      'escalera de biblioteca sin tercer peldaño',
+      'vela quemada hasta el giro',
+      'márgenes llenos de discusiones',
+      'pila pendiente más alta que la lámpara',
+      'sobrecubierta doblada de marcapáginas'
+    ],
+    gaming_setup: [
+      'teclado brillando entre dedos cansados',
+      'audífonos en su base de madera',
+      'luz del monitor pintando el cuarto',
+      'control con un stick gastado',
+      'escritorio libre para una misión',
+      'tira led sangrando color por la pared',
+      'torre respirando tras vidrio',
+      'tecla sacada para limpieza profunda',
+      'consola de stream con botón rojo',
+      'cables trenzados en uno solo'
+    ],
+    coffee_culture: [
+      'portafiltro girado con práctica',
+      'corazón de latte sin mirar',
+      'chemex goteando lento en báscula',
+      'tostadora tibia al amanecer',
+      'saco de yute de un solo origen',
+      'tamper nivelado a palma plana',
+      'taza gruesa que guarda calor',
+      'cold brew desde anoche',
+      'molino dos clics más fino',
+      'primer crack sonando a aplauso'
+    ],
+    skate_culture: [
+      'tabla astillada donde aterriza',
+      'ruedas planas de un derrape',
+      'lija negra de una temporada',
+      'borde encerado antes del alba',
+      'filo pulido por intentos',
+      'silueta empujando contra tráfico',
+      'truck ajustado con multiherramienta',
+      'sesión que acaba con las luces',
+      'tenis roto en el ollie',
+      'bordillo pintado pero patinado igual'
+    ],
+    surf_culture: [
+      'ola cerrándose como secreto',
+      'tabla clavada en arena mojada',
+      'peine de cera colgando',
+      'palma sobre todo el rompiente',
+      'sesión de atardecer sin nadie',
+      'correa enrollada a pies descalzos',
+      'series marchando por la punta',
+      'sal seca blanca en espalda oscura',
+      'patrulla del alba primera en la orilla',
+      'ducha de playa fría y libre'
+    ],
+    crypto_web3: [
+      'libro mayor sin banco en la tapa',
+      'llave partida en doce palabras',
+      'nodos de acuerdo entre océanos',
+      'bloque sellado sobre el anterior',
+      'billetera fría para olvidar',
+      'gráfica que sube solo en sueños',
+      'contrato sin nadie a quien llamar',
+      'moneda de circuitos',
+      'documento doblado en avión',
+      'señal llena donde no hay bancos'
+    ],
+    ai_tech: [
+      'cursor parpadeando donde cae la idea',
+      'nodos encendidos como ciudad',
+      'mano robot a medio camino',
+      'chip con calles en vez de circuitos',
+      'prompt antes que se enfríe el café',
+      'datos trenzados en un hilo',
+      'rostro de mil miniaturas',
+      'servidor zumbando de noche',
+      'algoritmo podado como bonsái',
+      'futuro que llega sin pedir permiso'
+    ],
   };
 
   /* ---------------- TEMPORADA · ENGLISH ---------------- */
@@ -510,6 +798,19 @@
     christmas: 'Navidad',
     new_year: 'Año Nuevo',
     black_friday: 'Black Friday'
+,
+    streetwear: 'Streetwear y cultura urbana',
+    tattoo_lifestyle: 'Tatuaje y lifestyle',
+    motorcycle_biker: 'Motos y cultura biker',
+    vanlife_nomad: 'Vanlife y nómadas',
+    plant_parent: 'Plantas y plant parents',
+    booktok_reader: 'Lectura y BookTok',
+    gaming_setup: 'Setup gamer',
+    coffee_culture: 'Café de especialidad',
+    skate_culture: 'Skate',
+    surf_culture: 'Surf',
+    crypto_web3: 'Cripto y web3',
+    ai_tech: 'IA y tecnología',
   };
 
   /* Keywords en español: POD_GLOBAL_SUBNICHES solo trae keywords en inglés,
@@ -541,6 +842,19 @@
     christmas: ['navidad', 'pesebre', 'villancico', 'diciembre', 'regalo', 'belen'],
     new_year: ['ano nuevo', 'brindis', 'resolucion', 'enero', 'cuenta atras'],
     black_friday: ['black friday', 'oferta', 'descuento', 'compra', 'rebaja']
+,
+    streetwear: ['streetwear', 'oversized', 'urbano', 'moda calle', 'drop', 'cargo', 'capucha', 'espalda', 'tenis', 'gorro'],
+    tattoo_lifestyle: ['tatuaje', 'tatuado', 'tinta', 'flash', 'aguja', 'manga', 'plantilla', 'estudio', 'blackwork'],
+    motorcycle_biker: ['moto', 'biker', 'motociclista', 'motor', 'casco', 'carretera', 'ruta', 'cuero', 'rodada'],
+    vanlife_nomad: ['vanlife', 'van', 'nomada', 'carretera', 'camper', 'furgo', 'vida en ruta', 'panel solar'],
+    plant_parent: ['plantas', 'planta', 'monstera', 'maceta', 'riego', 'esqueje', 'jardin', 'selva interior', 'plant mom'],
+    booktok_reader: ['lectura', 'libro', 'libros', 'lector', 'booktok', 'novela', 'biblioteca', 'libreria', 'romantica', 'subrayar'],
+    gaming_setup: ['gaming', 'setup', 'gamer', 'teclado', 'rgb', 'pantalla', 'audifonos', 'stream', 'escritorio', 'pc'],
+    coffee_culture: ['cafe', 'espresso', 'barista', 'especialidad', 'filtrado', 'tueste', 'chemex', 'prensa', 'barismo'],
+    skate_culture: ['skate', 'patineta', 'skater', 'tabla', 'truco', 'pista', 'calle', 'ollie', 'rampa'],
+    surf_culture: ['surf', 'surfing', 'surfista', 'ola', 'tabla', 'playa', 'rompiente', 'marea', 'cera'],
+    crypto_web3: ['cripto', 'web3', 'blockchain', 'billetera', 'nodo', 'protocolo', 'descentralizado', 'cadena'],
+    ai_tech: ['ia', 'inteligencia artificial', 'robot', 'tecnologia', 'algoritmo', 'automatizacion', 'datos', 'prompt', 'red neuronal'],
   };
 
   /* Banco común en inglés. OBJECT_BANK_COMMON (data-estilos.js) está TODO en
@@ -604,6 +918,34 @@
 
   registerGroup('evergreen', EN_EVERGREEN, ES_EVERGREEN);
   registerGroup('temporada', EN_SEASON, ES_SEASON);
+
+  /* Colombia: estos 3 subnichos globales también viven en el mercado Colombia.
+     Se agregan al grupo evergreen con regiones y audiencias colombianas.
+     (registerGroup ya creó POD_SUBNICHES[id]; aquí solo se extiende). */
+  ["motorcycle_biker", "coffee_culture", "surf_culture"].forEach(function (id) {
+    if (POD_SUBNICHE_GROUPS.evergreen.indexOf(id) === -1) POD_SUBNICHE_GROUPS.evergreen.push(id);
+  });
+  if (POD_SUBNICHES.motorcycle_biker) {
+    if (POD_SUBNICHES.motorcycle_biker.regiones.indexOf('todas') === -1) POD_SUBNICHES.motorcycle_biker.regiones.push('todas');
+    ['andino_joven_m', 'andino_adulto_m', 'coste_joven_m', 'coste_adulto_m', 'unisex_nacional'].forEach(function (a) {
+      if (POD_SUBNICHES.motorcycle_biker.audiencias.indexOf(a) === -1) POD_SUBNICHES.motorcycle_biker.audiencias.push(a);
+    });
+  }
+  if (POD_SUBNICHES.coffee_culture) {
+    if (POD_SUBNICHES.coffee_culture.regiones.indexOf('todas') === -1) POD_SUBNICHES.coffee_culture.regiones.push('todas');
+    ['andino_joven_f', 'andino_adulta_f', 'coste_adulta_f', 'unisex_nacional'].forEach(function (a) {
+      if (POD_SUBNICHES.coffee_culture.audiencias.indexOf(a) === -1) POD_SUBNICHES.coffee_culture.audiencias.push(a);
+    });
+  }
+    var _si = POD_SUBNICHES.surf_culture.regiones.indexOf('todas');
+  if (_si !== -1) POD_SUBNICHES.surf_culture.regiones.splice(_si, 1);
+if (POD_SUBNICHES.surf_culture) {
+    if (POD_SUBNICHES.surf_culture.regiones.indexOf('costa_caribe') === -1) POD_SUBNICHES.surf_culture.regiones.push('costa_caribe');
+    ['coste_joven_m', 'coste_joven_f', 'coste_adulto_m', 'pacifico_raiz'].forEach(function (a) {
+      if (POD_SUBNICHES.surf_culture.audiencias.indexOf(a) === -1) POD_SUBNICHES.surf_culture.audiencias.push(a);
+    });
+  }
+
 
   window.BANCO_GLOBAL_EN_EVERGREEN = EN_EVERGREEN;
   window.BANCO_GLOBAL_ES_EVERGREEN = ES_EVERGREEN;

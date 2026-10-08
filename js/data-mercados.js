@@ -415,7 +415,197 @@ const POD_GLOBAL_SUBNICHES = {
         "mindset",
         "uplifting"
       ]
-    }
+    },
+    streetwear: {
+      label: "Streetwear Essentials",
+      keywords: [
+        "streetwear",
+        "street wear",
+        "oversized",
+        "drop",
+        "hype",
+        "urban fashion",
+        "chest hit",
+        "back print",
+        "cargo",
+        "sneakerhead",
+        "beanie",
+        "techwear"
+      ]
+    },
+    tattoo_lifestyle: {
+      label: "Tattoo Lifestyle",
+      keywords: [
+        "tattoo",
+        "tattoos",
+        "inked",
+        "tattooed",
+        "flash",
+        "ink",
+        "needle",
+        "blackwork",
+        "sleeve",
+        "stencil",
+        "aftercare",
+        "shop"
+      ]
+    },
+    motorcycle_biker: {
+      label: "Motorcycle Biker",
+      keywords: [
+        "motorcycle",
+        "biker",
+        "moto",
+        "rider",
+        "engine",
+        "helmet",
+        "highway",
+        "cruiser",
+        "chopper",
+        "leather",
+        "road",
+        "piston",
+        "throttle"
+      ]
+    },
+    vanlife_nomad: {
+      label: "Vanlife Nomads",
+      keywords: [
+        "vanlife",
+        "van life",
+        "nomad",
+        "van",
+        "road trip",
+        "camper",
+        "off grid",
+        "home on wheels",
+        "convert",
+        "roam"
+      ]
+    },
+    plant_parent: {
+      label: "Plant Parents",
+      keywords: [
+        "plants",
+        "plant",
+        "plant mom",
+        "plant dad",
+        "monstera",
+        "pothos",
+        "propagation",
+        "garden",
+        "indoor jungle",
+        "watering",
+        "repot"
+      ]
+    },
+    booktok_reader: {
+      label: "BookTok Readers",
+      keywords: [
+        "booktok",
+        "book",
+        "books",
+        "reading",
+        "reader",
+        "bookstore",
+        "romantasy",
+        "book lover",
+        "novel",
+        "library",
+        "bookish"
+      ]
+    },
+    gaming_setup: {
+      label: "Gaming Setup",
+      keywords: [
+        "gaming",
+        "setup",
+        "battlestation",
+        "rgb",
+        "keyboard",
+        "headset",
+        "monitor",
+        "stream",
+        "desk",
+        "keycaps"
+      ]
+    },
+    coffee_culture: {
+      label: "Coffee Culture",
+      keywords: [
+        "coffee",
+        "espresso",
+        "barista",
+        "latte",
+        "specialty",
+        "pour over",
+        "roast",
+        "chemex",
+        "cold brew",
+        "cafe"
+      ]
+    },
+    skate_culture: {
+      label: "Skate Culture",
+      keywords: [
+        "skate",
+        "skateboard",
+        "skater",
+        "deck",
+        "ollie",
+        "halfpipe",
+        "street skating",
+        "push",
+        "grip",
+        "wheels"
+      ]
+    },
+    surf_culture: {
+      label: "Surf Culture",
+      keywords: [
+        "surf",
+        "surfing",
+        "surfer",
+        "wave",
+        "board",
+        "beach",
+        "break",
+        "swell",
+        "lineup",
+        "wax",
+        "tide"
+      ]
+    },
+    crypto_web3: {
+      label: "Crypto Web3",
+      keywords: [
+        "crypto",
+        "web3",
+        "blockchain",
+        "defi",
+        "wallet",
+        "node",
+        "protocol",
+        "decentralized",
+        "cold storage",
+        "onchain"
+      ]
+    },
+    ai_tech: {
+      label: "AI Tech",
+      keywords: [
+        "ai",
+        "artificial intelligence",
+        "robot",
+        "neural",
+        "machine learning",
+        "prompt",
+        "automation",
+        "chatbot",
+        "algorithm",
+        "tech"
+      ]
+    },
   },
 
   temporada: {

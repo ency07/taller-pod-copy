@@ -549,7 +549,19 @@ const STYLE_CANDIDATES = {
   thanksgiving: ["Folk Popular", "Vintage Desgastado", "Hand-Drawn", "Retro 70s", "Acuarela Suelta", "Bordado / Puntada", "Kids Storybook", "Collage Cut-Paper", "Airbrush Smooth", "Ukiyo-e / Woodblock"],
   christmas: ["Folk Popular", "Kids Storybook", "Foil Stamp / Metallic", "Hand-Drawn", "Collage Cut-Paper", "Airbrush Smooth", "Papercraft 3D", "Vintage Desgastado", "Bordado / Puntada", "Vitral / Mosaico"],
   new_year: ["Retro 80s Neon", "Y2K / Cyber", "Foil Stamp / Metallic", "Airbrush Smooth", "Minimal Modern", "Vaporwave", "Retro 70s", "Risograph", "Brutalist", "Collage Cut-Paper"],
-  black_friday: ["Brutalist", "Y2K / Cyber", "Retro 80s Neon", "Minimal Modern", "Vaporwave", "Risograph", "Collage Cut-Paper", "Grunge / DIY", "Pixel / 8-bit", "Stencil Urbano"]
+  black_friday: ["Brutalist", "Y2K / Cyber", "Retro 80s Neon", "Minimal Modern", "Vaporwave", "Risograph", "Collage Cut-Paper", "Grunge / DIY", "Pixel / 8-bit", "Stencil Urbano"],
+  streetwear: ["Stencil Urbano", "Y2K / Cyber", "Brutalist", "Grunge / DIY", "Retro 80s Neon", "Paste-up Wheatpaste", "Cómic / Halftone", "Vector Flat / Plano vectorial", "Risograph", "Minimal Modern"],
+  tattoo_lifestyle: ["Dark Tattoo", "Tattoo Old School", "Irezumi / Wabori", "Grabado / Linóleo", "Gótico Ornamental", "Brutalist", "Stencil Urbano", "Cómic / Halftone", "Vintage Desgastado", "Minimal Modern"],
+  motorcycle_biker: ["Vintage Desgastado", "Grabado / Linóleo", "Dark Tattoo", "Brutalist", "Tattoo Old School", "Retro 70s", "Stencil Urbano", "Blueprint / Technical", "Grunge / DIY", "Airbrush Smooth"],
+  vanlife_nomad: ["Ukiyo-e / Woodblock", "Acuarela Suelta", "Retro 70s", "Vintage Desgastado", "Hand-Drawn", "Minimal Modern", "Photomontage / Dada", "Sumi-e / Tinta Lavada", "Folk Popular", "Bohemian"],
+  plant_parent: ["Bohemian", "Acuarela Suelta", "Hand-Drawn", "Minimal Modern", "Folk Popular", "Ukiyo-e / Woodblock", "Retro 70s", "Collage Cut-Paper", "Papercraft 3D", "Bordado / Puntada"],
+  booktok_reader: ["Hand-Drawn", "Retro 70s", "Minimal Modern", "Kids Storybook", "Acuarela Suelta", "Collage Cut-Paper", "Vintage Desgastado", "Folk Popular", "Airbrush Smooth", "Papercraft 3D"],
+  gaming_setup: ["Y2K / Cyber", "Retro 80s Neon", "Pixel / 8-bit", "Vaporwave", "Brutalist", "Minimal Modern", "Stencil Urbano", "Risograph", "Grunge / DIY", "Blueprint / Technical"],
+  coffee_culture: ["Vintage Desgastado", "Retro 70s", "Hand-Drawn", "Minimal Modern", "Folk Popular", "Blueprint / Technical", "Grabado / Linóleo", "Bordado / Puntada", "Airbrush Smooth", "Ukiyo-e / Woodblock"],
+  skate_culture: ["Stencil Urbano", "Grunge / DIY", "Surf / Skate 90s", "Cómic / Halftone", "Y2K / Cyber", "Retro 80s Neon", "Brutalist", "Collage Cut-Paper", "Risograph", "Paste-up Wheatpaste"],
+  surf_culture: ["Surf / Skate 90s", "Retro 70s", "Acuarela Suelta", "Ukiyo-e / Woodblock", "Vintage Desgastado", "Hand-Drawn", "Airbrush Smooth", "Vaporwave", "Retro 80s Neon", "Folk Popular"],
+  crypto_web3: ["Y2K / Cyber", "Brutalist", "Minimal Modern", "Blueprint / Technical", "Pixel / 8-bit", "Retro 80s Neon", "Vaporwave", "Grunge / DIY", "Stencil Urbano", "Risograph"],
+  ai_tech: ["Y2K / Cyber", "Minimal Modern", "Blueprint / Technical", "Brutalist", "Retro 80s Neon", "Vaporwave", "Pixel / 8-bit", "Photomontage / Dada", "Grunge / DIY", "Airbrush Smooth"],
 };
 
 /* ============================================================
