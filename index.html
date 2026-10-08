@@ -120,10 +120,15 @@
                 <option>DISPLATE</option>
               </select>
               <div class="hint" id="tplActiveHint" style="margin-top:6px;"></div>
-              <div class="field" style="margin-top: 10px;">
+              <div class="field" id="printMethodField" style="margin-top: 10px;">
+                <label for="printMethod">Preparacion de impresion</label>
+                <select id="printMethod"></select>
+                <div class="hint">Se agrega al prompt como guia tecnica; no cambia el estilo visual ni sustituye los ajustes del proveedor.</div>
+              </div>
+              <div class="field" id="capApplicationField" style="margin-top: 10px;">
                 <label for="capApplication">Acabado de gorra (solo se usa al elegir GORRA)</label>
                 <select id="capApplication">
-                  <option value="auto" selected>Auto — simplificar para una aplicación viable</option>
+                  <option value="auto" selected>Auto — conservar estilo y adaptar solo lo necesario</option>
                   <option value="bordado">Bordado</option>
                   <option value="parche">Parche bordado o tejido</option>
                   <option value="impresion">Impresión</option>

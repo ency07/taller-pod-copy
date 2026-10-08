@@ -290,6 +290,28 @@
     } catch (e) {}
   }
 
+  function updatePrintMethodOptions() {
+    var product = $('product') ? $('product').value : '';
+    var select = $('printMethod');
+    var methodField = $('printMethodField');
+    var capField = $('capApplicationField');
+    var isCap = product === 'GORRA';
+    if (methodField) methodField.style.display = isCap ? 'none' : '';
+    if (capField) capField.style.display = isCap ? '' : 'none';
+    if (!select) return;
+    var methods = typeof getPrintMethods === 'function' ? getPrintMethods(product) : ['auto'];
+    var labels = typeof PRINT_METHOD_LABELS !== 'undefined' ? PRINT_METHOD_LABELS : {};
+    var previous = select.value || 'auto';
+    select.innerHTML = '';
+    methods.forEach(function (method) {
+      var option = document.createElement('option');
+      option.value = method;
+      option.textContent = labels[method] || method;
+      select.appendChild(option);
+    });
+    select.value = methods.indexOf(previous) !== -1 ? previous : 'auto';
+  }
+
   /* Template activo (banco de templates: mochila/bolso/funda).
      Muestra qué plantilla usará el motor para el producto elegido. */
   function updateTemplateHint() {
@@ -307,6 +329,7 @@
     } else {
       el.textContent = '';
     }
+    updatePrintMethodOptions();
     if (typeof renderDesignToggle === 'function') renderDesignToggle();
   }
 

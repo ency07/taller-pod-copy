@@ -168,6 +168,47 @@ const PRODUCT_RULES = {
   "DISPLATE": "DISPLATE: esto NO es una camiseta ni un estampado textil. Diseña una obra mural premium para impresión sobre metal. Usa composición rectangular completa (full-bleed permitido). Respeta margen de seguridad mínimo del 5% en los cuatro bordes para montaje. Permite detalle alto, atmósfera, textura rica y fondo completo. La lectura debe funcionar tanto de cerca como de lejos. No uses lógica de pecho, espalda, panel frontal ni placement textil. El mockup debe mostrar la lámina en pared o ambiente real, nunca sobre cuerpo humano. Evita texto pegado a los bordes. La paleta debe ser sólida y limpia para impresión metálica."
 };
 
+/* La preparacion de impresion es una capa aparte del estilo visual.
+   No participa en la seleccion creativa de estilo/layout/objeto. */
+const PRINT_METHODS_BY_PRODUCT = {
+  "CAMISETA SOFT": ["auto", "dtf", "sublimacion", "bordado"],
+  "CAMISETA APPAREL": ["auto", "dtf", "sublimacion", "bordado"],
+  "HOODIE": ["auto", "dtf", "sublimacion", "bordado"],
+  "ILUSTRACION PREMIUM APPAREL": ["auto", "dtf", "sublimacion", "bordado"],
+  "GORRA": [],
+  "MUG": ["auto", "sublimacion"],
+  "MOCHILA": ["auto", "dtf", "sublimacion", "bordado", "parche"],
+  "TOTE BAG": ["auto", "dtf", "sublimacion", "bordado", "parche"],
+  "FUNDA MÓVIL": ["auto", "impresion"],
+  "DISPLATE": ["auto", "impresion"]
+};
+const PRINT_METHOD_LABELS = {
+  auto: "Auto: conservar el arte y aplicar solo cuidados generales",
+  dtf: "DTF",
+  sublimacion: "Sublimacion (solo material compatible)",
+  bordado: "Bordado",
+  parche: "Parche bordado o tejido",
+  impresion: "Impresion segun proveedor"
+};
+const PRINT_PREP_RULES = {
+  auto: "Conserva intactos el estilo visual, la composicion, los colores y los detalles intencionales. No simplifiques ni conviertas a vector por defecto. Mantiene bordes limpios, contraste y lectura a la escala del producto; las medidas y tolerancias finales dependen del proveedor.",
+  dtf: "PREPARACION DTF: conserva el estilo, degradados, textura y detalle intencional. Define bordes nítidos sin halos ni píxeles sueltos; evita líneas o huecos tan finos que desaparezcan al tamaño de impresión. Mantén el arte imprimible claramente separado del mockup; no simules ni dibujes la base blanca del RIP, salvo que sea parte visible del diseño.",
+  sublimacion: "PREPARACION PARA SUBLIMACION: conserva color, degradados y detalle; no fuerces paleta plana ni simplificacion. Mantén textos y elementos esenciales dentro de zona segura; usa sangrado o repeticion solo cuando la superficie y plantilla del producto lo permitan. Separa el arte imprimible del mockup.",
+  bordado: "PREPARACION PARA BORDADO: conserva el concepto y la direccion visual, traduciendo solo los detalles que no sean legibles a escala real. Favorece contornos claros, formas conectadas y espacios abiertos; evita microtexto, hilos aislados y lineas demasiado finas. No declares el arte digitalizado ni listo para maquina.",
+  parche: "PREPARACION PARA PARCHE: conserva concepto y direccion visual; crea silueta delimitada, zonas de color legibles y espacio suficiente entre detalles. Evita microtexto y bordes extremadamente finos. No declares el arte listo para bordado o tejido sin digitalizacion y medidas del proveedor.",
+  impresion: "PREPARACION PARA IMPRESION: conserva estilo, color y detalle intencional; evita halos, bordes accidentales y elementos esenciales fuera del area segura. La tecnologia, material y medidas dependen del proveedor."
+};
+function getPrintMethods(product) {
+  return PRINT_METHODS_BY_PRODUCT[product] || ["auto"];
+}
+function getPrintPrepRule(product, method) {
+  const chosen = product === "GORRA" ? (method || "auto") : (method || "auto");
+  let rule = PRINT_PREP_RULES[chosen] || PRINT_PREP_RULES.auto;
+  if (chosen === "sublimacion" && product === "MUG") rule += " Aplicar solo a taza con recubrimiento apto para sublimacion; confirmarlo con el proveedor.";
+  else if (chosen === "sublimacion" && isTextile(product)) rule += " En textil, aplicar solo si la fibra es poliester compatible; no asumir que una camiseta de algodon admite sublimacion.";
+  return "ESTILO VISUAL y PREPARACION TECNICA son decisiones separadas. " + rule;
+}
+
 const PRODUCT_MOCKUP_RULES = {
   "CAMISETA SOFT": "dos mockups de camiseta (uno oscuro y otro claro); vista frontal y tres cuartos",
   "CAMISETA APPAREL": "dos mockups de prenda fashion (plana o modelo); vista frontal y detalle",
@@ -237,6 +278,11 @@ window.PRODUCT_BIAS = PRODUCT_BIAS;
 window.PLACEMENT = PLACEMENT;
 window.PRODUCT_RULES = PRODUCT_RULES;
 window.PRODUCT_MOCKUP_RULES = PRODUCT_MOCKUP_RULES;
+window.PRINT_METHODS_BY_PRODUCT = PRINT_METHODS_BY_PRODUCT;
+window.PRINT_METHOD_LABELS = PRINT_METHOD_LABELS;
+window.PRINT_PREP_RULES = PRINT_PREP_RULES;
+window.getPrintMethods = getPrintMethods;
+window.getPrintPrepRule = getPrintPrepRule;
 window.isDrinkware = isDrinkware;
 window.isCase = isCase;
 window.isBag = isBag;

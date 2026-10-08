@@ -116,6 +116,7 @@ let MOTOR_STATE = {
     esencia: ''
   },
   capApplication: 'auto',
+  printMethod: 'auto',
   imageReference: null,
   imageAnalysis: null
 };
@@ -156,6 +157,7 @@ function readStateFromDOM() {
   MOTOR_STATE.variationOptions.paleta = v('paletaVar', 'renovar');
   MOTOR_STATE.variationOptions.esencia = (g('essence') ? g('essence').value : '').trim();
   MOTOR_STATE.capApplication = v('capApplication', 'auto');
+  MOTOR_STATE.printMethod = v('printMethod', 'auto');
   const imageInput = g('imageUpload');
   const imageFile = imageInput && imageInput.files ? imageInput.files[0] : null;
   MOTOR_STATE.imageReference = imageFile ? {
@@ -934,14 +936,18 @@ function formatPrompt(result) {
   let productRule = _PRODUCT_RULES[MOTOR_STATE.product] || '';
   if (MOTOR_STATE.product === 'GORRA') {
     const capRules = {
-      auto: 'Auto: usa silueta simple y pocos detalles; no afirmes que el arte esta validado para produccion.',
-      bordado: 'ACABADO: BORDADO. Usa formas solidas, contornos gruesos, pocos colores, espacios amplios; evita degradados, lineas finas y microtexto. La viabilidad final depende de la plantilla del proveedor.',
-      parche: 'ACABADO: PARCHE. Usa silueta compacta, contorno claro y areas separables; evita microtexto y detalles finos.',
+      auto: 'Auto: conserva el estilo visual y adapta solo lo necesario al panel curvo; evita microtexto y detalles que no se lean a escala real. No afirmes que el arte esta validado para produccion.',
+      bordado: 'ACABADO: BORDADO. Conserva la direccion visual y adapta solo los detalles que no se lean a escala real. Contornos claros y espacios abiertos; evita microtexto. La digitalizacion y medidas finales dependen del proveedor.',
+      parche: 'ACABADO: PARCHE. Conserva concepto y estilo; define una silueta delimitada y separacion suficiente para leer sus detalles a escala real. Evita microtexto; medidas finales dependen del proveedor.',
       impresion: 'ACABADO: IMPRESION. Permite mas detalle que el bordado, manteniendo contraste y lectura en el panel curvo.'
     };
     productRule += ' ' + capRules[MOTOR_STATE.capApplication || 'auto'];
   }
   const mockupRule = typeof getMockupRule === 'function' ? getMockupRule(MOTOR_STATE.product) : '';
+  const selectedPrintMethod = MOTOR_STATE.product === 'GORRA' ? MOTOR_STATE.capApplication : MOTOR_STATE.printMethod;
+  const printPrepRule = typeof getPrintPrepRule === 'function' ? getPrintPrepRule(MOTOR_STATE.product, selectedPrintMethod) : '';
+  const printMethodLabels = typeof PRINT_METHOD_LABELS !== 'undefined' ? PRINT_METHOD_LABELS : {};
+  const printMethodName = printMethodLabels[selectedPrintMethod] || printMethodLabels.auto || 'Auto';
   const supportsPattern = ['MOCHILA', 'TOTE BAG', 'FUNDA MÓVIL'].indexOf(MOTOR_STATE.product) !== -1;
   const isPatron = MOTOR_STATE.designMode === 'patron' && !isVar && supportsPattern;
   const tplActive = _activeTemplateSafe();
@@ -986,6 +992,7 @@ function formatPrompt(result) {
   if (cultDir) o += 'CULTURA: ' + cultDir + '\n';
   if (legalDir) o += 'LEGAL: ' + legalDir + '\n';
   if (productRule) o += 'PRODUCTO: ' + productRule + '\n';
+  if (printPrepRule) o += 'ACABADO / PREPARACION TECNICA (' + printMethodName + '): ' + printPrepRule + '\n';
   if (mockupRule) o += 'PRESENTACION: ' + mockupRule + '\n';
   // Template activo (banco de templates: mochila/bolso/funda). Ancla el diseño
   // a zonas reales en vez de generar a ciegas.
