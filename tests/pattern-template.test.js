@@ -134,6 +134,36 @@ deleteTemplate(rr.id);
 const out2 = formatPrompt({ set: { A: ficha('Minimal Modern'), B: ficha('Brutalist'), C: ficha('Retro 70s') } });
 ok(out2.indexOf('TEMPLATE:') === -1, 'prompt cita template sin activo');
 
+/* ---------- 5. Modo patrón (designMode patron) ---------- */
+ok(MOTOR_STATE.designMode === 'contacto', 'designMode debe defaultear a contacto');
+MOTOR_STATE.designMode = 'patron';
+MOTOR_STATE.repeatType = 'medio salto';
+MOTOR_STATE.product = 'TOTE BAG';
+const rp = saveTemplate({ nombre: 'Tote flores test', producto: 'TOTE BAG', imagen: tinyImg, notas: '' });
+setActiveTemplate('TOTE BAG', rp.id);
+const pout = formatPrompt({ set: { A: ficha('Folk Popular'), B: ficha('Bohemian'), C: ficha('Retro 70s') } });
+ok(pout.indexOf('/PATRON REPETIDO') !== -1, 'prompt patrón sin cabecera PATRON REPETIDO');
+ok(pout.indexOf('REPETICIÓN: medio salto') !== -1, 'prompt patrón sin tipo de repetición');
+ok(pout.indexOf('TILE: motivo') !== -1, 'prompt patrón sin líneas TILE por variante');
+ok((pout.match(/REPETICIÓN: medio salto/g) || []).length >= 3, 'prompt patrón sin REPETICIÓN por ficha');
+ok(pout.indexOf('sin costura visible') !== -1, 'prompt patrón sin regla de tile sin costura');
+ok(pout.indexOf('TEXTO EN TILE:') !== -1, 'prompt patrón sin regla de texto en tile');
+ok(pout.indexOf('TEMPLATE: Tote flores test (TOTE BAG)') !== -1, 'prompt patrón sin template citado');
+ok(pout.indexOf('APLICACIÓN: repetir en Cara frontal') !== -1, 'línea APLICACIÓN no cita zonas de uso');
+ok(pout.indexOf('excluir Asas') !== -1, 'aplicación sin zonas de exclusión');
+// Sin template: placement estándar + aviso
+setActiveTemplate('TOTE BAG', null);
+const pout2 = formatPrompt({ set: { A: ficha('Folk Popular'), B: ficha('Bohemian'), C: ficha('Retro 70s') } });
+ok(pout2.indexOf('/PATRON REPETIDO') !== -1, 'patrón sin template perdió cabecera');
+ok(pout2.indexOf('sin template') !== -1, 'patrón sin template no avisa');
+// Modo contacto intacto
+MOTOR_STATE.designMode = 'contacto';
+const cout = formatPrompt({ set: { A: ficha('Folk Popular'), B: ficha('Bohemian'), C: ficha('Retro 70s') } });
+ok(cout.indexOf('/PATRON REPETIDO') === -1, 'modo contacto contaminado con patrón');
+ok(cout.indexOf('/CONTACTSHEET') !== -1, 'modo contacto perdió cabecera');
+ok(cout.indexOf('TILE: motivo') === -1, 'modo contacto con líneas TILE');
+deleteTemplate(rp.id);
+
 const passed = failures.length === 0;
 console.log((passed ? 'PASS' : 'FAIL') + '  pattern-template  (' + checks + ' aserciones, ' + failures.length + ' fallos)');
 failures.forEach(function (f) { console.log('  X ' + f); });

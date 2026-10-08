@@ -106,6 +106,8 @@ let MOTOR_STATE = {
   workflowMode: 'new',
   groupMode: 'distintos',
   objectMode: 'simple',
+  designMode: 'contacto',
+  repeatType: 'medio salto',
   fmtDense: true,
   variationOptions: {
     simbolo: 'sustituir',
@@ -148,6 +150,7 @@ function readStateFromDOM() {
     }
   } catch (e) { MOTOR_STATE.dominioDetectado = 'auto'; }
   MOTOR_STATE.workflowMode = v('workflowMode', 'new');
+  MOTOR_STATE.repeatType = v('repeatType', 'medio salto');
   MOTOR_STATE.variationOptions.simbolo = v('simboloVar', 'sustituir');
   MOTOR_STATE.variationOptions.textos = v('textosVar', 'conservar_palabras');
   MOTOR_STATE.variationOptions.paleta = v('paletaVar', 'renovar');
@@ -877,6 +880,35 @@ function generateSet() {
   return LAST_RESULT;
 }
 
+/* --- Patrón repetido por producto (solo mochila/bolso/funda con template) --- */
+function _activeTemplateSafe() {
+  try {
+    if (typeof getActiveTemplate === 'function') return getActiveTemplate(MOTOR_STATE.product);
+  } catch (e) {}
+  return null;
+}
+
+function _patronScale() {
+  const map = {
+    'MOCHILA': 'motivo pequeño-mediano (panel y bolsillo)',
+    'TOTE BAG': 'motivo mediano (cara frontal amplia)',
+    'FUNDA MÓVIL': 'motivo pequeño (trasera reducida)'
+  };
+  return map[MOTOR_STATE.product] || 'motivo mediano';
+}
+
+function _patronAplicacion(tpl, placementFallback) {
+  if (tpl) {
+    const usar = (tpl.zonas || []).filter(function (z) { return z.uso === 'usar' || z.uso === 'opcional'; }).map(function (z) { return z.label; }).join(', ');
+    const excluir = (tpl.zonas || []).filter(function (z) { return z.uso === 'excluir'; }).map(function (z) { return z.label; }).join(', ');
+    let s = 'repetir en ' + (usar || 'zonas de uso');
+    if (excluir) s += '; excluir ' + excluir;
+    s += ' (template ' + tpl.nombre + ')';
+    return s;
+  }
+  return 'repetir en ' + (placementFallback || MOTOR_STATE.product) + ' (sin template; sube la plantilla en el editor para mochila/bolso/funda)';
+}
+
 /* --- Formateo de prompt --- */
 function formatPrompt(result) {
   if (!result || !result.set) return '';
@@ -910,6 +942,8 @@ function formatPrompt(result) {
     productRule += ' ' + capRules[MOTOR_STATE.capApplication || 'auto'];
   }
   const mockupRule = typeof getMockupRule === 'function' ? getMockupRule(MOTOR_STATE.product) : '';
+  const isPatron = MOTOR_STATE.designMode === 'patron' && !isVar;
+  const tplActive = _activeTemplateSafe();
   let o = '';
   if (isVar) {
     const image = MOTOR_STATE.imageReference;
@@ -934,6 +968,11 @@ function formatPrompt(result) {
     else if (MOTOR_STATE.variationOptions.textos === 'mismo_mensaje') o += 'Conserva la idea de MENSAJE/CONCEPTO; permite reformular sin cambiar su sentido.\n';
     else o += 'Crea redaccion nueva desde CONCEPTO/MENSAJE, sin atribuirla a la imagen fuente.\n';
     o += 'ESQUEMAS: aplica las decisiones particulares de cada ficha.\n\n';
+  } else if (isPatron) {
+    o += '/PATRON REPETIDO — 3 VARIANTES DE TILE · MISMO CONCEPTO\n';
+    o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
+    o += 'CONCEPTO: ' + MOTOR_STATE.concept + ' | MENSAJE: ' + MOTOR_STATE.message + '\n';
+    o += 'REPETICIÓN: ' + (MOTOR_STATE.repeatType || 'medio salto') + ' | CADA VARIANTE ES UN TILE DISTINTO DEL MISMO CONCEPTO\n\n';
   } else {
     o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
@@ -949,19 +988,14 @@ function formatPrompt(result) {
   if (mockupRule) o += 'PRESENTACION: ' + mockupRule + '\n';
   // Template activo (banco de templates: mochila/bolso/funda). Ancla el diseño
   // a zonas reales en vez de generar a ciegas.
-  try {
-    if (typeof getActiveTemplate === 'function') {
-      const tpl = getActiveTemplate(MOTOR_STATE.product);
-      if (tpl) {
-        const zones = (tpl.zonas || []).map(function (z) {
-          return z.label + ' [' + z.uso + ']';
-        }).join('; ');
-        o += 'TEMPLATE: ' + tpl.nombre + ' (' + tpl.producto + ') | ZONAS: ' + zones;
-        if (tpl.notas) o += ' | NOTAS: ' + tpl.notas;
-        o += '\n';
-      }
-    }
-  } catch (e) {}
+  if (tplActive) {
+    const zones = (tplActive.zonas || []).map(function (z) {
+      return z.label + ' [' + z.uso + ']';
+    }).join('; ');
+    o += 'TEMPLATE: ' + tplActive.nombre + ' (' + tplActive.producto + ') | ZONAS: ' + zones;
+    if (tplActive.notas) o += ' | NOTAS: ' + tplActive.notas;
+    o += '\n';
+  }
   if (MOTOR_STATE.market === 'gospel_es' || MOTOR_STATE.market === 'gospel_en') {
     o += 'DOCTRINA: Trinitario (Padre, Hijo, Espiritu Santo) y cristocentrico. Cruz y resurreccion al centro. PROHIBIDO prosperidad magica, decretos, angeles como centro, santos mediadores, esoterismo, horoscopo, energia. Sin region: universal.\n';
   }
@@ -972,7 +1006,12 @@ function formatPrompt(result) {
     o += 'SANDBOX: solo bancos globales del idioma del mercado. Prohibidos regionalismos colombianos y simbolismo gospel doctrinal.\n';
   }
   o += 'DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo y fondo NUNCA se repiten entre A/B/C.\n';
-  o += 'TEXTOS: tres niveles con peso real, todos legibles; PROHIBIDO microtexto decorativo.\n';
+  if (isPatron) {
+    o += 'PATRON: cada variante es un tile sin costura visible (bordes que empatan al repetirse); motivo y fondo definidos por ficha; repetición ' + (MOTOR_STATE.repeatType || 'medio salto') + ' en toda la superficie aplicable.\n';
+    o += 'TEXTO EN TILE: mínimo o nulo; si hay texto debe funcionar repetido (sin lectura lineal, sin frase que se corte entre repeticiones).\n';
+  } else {
+    o += 'TEXTOS: tres niveles con peso real, todos legibles; PROHIBIDO microtexto decorativo.\n';
+  }
   o += 'AUDIENCIA: cada perfil gobierna decisiones visibles. Si al quitarla el diseño no cambia, RECHAZAR.\n\n';
 
   K.forEach(function (k, i) {
@@ -985,7 +1024,12 @@ function formatPrompt(result) {
     o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
     o += 'TEXTO: ' + v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' Â· ' + v.tipografia + '\n';
     o += 'PALETA: ' + v.paleta + '\n';
-    o += 'PERTINENCIA: audiencia ' + (v.fitAudiencia || 0) + '/100 Â· producto ' + (v.fitProducto || 0) + '/100\n\n';
+    o += 'PERTINENCIA: audiencia ' + (v.fitAudiencia || 0) + '/100 Â· producto ' + (v.fitProducto || 0) + '/100\n';
+    if (isPatron) {
+      o += 'TILE: motivo (' + v.objeto + ') en estilo ' + v.estilo + ' (' + v.tecnica + ') sobre fondo ' + (v.familiaColor || 'del producto') + '\n';
+      o += 'REPETICIÓN: ' + (MOTOR_STATE.repeatType || 'medio salto') + ' | ESCALA MOTIVO: ' + _patronScale() + ' | APLICACIÓN: ' + _patronAplicacion(tplActive, v.placement) + '\n';
+    }
+    o += '\n';
   });
 
   return o;

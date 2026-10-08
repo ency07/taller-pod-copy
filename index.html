@@ -313,6 +313,19 @@
             <label style="margin-top: 14px;">Objetos</label>
             <div id="objectModeToggle" class="pills"></div>
 
+            <label style="margin-top: 14px;">Diseño</label>
+            <div id="designToggle" class="pills"></div>
+
+            <div class="field" id="repeatRow" style="margin-top: 10px; display: none;">
+              <label for="repeatType">Repetición del patrón</label>
+              <select id="repeatType">
+                <option value="medio salto" selected>Medio salto (ladrillo)</option>
+                <option value="rejilla">Rejilla (alineado)</option>
+                <option value="espejo">Espejo (mirror)</option>
+              </select>
+              <div class="hint">Solo mochila, bolso y funda tienen banco de templates. Sin template, el patrón se aplica al placement estándar.</div>
+            </div>
+
             <div class="field" style="margin-top: 16px;">
               <label for="pbText">Banco personal — objetos nuevos, uno por línea</label>
               <textarea id="pbText" rows="4" placeholder="Ej: ventilador de techo como testigo de todas las verdades"></textarea>

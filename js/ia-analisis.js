@@ -733,6 +733,35 @@
     });
   }
 
+  /* Toggle de modo de diseño: fichas (3 direcciones) vs patrón repetido.
+     Solo mochila/bolso/funda tienen banco de templates; el resto usa placement. */
+  function renderDesignToggle() {
+    const el = $('designToggle');
+    if (el) {
+      const modes = [
+        { val: 'contacto', label: 'Fichas (3 direcciones)' },
+        { val: 'patron', label: 'Patrón repetido' }
+      ];
+      el.innerHTML = '';
+      modes.forEach(function (m) {
+        const pill = document.createElement('span');
+        pill.className = 'pill' + ((typeof MOTOR_STATE !== 'undefined' && MOTOR_STATE.designMode === m.val) ? ' on' : '');
+        pill.textContent = m.label;
+        pill.addEventListener('click', function () {
+          if (typeof MOTOR_STATE !== 'undefined') {
+            MOTOR_STATE.designMode = m.val;
+          }
+          renderDesignToggle();
+        });
+        el.appendChild(pill);
+      });
+    }
+    const row = $('repeatRow');
+    if (row) {
+      row.style.display = (typeof MOTOR_STATE !== 'undefined' && MOTOR_STATE.designMode === 'patron') ? '' : 'none';
+    }
+  }
+
   /* ============================================================
      INICIALIZACIÓN
      ============================================================ */
@@ -763,6 +792,7 @@
     wireButtons();
     renderModeToggle();
     renderObjectModeToggle();
+    renderDesignToggle();
     updatePbCount();
 
     // Si el modo es variación, abrir el panel
