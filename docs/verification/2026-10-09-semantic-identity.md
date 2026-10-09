@@ -86,3 +86,11 @@ No integrar en main hasta ejecutar los tests y comprobar el Preview.
 
 ### Siguiente gate
 Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localizar los módulos de credenciales y Supabase, ejecutar los tests desde un checkout con Node y después probar el Preview de Vercel. No fusionar hasta pasar esos gates.
+
+
+## Actualización — eliminar bloqueo para conceptos descriptivos (2026-10-09)
+
+- `js/motor-nucleo.js`: si no existe una coincidencia inequívoca en el banco, el concepto completo pasa a ser el ancla semántica. Así se aceptan escenas, lugares, relaciones y conceptos con varios elementos sin seleccionar un objeto arbitrario.
+- El bloqueo queda reservado para el caso en que el campo de concepto está vacío.
+- `tests/semantic-identity.test.js`: actualizados los casos para cubrir conceptos descriptivos, relaciones entre símbolos y concepto ausente.
+- Verificación disponible: compilación sintáctica del contenido de los dos archivos revisados, pendiente ejecutar el test con Node real y probar el Preview.
