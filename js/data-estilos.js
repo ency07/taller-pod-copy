@@ -155,9 +155,9 @@ const TIPOS = [
 ];
 
 const TRATAMIENTOS = [
-  "HEAVY: masas densas al 60-80%, contraste alto, tinta cargada, grano marcado, bordes duros",
-  "SOFT: masas ligeras al 30-50%, contraste medio-bajo, degradados suaves, grano fino",
-  "MODERN: masas planas al 40-60%, contraste medio, tintas planas limpias, geometría neta"
+  "HEAVY: contornos gruesos y masas sólidas dominantes; contraste alto; textura marcada solo en áreas amplias; conserva huecos abiertos y letras grandes legibles",
+  "SOFT: formas abiertas, aire y textura ligera; transiciones suaves solo en áreas amplias; conserva contraste suficiente para separar símbolo y texto al imprimir",
+  "MODERN: geometría limpia, bordes nítidos y tintas planas; paleta controlada; silueta clara y sin ruido que compita con el mensaje"
 ];
 
 const FORMAS = [

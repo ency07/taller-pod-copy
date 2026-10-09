@@ -598,6 +598,17 @@ function _pickFresh(biasPool, fullPool, used) {
 
 function _treatmentKey(value) { return String(value || '').split(':')[0].trim().toUpperCase(); }
 
+function _treatmentSpecComplete(value) {
+  const key = _treatmentKey(value);
+  const detail = String(value || '').toLowerCase();
+  const requirements = {
+    HEAVY: ['contornos gruesos', 'masas sólidas', 'contraste alto', 'letras grandes legibles'],
+    SOFT: ['formas abiertas', 'aire', 'contraste suficiente', 'al imprimir'],
+    MODERN: ['geometría limpia', 'bordes nítidos', 'tintas planas', 'silueta clara']
+  };
+  return !!requirements[key] && requirements[key].every(function (part) { return detail.indexOf(part) !== -1; });
+}
+
 function _pickFreshTreatment(biasPool, fullPool, used) {
   const usedKeys = (used || []).map(_treatmentKey);
   const available = (fullPool || []).filter(function (item) { return usedKeys.indexOf(_treatmentKey(item)) === -1; });
@@ -607,7 +618,25 @@ function _pickFreshTreatment(biasPool, fullPool, used) {
   return _pick(preferred.length ? preferred : available);
 }
 
-function buildCandidate(audsPerKey) {
+function _isLockedContactSet() {
+  return MOTOR_STATE.workflowMode !== 'variation' && MOTOR_STATE.designMode !== 'patron';
+}
+
+function _resolveContactIdentity(objectPool) {
+  const concept = String(MOTOR_STATE.concept || '').trim();
+  const message = String(MOTOR_STATE.message || '').trim();
+  const source = concept || message;
+  const relation = source.match(/^\s*(?:(?:a|an|the|un|una|el|la|los|las)\s+)?([A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ'’-]*(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ'’-]*){0,2}?)\s+(?:que|that|which)\s+(?:protege|protegen|proteger|protects|protect|guards|defends)\b/i);
+  const symbol = (relation && relation[1] ? relation[1].trim() : '') || _pick(objectPool) || source || 'símbolo del nicho';
+  const protective = /\b(proteg\w*|protect\w*|guard\w*|defend\w*|cuid\w*|care\w*|safe\w*)\b/i.test(concept + ' ' + message);
+  return {
+    symbol: symbol,
+    funcionSimbolica: protective ? 'Protección y cuidado' : (_pick(_POOLS.funcionSimbolica) || 'Emblema de identidad'),
+    intencionEmocional: protective ? 'Seguridad y cuidado' : (_pick(_POOLS.intencionEmocional) || 'Certeza silenciosa')
+  };
+}
+
+function buildCandidate(audsPerKey, fixedIdentity) {
   const estilos = resolveEstilos(audsPerKey);
   const hierarchyPerKey = resolveTextImageModes(estilos, audsPerKey);
   const objectPool = getObjectPool();
@@ -620,6 +649,11 @@ function buildCandidate(audsPerKey) {
   const set = {};
   const usedThisSet = new Set();
   const usedAxes = { layout: [], tipografia: [], formaSimbolo: [], tratamiento: [], integracionTexto: [] };
+  const contactIdentity = _isLockedContactSet()
+    ? (fixedIdentity || _resolveContactIdentity(objectPool))
+    : null;
+  const contactPrimaryText = String(MOTOR_STATE.message || MOTOR_STATE.concept || '').trim().replace(/\s+/g, ' ');
+  const contactSupportText = String(MOTOR_STATE.support || '').trim().replace(/\s+/g, ' ');
 
   K.forEach(function (k) {
     const v = {};
@@ -627,8 +661,11 @@ function buildCandidate(audsPerKey) {
     v.audiencia = audsPerKey[k];
     v.jerarquiaVisual = hierarchyPerKey[k];
 
-    // Objeto
-    if (v.jerarquiaVisual === 'SOLO_TEXTO') {
+    // En un contactsheet nuevo, el símbolo se decide una vez para A/B/C.
+    // Variación desde imagen conserva su propia lógica y sus selectores.
+    if (contactIdentity) {
+      v.objeto = contactIdentity.symbol;
+    } else if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       v.objeto = 'SIN OBJETO — composición tipográfica pura';
     } else if (conservarSimb) {
       v.objeto = '(símbolo de la imagen REDIBUJADO: misma función simbólica; prohibido copiar silueta)';
@@ -659,6 +696,11 @@ function buildCandidate(audsPerKey) {
     } else {
       v.textoApoyo = _pick(sp.textoApoyo || _TEXTO_FALLBACK_SECULAR.textoApoyo || ['texto de apoyo con peso']);
       v.textoTerciario = _pick(sp.textoTerciario || _TEXTO_FALLBACK_SECULAR.textoTerciario || ['dato de serie legible']);
+    }
+    if (contactIdentity) {
+      v.textoPrincipal = contactPrimaryText;
+      v.textoApoyo = contactSupportText;
+      v.textoTerciario = '';
     }
 
     v.tecnica = _pick(sp.tecnica || ['técnica mixta']);
@@ -704,8 +746,12 @@ function buildCandidate(audsPerKey) {
     const densityPool = compatibleDensity.length ? compatibleDensity : (productDensity.length ? productDensity : (audienceDensity.length ? audienceDensity : (_POOLS.densidad || ['Balanced'])));
     v.densidad = _pick(densityPool);
     v.negativeSpace = _pick(_POOLS.negativeSpace || ['aire alrededor del motivo']);
-    v.funcionSimbolica = _pick(_POOLS.funcionSimbolica || ['Emblema de identidad']);
-    v.intencionEmocional = _pick(_POOLS.intencionEmocional || ['Certeza silenciosa']);
+    v.funcionSimbolica = contactIdentity
+      ? contactIdentity.funcionSimbolica
+      : _pick(_POOLS.funcionSimbolica || ['Emblema de identidad']);
+    v.intencionEmocional = contactIdentity
+      ? contactIdentity.intencionEmocional
+      : _pick(_POOLS.intencionEmocional || ['Certeza silenciosa']);
 
     v.placement = _PLACEMENT[MOTOR_STATE.product] || _PLACEMENT['CAMISETA SOFT'] || 'pecho centrado';
     v.escalaProducto = productBias.scale || 'escala adecuada al producto';
@@ -765,7 +811,8 @@ function buildCandidate(audsPerKey) {
 
 /* --- Scoring y selección --- */
 function scoreSet(set) {
-  const fields = ['estilo', 'layout', 'tipografia', 'formaSimbolo', 'tratamiento', 'integracionTexto', 'objeto', 'familiaColor'];
+  // El objeto deja de ser eje de diversidad: el contactsheet debe conservarlo.
+  const fields = ['estilo', 'layout', 'tipografia', 'formaSimbolo', 'tratamiento', 'integracionTexto', 'familiaColor'];
   const pairs = [[0, 1], [0, 2], [1, 2]];
   let diversity = 0;
 
@@ -782,8 +829,13 @@ function scoreSet(set) {
 
   const estilos = [...new Set(K.map(function (k) { return set[k].estilo; }))];
   const familias = [...new Set(K.map(function (k) { return set[k].familiaColor; }))];
-  const objs = K.filter(function (k) { return set[k].jerarquiaVisual !== 'SOLO_TEXTO'; }).map(function (k) { return set[k].objeto; });
-  const objUnique = new Set(objs).size === objs.length;
+  const symbols = K.map(function (k) { return String(set[k].objeto || '').trim(); });
+  const symbolStable = symbols.length === 3 && !!symbols[0] && symbols.every(function (x) { return x === symbols[0]; });
+  const treatmentKeys = K.map(function (k) { return _treatmentKey(set[k].tratamiento); });
+  const requiredTreatments = ['HEAVY', 'SOFT', 'MODERN'];
+  const treatmentsComplete = requiredTreatments.every(function (name) { return treatmentKeys.indexOf(name) !== -1; })
+    && new Set(treatmentKeys).size === 3
+    && K.every(function (k) { return _treatmentSpecComplete(set[k].tratamiento); });
 
   const fitAudMin = Math.min.apply(null, K.map(function (k) { return set[k].fitAudiencia || 0; }));
   const fitProdMin = Math.min.apply(null, K.map(function (k) { return set[k].fitProducto || 0; }));
@@ -792,10 +844,11 @@ function scoreSet(set) {
     diversity: dPct,
     estilos: estilos,
     familias: familias,
-    objUnique: objUnique,
+    symbolStable: symbolStable,
+    treatmentsComplete: treatmentsComplete,
     fitAudienciaMin: fitAudMin,
     fitProductoMin: fitProdMin,
-    total: dPct * 2 + (estilos.length === 3 ? 30 : 0) + (objUnique ? 20 : -50) + fitAudMin * 0.5 + fitProdMin * 0.5
+    total: dPct * 2 + (estilos.length === 3 ? 30 : 0) + (symbolStable ? 20 : -50) + (treatmentsComplete ? 20 : -40) + fitAudMin * 0.5 + fitProdMin * 0.5
   };
 }
 
@@ -850,7 +903,8 @@ function generateSet() {
     const estilosOk = MOTOR_STATE.groupMode === 'mismo'
       ? m.estilos.length === 1
       : m.estilos.length === 3;
-    const ok = m.diversity >= 55 && estilosOk && m.objUnique && ejesOk && pertinenciaOk
+    const contactRulesOk = !_isLockedContactSet() || (m.symbolStable && m.treatmentsComplete);
+    const ok = m.diversity >= 55 && estilosOk && contactRulesOk && ejesOk && pertinenciaOk
       && _patternConflictsOf(cand) === 0;
 
     // Rankings SEPARADOS: antes un candidato rechazado subía bestTotal y
@@ -974,6 +1028,11 @@ function formatPrompt(result) {
   const tplActive = _activeTemplateSafe();
   const promptConcept = String(MOTOR_STATE.concept || '').trim() || String(MOTOR_STATE.message || '').trim() || '—';
   const promptMessage = String(MOTOR_STATE.message || '').trim() || '—';
+  const contactDNA = !isVar && !isPatron;
+  const contactSymbol = contactDNA && set.A ? String(set.A.objeto || '').trim() : '';
+  const contactFunction = contactDNA && set.A ? String(set.A.funcionSimbolica || '').trim() : '';
+  const contactMainText = String(MOTOR_STATE.message || MOTOR_STATE.concept || '').trim().replace(/\s+/g, ' ');
+  const contactSupportText = String(MOTOR_STATE.support || '').trim().replace(/\s+/g, ' ');
   const activeDomain = dominioEfectivo();
   let promptFamilyId = null;
   if (isGospelMarket()) promptFamilyId = activeDomain || null;
@@ -1016,11 +1075,17 @@ function formatPrompt(result) {
     o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
     o += 'CONCEPTO: ' + promptConcept + ' | MENSAJE: ' + promptMessage + '\n';
-    o += 'ADN IGUAL EN A/B/C: concepto · mensaje · dominio · función simbólica · intención emocional\n\n';
+    if (contactDNA) {
+      o += 'ADN IGUAL EN A/B/C: símbolo «' + (contactSymbol || 'derivado del concepto') + '» · mensaje literal «' + (contactMainText || 'sin texto indicado') + '» · función «' + (contactFunction || 'una misma función protectora') + '»\n\n';
+    } else {
+      o += 'ADN IGUAL EN A/B/C: concepto · mensaje · dominio · función simbólica · intención emocional\n\n';
+    }
   }
 
   o += 'NICHO/FAMILIA: ' + promptFamily + '\n';
-  o += 'ANCLA: mismo nicho/concepto en A/B/C; variar expresion. SOLO_TEXTO: nombrar el nicho en el texto.\n';
+  o += contactDNA
+    ? 'ANCLA: misma ' + (contactSymbol ? '«' + contactSymbol + '»' : 'idea central') + ', mensaje y función en A/B/C; variar su tratamiento visual, tipografía, composición y jerarquía.\n'
+    : 'ANCLA: mismo nicho/concepto en A/B/C; variar expresion. SOLO_TEXTO: nombrar el nicho en el texto.\n';
   o += 'REGLAS INQUEBRANTABLES:\n';
   if (langDir) o += 'IDIOMA: ' + langDir + '\n';
   if (cultDir) o += 'CULTURA: ' + cultDir + '\n';
@@ -1052,6 +1117,8 @@ function formatPrompt(result) {
   if (isPatron) {
     o += 'PATRON: cada variante es un tile sin costura visible (bordes que empatan al repetirse); motivo y fondo definidos por ficha; repetición ' + (MOTOR_STATE.repeatType || 'medio salto') + ' en toda la superficie aplicable.\n';
     o += 'TEXTO EN TILE: mínimo o nulo; si hay texto debe funcionar repetido (sin lectura lineal, sin frase que se corte entre repeticiones).\n';
+  } else if (contactDNA) {
+    o += 'TEXTOS: usa literalmente solo el mensaje indicado' + (contactSupportText ? ' y el apoyo indicado' : '') + '; no inventes texto secundario ni terciario. Letras grandes, correctas y legibles a escala real de ' + MOTOR_STATE.product + '; si falta espacio, elimina primero el apoyo y conserva íntegro el mensaje principal. PROHIBIDO microtexto y pseudo-letras.\n';
   } else {
     o += 'TEXTOS: tres niveles con peso real, todos legibles; PROHIBIDO microtexto decorativo.\n';
   }
@@ -1062,16 +1129,22 @@ function formatPrompt(result) {
     o += '### ' + N[i] + ' · ' + v.estilo + ' · ' + v.audiencia + '\n';
     o += 'JERARQUÍA: ' + v.jerarquiaVisual + '\n';
     o += 'OBJETO: ' + v.objeto + '\n';
+    if (contactDNA) o += 'FUNCIÓN CONSTANTE: ' + v.funcionSimbolica + ' · intención ' + v.intencionEmocional + '\n';
+    const textLine = contactDNA
+      ? 'MENSAJE PRINCIPAL literal: «' + (contactMainText || 'ninguno indicado; no inventar') + '»' + (contactSupportText ? ' · APOYO literal: «' + contactSupportText + '»' : '') + ' · sin texto terciario · ' + v.tipografia
+      : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia;
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
-      o += 'DIRECCIÓN: composición tipográfica pura en clave ' + v.estilo + '; sin objeto, figura ni ilustración.\n';
+      o += contactDNA
+        ? 'DIRECCIÓN: representar el mismo símbolo mediante la forma de las letras; sin añadir otros objetos ni ilustraciones.\n'
+        : 'DIRECCIÓN: composición tipográfica pura en clave ' + v.estilo + '; sin objeto, figura ni ilustración.\n';
       o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
       o += 'ARTE: tipografía como único elemento visual; ' + v.tratamiento + '\n';
-      o += 'TEXTO: ' + v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia + '\n';
+      o += 'TEXTO: ' + textLine + '\n';
     } else {
       o += 'DIRECCIÓN: ' + v.arquitectura + '; ' + v.composicion + '; ' + v.layout + '\n';
       o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
       o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
-      o += 'TEXTO: ' + v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia + '\n';
+      o += 'TEXTO: ' + textLine + '\n';
       o += 'TEXTO/IMAGEN: ' + v.distribucionTexto + '; ' + v.integracionTexto + '; ' + v.relacion + '\n';
     }
     o += 'PALETA: ' + v.paleta + '\n';
@@ -1148,7 +1221,10 @@ function renderCards(result) {
       html += '</div>';
     }
 
-    html += '<div class="fit-bar" title="Compara las reglas del prompt con preferencias configuradas; no revisa la imagen generada ni certifica produccion.">Reglas del prompt: audiencia <span class="val">' + (v.fitAudiencia || 0) + '/100</span> · producto <span class="val">' + (v.fitProducto || 0) + '/100</span></div>';
+    const treatmentKey = _treatmentKey(v.tratamiento);
+    const treatmentOk = _treatmentSpecComplete(v.tratamiento);
+    html += '<div class="fit-bar" title="Comprueba que la instrucción del tratamiento de esta tarjeta está completa; no revisa la imagen generada."><span class="' + (treatmentOk ? 'good' : 'bad') + '">' + treatmentKey + ': ' + (treatmentOk ? 'instrucción verificada en el prompt' : 'instrucción incompleta') + '</span></div>';
+    html += '<div class="fit-bar" title="Compara las reglas del prompt con preferencias configuradas; no revisa la imagen generada ni certifica producción.">Reglas del prompt: audiencia <span class="val">' + (v.fitAudiencia || 0) + '/100</span> · producto <span class="val">' + (v.fitProducto || 0) + '/100</span></div>';
 
     card.innerHTML = html;
     root.appendChild(card);
@@ -1171,12 +1247,17 @@ function rerollSingle(keyLetter) {
     var auds = resolveAudiences();
     var others = K.filter(function (x) { return x !== keyLetter; });
     var best = null, bestScore = -1e9;
+    var fixedIdentity = _isLockedContactSet() ? {
+      symbol: LAST_RESULT.set.A.objeto,
+      funcionSimbolica: LAST_RESULT.set.A.funcionSimbolica,
+      intencionEmocional: LAST_RESULT.set.A.intencionEmocional
+    } : null;
     for (var i = 0; i < 600; i++) {
-      var cand = buildCandidate(auds);
+      var cand = buildCandidate(auds, fixedIdentity);
       var v = cand[keyLetter];
       var clash = others.some(function (o) {
         var w = LAST_RESULT.set[o];
-        return w.estilo === v.estilo || w.objeto === v.objeto || w.layout === v.layout || w.tipografia === v.tipografia || w.integracionTexto === v.integracionTexto || _treatmentKey(w.tratamiento) === _treatmentKey(v.tratamiento);
+        return w.estilo === v.estilo || (!_isLockedContactSet() && w.objeto === v.objeto) || w.layout === v.layout || w.tipografia === v.tipografia || w.integracionTexto === v.integracionTexto || _treatmentKey(w.tratamiento) === _treatmentKey(v.tratamiento);
       });
       if (clash) continue;
       var pat = { estilo: _getStyleBase(v.estilo), formaSimbolo: v.formaSimbolo, tratamiento: String(v.tratamiento).split(':')[0].trim(), layout: String(v.layout).split(':')[0].trim(), familiaColor: v.familiaColor };
@@ -1207,7 +1288,8 @@ function renderGates(result) {
   html += '<span class="badge ' + (m.fitAudienciaMin >= 50 ? 'good' : 'bad') + '">Audiencia mín: ' + m.fitAudienciaMin + '/100</span>';
   html += '<span class="badge ' + (m.fitProductoMin >= 40 ? 'good' : 'bad') + '">Producto mín: ' + m.fitProductoMin + '/100</span>';
   html += '<span class="badge ' + (m.estilos.length >= 3 ? 'good' : 'warn') + '">' + m.estilos.length + ' estilos distintos</span>';
-  html += '<span class="badge ' + (m.objUnique ? 'good' : 'bad') + '">Objetos únicos</span>';
+  html += '<span class="badge ' + (m.symbolStable ? 'good' : 'bad') + '" title="Comprueba que A/B/C conservan el mismo símbolo indicado en el prompt.">Símbolo constante</span>';
+  html += '<span class="badge ' + (m.treatmentsComplete ? 'good' : 'bad') + '" title="Comprueba que el prompt asigna HEAVY, SOFT y MODERN una vez cada uno; no inspecciona la imagen generada.">HEAVY · SOFT · MODERN</span>';
   html += '<span class="badge ' + (m.familias.length >= 3 ? 'good' : 'warn') + '">Colores distintos</span>';
 
   gateEl.innerHTML = html;
@@ -1232,7 +1314,7 @@ function crearLos3Disenos() {
 
     if (statusEl) {
       if (result.passed) {
-        statusEl.innerHTML = '<span class="good">Listo: los tres pasan el control de diferencia · Prompt armado abajo</span>';
+        statusEl.innerHTML = '<span class="good">Listo: símbolo constante, tres tratamientos asignados y diferencias revisadas en el prompt</span>';
       } else {
         statusEl.innerHTML = '<span class="warn">Listo con advertencia: revisa el control de calidad</span>';
       }
