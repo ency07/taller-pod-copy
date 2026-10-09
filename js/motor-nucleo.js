@@ -626,8 +626,9 @@ function _isLockedContactSet() {
 function _resolveContactIdentity(objectPool) {
   const concept = String(MOTOR_STATE.concept || '').trim();
   const message = String(MOTOR_STATE.message || '').trim();
-  // La identidad se infiere exclusivamente del concepto; nunca se inventa
-  // una sustitución aleatoria si el texto es ambiguo.
+  // La identidad primaria debe venir del concepto del usuario.
+  // Si no hay un único objeto, el concepto completo funciona como ancla semántica:
+  // el motor puede crear una escena o metáfora coherente sin elegir un objeto al azar.
   const normalize = function (value) {
     return (typeof _normalizeTxt === 'function' ? _normalizeTxt(String(value || '')) : String(value || '').toLowerCase())
       .replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
@@ -642,39 +643,44 @@ function _resolveContactIdentity(objectPool) {
     const labelTokens = [...new Set(normLabel.split(/\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); }))];
     const overlap = labelTokens.filter(function (t) { return tokens.indexOf(t) !== -1; });
     const distinctive = overlap.filter(function (t) { return t.length >= 5; });
-    return { label: label, normLabel: normLabel, overlap: overlap, distinctive: distinctive,
-      score: distinctive.reduce(function (sum, t) { return sum + Math.min(t.length, 10); }, 0) };
+    return {
+      label: label,
+      distinctive: distinctive,
+      score: distinctive.reduce(function (sum, t) { return sum + Math.min(t.length, 10); }, 0)
+    };
   }).filter(function (x) { return x.score > 0; })
     .sort(function (a, b) { return b.score - a.score || b.distinctive.length - a.distinctive.length; });
 
   let symbol = '';
-  let resolved = false;
+  let resolvedFromBank = false;
   if (scored.length && scored[0].distinctive.length) {
     const first = scored[0], second = scored[1];
-    // No aceptar un empate: dos objetos igualmente plausibles requieren aclaración.
+    // Usar un objeto del banco solo si destaca inequívocamente.
     if (!second || first.score > second.score) {
       symbol = first.label;
-      resolved = true;
+      resolvedFromBank = true;
     }
   }
-  // Para un nombre de símbolo breve y explícito se permite usar literalmente
-  // la entrada del usuario, aunque no exista una ficha idéntica en el banco.
-  if (!resolved && tokens.length >= 1 && tokens.length <= 2 && source.length <= 40
-      && !/\b(protege|protegen|proteger|protect|protects|guard|defiende|defend|sosteniendo|holding)\b/.test(source)) {
-    symbol = concept;
-    resolved = true;
-  }
+
+  // Los conceptos largos, escenas y relaciones entre varios elementos son válidos.
+  // En vez de bloquear o inventar un símbolo, conservar la frase completa como ancla.
+  const hasConcept = !!concept;
+  if (!symbol && hasConcept) symbol = concept;
+
   const protective = /\b(proteg\w*|protect\w*|guard\w*|defend\w*|cuid\w*|care\w*|safe\w*)\b/i.test(concept + ' ' + message);
   const claw = /\b(garra|claw|pata|paw)\b/i.test(source);
   return {
-    ok: resolved,
-    reason: resolved ? '' : 'No pude identificar un símbolo principal inequívoco en el concepto. Especifica el objeto o símbolo dominante antes de generar A/B/C.',
+    ok: hasConcept,
+    reason: hasConcept ? '' : 'Escribe el concepto principal para generar A/B/C. Si no existe un único objeto, describe la escena o idea completa.',
     symbol: symbol,
-    guiaSimbolo: claw
-      ? 'Representa una garra o pata animal completa y reconocible como protección; no la conviertas en arañazo o ataque ni inventes una especie que el usuario no indicó.'
-      : 'Representa únicamente el símbolo identificado en el concepto; no lo sustituyas por otro objeto ni añadas elementos que el usuario no indicó.',
-    funcionSimbolica: protective ? 'Protección y cuidado' : (_pick(_POOLS.funcionSimbolica) || 'Emblema de identidad'),
-    intencionEmocional: protective ? 'Seguridad y cuidado' : (_pick(_POOLS.intencionEmocional) || 'Certeza silenciosa')
+    identityMode: resolvedFromBank ? 'symbol' : 'concept',
+    guiaSimbolo: resolvedFromBank
+      ? (claw
+        ? 'Mantén reconocible la garra o pata animal completa como símbolo de protección; no la conviertas en arañazo o ataque ni inventes una especie.'
+        : 'Representa el símbolo identificado en el concepto sin sustituirlo por otro objeto no solicitado.')
+      : 'Usa el concepto completo como ancla semántica. Si describe una escena, lugar, relación o conjunto de elementos, representa esa idea de forma coherente; no la reduzcas a un objeto arbitrario ni inventes un símbolo dominante.',
+    funcionSimbolica: protective ? 'Protección y cuidado' : 'Expresión visual del concepto indicado',
+    intencionEmocional: protective ? 'Seguridad y cuidado' : 'Interpretación coherente con el concepto indicado'
   };
 }
 
