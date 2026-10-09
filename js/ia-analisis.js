@@ -234,23 +234,39 @@
     }
   }
 
-  /* #domImagen ("Familia de la imagen") estaba muerto: 0 referencias en todo
-     js/*.js, así que siempre quedaba en Auto. Ahora se puebla con los dominios
-     del mercado activo y se lee en el motor (MOTOR_STATE.domImagen). */
+  function _escapeOptionText(value) {
+    return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');
+  }
+
+  function _domainOptionsHTML(list) {
+    const groups = [];
+    (list || []).forEach(function (item) {
+      const group = item.group || '';
+      let target = groups.find(function (g) { return g.label === group; });
+      if (!target) { target = { label: group, items: [] }; groups.push(target); }
+      target.items.push(item);
+    });
+    return groups.map(function (group) {
+      const options = group.items.map(function (d) {
+        return '<option value=\"' + _escapeOptionText(d.id) + '\">' + _escapeOptionText(d.label) + '</option>';
+      }).join('');
+      return group.label ? '<optgroup label=\"' + _escapeOptionText(group.label) + '\">' + options + '</optgroup>' : options;
+    }).join('');
+  }
+
+  /* Las opciones salen de dominios generales y subnichos con banco real.
+     Auto prioriza análisis confirmado; sin él usa concepto y mensaje. */
   function updateDomImagenSelect() {
     const domSel = $('domImagen');
     if (!domSel) return;
     const prev = domSel.value || 'Auto';
+    const marketId = _marketId();
+    const regionId = normalizeRegionForMarket();
     let list = [];
     try {
-      if (typeof getListaDominios === 'function') list = getListaDominios(_marketId()) || [];
+      if (typeof getListaDominios === 'function') list = getListaDominios(marketId, regionId) || [];
     } catch (e) { list = []; }
-
-    let html = '<option value="Auto">Auto — detectar de la imagen</option>';
-    list.forEach(function (d) {
-      html += '<option value="' + d.id + '">' + d.label + '</option>';
-    });
-    domSel.innerHTML = html;
+    domSel.innerHTML = '<option value=\"Auto\">Auto - analisis si existe; si no, concepto/mensaje</option>' + _domainOptionsHTML(list);
     const ok = !_marketResetPending && (prev === 'Auto' || list.some(function (d) { return d.id === prev; }));
     domSel.value = ok ? prev : 'Auto';
   }
@@ -260,16 +276,12 @@
     if (!domSel) return;
     const prev = domSel.value || 'auto';
     const marketId = _marketId();
+    const regionId = normalizeRegionForMarket();
     let list = [];
     try {
-      if (typeof getListaDominios === 'function') list = getListaDominios(marketId) || [];
+      if (typeof getListaDominios === 'function') list = getListaDominios(marketId, regionId) || [];
     } catch (e) { list = []; }
-    let html = '<option value="auto">Auto — detectar del concepto y mensaje</option>';
-    list.forEach(function (d) {
-      html += '<option value="' + d.id + '">' + d.label + '</option>';
-    });
-    domSel.innerHTML = html;
-    // Preservar elección manual si sigue existiendo (salvo reset de mercado).
+    domSel.innerHTML = '<option value=\"auto\">Auto - concepto/mensaje o analisis si hay imagen</option>' + _domainOptionsHTML(list);
     const stillThere = prev === 'auto' || list.some(function (d) { return d.id === prev; });
     domSel.value = (!_marketResetPending && stillThere) ? prev : 'auto';
     updateDominioHelp();
@@ -282,7 +294,19 @@
       const marketId = _marketId();
       const c = $('concept') ? $('concept').value : '';
       const m = $('message') ? $('message').value : '';
-      const det = (typeof detectarDominio === 'function') ? detectarDominio(c, m, marketId) : 'auto';
+      let detectText = '';
+      const imageInput = $('imageUpload');
+      const file = imageInput && imageInput.files ? imageInput.files[0] : null;
+      if ($('workflowMode') && $('workflowMode').value === 'variation' && file && imageInput.dataset) {
+        const signature = [file.name, file.size, file.lastModified].join('|');
+        if (imageInput.dataset.analysisSignature === signature) {
+          try {
+            const a = JSON.parse(imageInput.dataset.analysisSummary || 'null');
+            if (a) detectText = [a.concepto, a.mensaje_visible, a.simbolo_descripcion, a.funcion_simbolica, a.esencia_a_conservar].filter(Boolean).join(' ');
+          } catch (e) {}
+        }
+      }
+      const det = (typeof detectarDominio === 'function') ? detectarDominio(detectText || c, detectText ? '' : m, marketId, normalizeRegionForMarket()) : 'auto';
       const cur = $('dominio') ? $('dominio').value : 'auto';
       if (cur !== 'auto') help.textContent = 'Dominio manual: ' + cur + ' (Auto sugiere: ' + det + '). Tú mandas.';
       else if (det !== 'auto') help.textContent = 'Auto detectó: ' + det + ' por tu concepto/mensaje. Puedes cambiarlo manual.';
@@ -980,6 +1004,14 @@
     on('concept', 'input', updateDominioHelp);
     on('message', 'input', updateDominioHelp);
     on('dominio', 'change', updateDominioHelp);
+    on('domImagen', 'change', function () {
+      const help = $('domImagenHelp');
+      if (!help || !$('domImagen')) return;
+      const selected = $('domImagen').value;
+      help.textContent = selected === 'Auto'
+        ? 'Auto: usa analisis confirmado si existe; si no, concepto/mensaje. La familia guia los objetos.'
+        : 'Familia elegida: ' + $('domImagen').selectedOptions[0].textContent + '. Guia los objetos nuevos.';
+    });
     on('product', 'change', updateTemplateHint);
 
     // Análisis de imagen

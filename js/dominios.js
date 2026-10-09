@@ -37,23 +37,56 @@ function getDominiosGospel(market) {
   return {};
 }
 
-function getListaDominios(market) {
-  if (market === 'gospel_es' || market === 'gospel_en') {
-    const g = getDominiosGospel(market);
-    return Object.keys(g).map(function (id) {
-      return { id: id, label: id + ' — ' + (g[id].label || ''), desc: g[id].desc || '' };
-    });
-  }
-  const base = market === 'colombia' || !market
+function _dominiosComercialesParaMercado(market) {
+  return market === 'colombia' || !market
     ? Object.assign({}, POD_DOMINIOS_COMERCIAL, POD_DOMINIOS_STREET)
     : Object.assign({}, POD_DOMINIOS_COMERCIAL);
-  return Object.keys(base).map(function (id) {
-    return { id: id, label: id + ' — ' + base[id].label, desc: base[id].desc };
+}
+
+function _subnichosYaCubiertosPorDominios(market) {
+  const defs = _dominiosComercialesParaMercado(market);
+  const field = market === 'colombia' || market === 'diaspora_col' ? 'subniche_col' : 'subniche_global';
+  return Object.keys(defs).map(function (id) { return defs[id][field] || null; }).filter(Boolean);
+}
+
+function _getSubnichoOptions(market, region) {
+  if (market === 'gospel_es' || market === 'gospel_en' || typeof getSubnicheIdsForMarket !== 'function') return [];
+  let ids = [];
+  try {
+    ids = (getSubnicheIdsForMarket(market, 'evergreen', region) || [])
+      .concat(getSubnicheIdsForMarket(market, 'temporada', region) || []);
+  } catch (e) { ids = []; }
+  const covered = _subnichosYaCubiertosPorDominios(market);
+  return ids.filter(function (id, index) {
+    if (ids.indexOf(id) !== index || covered.indexOf(id) !== -1) return false;
+    const hasBank = typeof getBankForSubniche === 'function'
+      ? getBankForSubniche(id, region, market).length > 0
+      : !!(typeof POD_SUBNICHES !== 'undefined' && POD_SUBNICHES[id] && POD_SUBNICHES[id].bank);
+    return hasBank;
   });
 }
 
+function getListaDominios(market, region) {
+  if (market === 'gospel_es' || market === 'gospel_en') {
+    const g = getDominiosGospel(market);
+    return Object.keys(g).map(function (id) {
+      return { id: id, label: id + ' — ' + (g[id].label || ''), desc: g[id].desc || '', group: 'Dominio teológico' };
+    });
+  }
+  const base = _dominiosComercialesParaMercado(market);
+  const domains = Object.keys(base).map(function (id) {
+    return { id: id, label: id + ' — ' + base[id].label, desc: base[id].desc, group: 'Familias generales' };
+  });
+  const families = _getSubnichoOptions(market, region).map(function (id) {
+    const label = typeof getSubnicheLabel === 'function' ? getSubnicheLabel(id, market) : id;
+    const meta = typeof POD_SUBNICHES !== 'undefined' ? POD_SUBNICHES[id] : null;
+    return { id: id, label: label, desc: (meta && meta.descripcion) || '', group: 'Familias con banco propio' };
+  });
+  return domains.concat(families);
+}
+
 /* Detección automática: lee concepto + mensaje, busca keywords en dominios del mercado activo. Nunca decide el motor a ciegas: si el usuario elige manual, manual manda. */
-function detectarDominio(concepto, mensaje, market) {
+function detectarDominio(concepto, mensaje, market, region) {
   const txt = _norm((concepto || '') + ' ' + (mensaje || ''));
   if (!txt.trim()) return 'auto';
 
@@ -69,11 +102,20 @@ function detectarDominio(concepto, mensaje, market) {
     return bestHits > 0 ? best : 'auto';
   }
 
-  const base = Object.assign({}, POD_DOMINIOS_COMERCIAL, POD_DOMINIOS_STREET);
+  const base = _dominiosComercialesParaMercado(market);
   let best = 'auto', bestHits = 0;
+  const mappingField = market === 'colombia' || market === 'diaspora_col' ? 'subniche_col' : 'subniche_global';
   Object.keys(base).forEach(function (id) {
     let hits = 0;
-    (base[id].keywords || []).forEach(function (k) { if (txt.indexOf(_norm(k)) > -1) hits++; });
+    const mapped = typeof POD_SUBNICHES !== 'undefined' ? POD_SUBNICHES[base[id][mappingField]] : null;
+    const keywords = (base[id].keywords || []).concat(mapped && mapped.keywords || []);
+    keywords.forEach(function (k) { if (k && txt.indexOf(_norm(k)) > -1) hits++; });
+    if (hits > bestHits) { bestHits = hits; best = id; }
+  });
+  _getSubnichoOptions(market, region).forEach(function (id) {
+    const kws = typeof getKeywordsForSubniche === 'function' ? getKeywordsForSubniche(id) : [];
+    let hits = 0;
+    kws.forEach(function (k) { if (k && txt.indexOf(_norm(k)) > -1) hits++; });
     if (hits > bestHits) { bestHits = hits; best = id; }
   });
   return bestHits > 0 ? best : 'auto';

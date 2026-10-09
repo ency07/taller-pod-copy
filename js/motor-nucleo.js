@@ -142,14 +142,8 @@ function readStateFromDOM() {
   MOTOR_STATE.audienceSet = v('audienceSet', 'Auto');
   MOTOR_STATE.audienceMulti = v('audienceMulti', 'no');
   MOTOR_STATE.dominio = v('dominio', 'auto');
-  // "Familia de la imagen" (#domImagen): antes no se leía en ningún lado.
+  // Familia elegida para guiar los objetos en variación; Auto se resuelve abajo.
   MOTOR_STATE.domImagen = v('domImagen', 'Auto');
-  // Detección auto solo si el usuario deja Auto: lee estructura de bancos, no quemado en motor
-  try {
-    if (typeof detectarDominio === 'function') {
-      MOTOR_STATE.dominioDetectado = detectarDominio(MOTOR_STATE.concept, MOTOR_STATE.message, MOTOR_STATE.market);
-    }
-  } catch (e) { MOTOR_STATE.dominioDetectado = 'auto'; }
   MOTOR_STATE.workflowMode = v('workflowMode', 'new');
   MOTOR_STATE.repeatType = v('repeatType', 'medio salto');
   MOTOR_STATE.variationOptions.simbolo = v('simboloVar', 'sustituir');
@@ -169,6 +163,19 @@ function readStateFromDOM() {
     try { MOTOR_STATE.imageAnalysis = JSON.parse(imageInput.dataset.analysisSummary || 'null'); }
     catch (e) { MOTOR_STATE.imageAnalysis = null; }
   }
+
+  const analysis = MOTOR_STATE.workflowMode === 'variation' ? MOTOR_STATE.imageAnalysis : null;
+  const analysisText = analysis
+    ? [analysis.concepto, analysis.mensaje_visible, analysis.simbolo_descripcion, analysis.funcion_simbolica, analysis.esencia_a_conservar].filter(Boolean).join(' ')
+    : '';
+  const detectorConcept = analysisText || MOTOR_STATE.concept;
+  const detectorMessage = analysisText ? '' : MOTOR_STATE.message;
+  try {
+    MOTOR_STATE.dominioDetectado = typeof detectarDominio === 'function'
+      ? detectarDominio(detectorConcept, detectorMessage, MOTOR_STATE.market, MOTOR_STATE.region)
+      : 'auto';
+  } catch (e) { MOTOR_STATE.dominioDetectado = 'auto'; }
+
 }
 
 /* --- Resolución de audiencias --- */
@@ -428,13 +435,13 @@ function resolveTextImageModes(estilos, audsPerKey) {
 
 /* --- Pool de objetos --- */
 function dominioEfectivo() {
-  // 1) Dominio fijado a mano manda siempre.
-  if (MOTOR_STATE.dominio && MOTOR_STATE.dominio !== 'auto') return MOTOR_STATE.dominio;
-  // 2) "Familia de la imagen" elegida a mano en modo variación (#domImagen).
+  // En variacion, la familia elegida para la referencia manda sobre el dominio general.
   if (MOTOR_STATE.workflowMode === 'variation' && MOTOR_STATE.domImagen && MOTOR_STATE.domImagen !== 'Auto') {
     return MOTOR_STATE.domImagen;
   }
-  // 3) Detección automática del concepto/mensaje.
+  if (MOTOR_STATE.dominio && MOTOR_STATE.dominio !== 'auto') return MOTOR_STATE.dominio;
+  // Un subnicho fijado manualmente ya ancla el banco; Auto no lo debe sustituir.
+  if (MOTOR_STATE.subniche && MOTOR_STATE.subniche !== 'auto') return null;
   return MOTOR_STATE.dominioDetectado && MOTOR_STATE.dominioDetectado !== 'auto' ? MOTOR_STATE.dominioDetectado : null;
 }
 
@@ -489,10 +496,12 @@ function effectiveSubniche() {
    dominios.js mapeaba los 9 dominios no-gospel a subnichos colombianos *_col
    (quemado): OFICIO en Global apuntaba a oficios_emprendimiento_col. */
 function subnicheForDominio(dom) {
-  if (!dom || typeof POD_DOMINIOS_COMERCIAL === 'undefined') return null;
-  const d = POD_DOMINIOS_COMERCIAL[dom] || POD_DOMINIOS_STREET[dom];
+  if (!dom || isGospelMarket()) return null;
+  if (_marketSubnicheIds().indexOf(dom) !== -1) return dom;
+  if (typeof POD_DOMINIOS_COMERCIAL === 'undefined') return null;
+  const defs = typeof POD_DOMINIOS_STREET !== 'undefined' ? POD_DOMINIOS_STREET : {};
+  const d = POD_DOMINIOS_COMERCIAL[dom] || defs[dom];
   if (!d) return null;
-  if (isGospelMarket()) return null;
   if (isColombiaMarket() || (!isGlobalMarket() && MOTOR_STATE.market === 'diaspora_col')) {
     return d.subniche_col || d.subniche || null;
   }
@@ -521,7 +530,8 @@ function getObjectPool() {
   let pool = [];
   const dom = dominioEfectivo();
   const gospel = isGospelMarket();
-  const sub = effectiveSubniche();
+  const domSub = subnicheForDominio(dom);
+  const sub = domSub || effectiveSubniche();
 
   // 1) Dominio: banco propio del mercado. Gospel usa sus 12 dominios doctrinales;
   //    no-gospel usa el subnicho del dominio YA RESUELTO PARA EL MERCADO.
@@ -533,7 +543,6 @@ function getObjectPool() {
           pool = g[dom].objetos.slice();
         }
       } else if (!gospel) {
-        const domSub = subnicheForDominio(dom);
         if (domSub && typeof getBankForSubniche === 'function' && _marketSubnicheIds().indexOf(domSub) !== -1) {
           pool = getBankForSubniche(domSub, MOTOR_STATE.region, MOTOR_STATE.market);
         }
@@ -584,6 +593,18 @@ function _pickFresh(biasPool, fullPool, used) {
   if (full.length) return _pick(full);
   const fallback = (biasPool && biasPool.length) ? biasPool : (fullPool || []);
   return _pick(fallback);
+}
+
+
+function _treatmentKey(value) { return String(value || '').split(':')[0].trim().toUpperCase(); }
+
+function _pickFreshTreatment(biasPool, fullPool, used) {
+  const usedKeys = (used || []).map(_treatmentKey);
+  const available = (fullPool || []).filter(function (item) { return usedKeys.indexOf(_treatmentKey(item)) === -1; });
+  if (!available.length) return _pick(fullPool || []);
+  const preferredKeys = (biasPool || []).map(_treatmentKey);
+  const preferred = available.filter(function (item) { return preferredKeys.indexOf(_treatmentKey(item)) !== -1; });
+  return _pick(preferred.length ? preferred : available);
 }
 
 function buildCandidate(audsPerKey) {
@@ -670,7 +691,7 @@ function buildCandidate(audsPerKey) {
     usedAxes.formaSimbolo.push(v.formaSimbolo);
 
     const tratBias = (productBias.trat || []).concat(audProfile.tratPref || []);
-    v.tratamiento = _pickFresh(tratBias, _TRATAMIENTOS, usedAxes.tratamiento);
+    v.tratamiento = _pickFreshTreatment(tratBias, _TRATAMIENTOS, usedAxes.tratamiento);
     usedAxes.tratamiento.push(v.tratamiento);
 
     v.integracionTexto = _pickFresh(_INTEGRACION, _INTEGRACION, usedAxes.integracionTexto);
@@ -951,6 +972,16 @@ function formatPrompt(result) {
   const supportsPattern = ['MOCHILA', 'TOTE BAG', 'FUNDA MÓVIL'].indexOf(MOTOR_STATE.product) !== -1;
   const isPatron = MOTOR_STATE.designMode === 'patron' && !isVar && supportsPattern;
   const tplActive = _activeTemplateSafe();
+  const promptConcept = String(MOTOR_STATE.concept || '').trim() || String(MOTOR_STATE.message || '').trim() || '—';
+  const promptMessage = String(MOTOR_STATE.message || '').trim() || '—';
+  const activeDomain = dominioEfectivo();
+  let promptFamilyId = null;
+  if (isGospelMarket()) promptFamilyId = activeDomain || null;
+  else promptFamilyId = subnicheForDominio(activeDomain)
+    || (_marketSubnicheIds().indexOf(activeDomain) !== -1 ? activeDomain : effectiveSubniche());
+  const promptFamily = promptFamilyId && typeof getSubnicheLabel === 'function'
+    ? getSubnicheLabel(promptFamilyId, MOTOR_STATE.market)
+    : (promptFamilyId || 'Auto: inferir del concepto/mensaje y mantener en A/B/C');
   let o = '';
   if (isVar) {
     const image = MOTOR_STATE.imageReference;
@@ -959,6 +990,7 @@ function formatPrompt(result) {
     o += '/VARIATION - TRES DIRECCIONES NUEVAS (01A · 01B · 01C)\n';
     o += 'MODO: variacion guiada | MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + '\n';
     o += 'ESTILOS: ' + K.map(function (k) { return N[K.indexOf(k)] + ' ' + set[k].estilo; }).join(' · ') + '\n';
+    o += 'CONCEPTO: ' + promptConcept + ' | MENSAJE: ' + promptMessage + '\n';
     if (hasAnalysis) {
       o += 'REFERENCIA: imagen analizada en el generador. Este texto no contiene el archivo: adjuntalo tambien en la IA de imagen. No inventes detalles ausentes del analisis.\n';
       o += 'ANALISIS CONFIRMADO: concepto ' + (analysis.concepto || 'sin dato') + '; texto visible ' + (analysis.mensaje_visible || 'no detectado') + '; simbolo ' + (analysis.simbolo_descripcion || 'sin dato') + '; funcion ' + (analysis.funcion_simbolica || 'sin dato') + '; esencia ' + (analysis.esencia_a_conservar || 'sin dato') + '.\n';
@@ -978,15 +1010,17 @@ function formatPrompt(result) {
   } else if (isPatron) {
     o += '/PATRON REPETIDO — 3 VARIANTES DE TILE · MISMO CONCEPTO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
-    o += 'CONCEPTO: ' + MOTOR_STATE.concept + ' | MENSAJE: ' + MOTOR_STATE.message + '\n';
+    o += 'CONCEPTO: ' + promptConcept + ' | MENSAJE: ' + promptMessage + '\n';
     o += 'REPETICIÓN: ' + (MOTOR_STATE.repeatType || 'medio salto') + ' | CADA VARIANTE ES UN TILE DISTINTO DEL MISMO CONCEPTO\n\n';
   } else {
     o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
-    o += 'CONCEPTO: ' + MOTOR_STATE.concept + ' | MENSAJE: ' + MOTOR_STATE.message + '\n';
+    o += 'CONCEPTO: ' + promptConcept + ' | MENSAJE: ' + promptMessage + '\n';
     o += 'ADN IGUAL EN A/B/C: concepto · mensaje · dominio · función simbólica · intención emocional\n\n';
   }
 
+  o += 'NICHO/FAMILIA: ' + promptFamily + '\n';
+  o += 'ANCLA: mismo nicho/concepto en A/B/C; variar expresion. SOLO_TEXTO: nombrar el nicho en el texto.\n';
   o += 'REGLAS INQUEBRANTABLES:\n';
   if (langDir) o += 'IDIOMA: ' + langDir + '\n';
   if (cultDir) o += 'CULTURA: ' + cultDir + '\n';
@@ -1028,10 +1062,18 @@ function formatPrompt(result) {
     o += '### ' + N[i] + ' · ' + v.estilo + ' · ' + v.audiencia + '\n';
     o += 'JERARQUÍA: ' + v.jerarquiaVisual + '\n';
     o += 'OBJETO: ' + v.objeto + '\n';
-    o += 'DIRECCIÓN: ' + v.arquitectura + '; ' + v.composicion + '; ' + v.layout + '\n';
-    o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
-    o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
-    o += 'TEXTO: ' + v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia + '\n';
+    if (v.jerarquiaVisual === 'SOLO_TEXTO') {
+      o += 'DIRECCIÓN: composición tipográfica pura en clave ' + v.estilo + '; sin objeto, figura ni ilustración.\n';
+      o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
+      o += 'ARTE: tipografía como único elemento visual; ' + v.tratamiento + '\n';
+      o += 'TEXTO: ' + v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia + '\n';
+    } else {
+      o += 'DIRECCIÓN: ' + v.arquitectura + '; ' + v.composicion + '; ' + v.layout + '\n';
+      o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
+      o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
+      o += 'TEXTO: ' + v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia + '\n';
+      o += 'TEXTO/IMAGEN: ' + v.distribucionTexto + '; ' + v.integracionTexto + '; ' + v.relacion + '\n';
+    }
     o += 'PALETA: ' + v.paleta + '\n';
     o += 'COINCIDENCIA DE REGLAS DEL PROMPT (no evalua la imagen final): audiencia ' + (v.fitAudiencia || 0) + '/100; producto ' + (v.fitProducto || 0) + '/100\n';
     if (isPatron) {
@@ -1134,7 +1176,7 @@ function rerollSingle(keyLetter) {
       var v = cand[keyLetter];
       var clash = others.some(function (o) {
         var w = LAST_RESULT.set[o];
-        return w.estilo === v.estilo || w.objeto === v.objeto || w.layout === v.layout || w.tipografia === v.tipografia || w.integracionTexto === v.integracionTexto;
+        return w.estilo === v.estilo || w.objeto === v.objeto || w.layout === v.layout || w.tipografia === v.tipografia || w.integracionTexto === v.integracionTexto || _treatmentKey(w.tratamiento) === _treatmentKey(v.tratamiento);
       });
       if (clash) continue;
       var pat = { estilo: _getStyleBase(v.estilo), formaSimbolo: v.formaSimbolo, tratamiento: String(v.tratamiento).split(':')[0].trim(), layout: String(v.layout).split(':')[0].trim(), familiaColor: v.familiaColor };
