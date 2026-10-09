@@ -626,16 +626,39 @@ function _isLockedContactSet() {
 function _resolveContactIdentity(objectPool) {
   const concept = String(MOTOR_STATE.concept || '').trim();
   const message = String(MOTOR_STATE.message || '').trim();
-  const source = concept || message;
-  const relation = source.match(/^\s*(?:(?:a|an|the|un|una|el|la|los|las)\s+)?([A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ'’-]*(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ'’-]*){0,2}?)\s+(?:que|that|which)\s+(?:protege|protegen|proteger|protects|protect|guards|defends)\b/i);
-  const symbol = (relation && relation[1] ? relation[1].trim() : '') || _pick(objectPool) || source || 'símbolo del nicho';
+  // El concepto tiene prioridad. No inferir el símbolo principal desde el mensaje
+  // ni sustituirlo por un objeto aleatorio del banco cuando la identidad es ambigua.
+  const source = concept;
+  const normalizedSource = typeof _normalizeTxt === 'function'
+    ? _normalizeTxt(source)
+    : source.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const pool = Array.isArray(objectPool) ? objectPool : [];
+  const matches = pool.map(function (item) {
+    const label = String(item || '').trim();
+    const normalizedLabel = typeof _normalizeTxt === 'function'
+      ? _normalizeTxt(label)
+      : label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return { label: label, normalized: normalizedLabel };
+  }).filter(function (item) {
+    return item.normalized.length >= 4 && normalizedSource.indexOf(item.normalized) !== -1;
+  }).sort(function (a, b) { return b.normalized.length - a.normalized.length; });
+
+  // Un símbolo se resuelve solo cuando una entrada concreta del banco está
+  // explícitamente contenida en el concepto, o cuando el usuario dio un nombre
+  // breve y directo (1–3 palabras) sin una relación ambigua.
+  const simpleConcept = source.split(/\s+/).filter(Boolean).length <= 3
+    && !/\b(que|con|para|desde|hacia|sobre|entre|sosteniendo|holding|protects?|protege|representa|lugares|lugares turisticos|tourist places)\b/i.test(normalizedSource);
+  const symbol = matches.length ? matches[0].label : (simpleConcept ? source : '');
+  const resolved = !!symbol;
   const protective = /\b(proteg\w*|protect\w*|guard\w*|defend\w*|cuid\w*|care\w*|safe\w*)\b/i.test(concept + ' ' + message);
   const claw = /\b(garra|claw|pata|paw)\b/i.test(source);
   return {
+    ok: resolved,
+    reason: resolved ? '' : 'No pude identificar un símbolo principal inequívoco en el concepto. Especifica el objeto o símbolo dominante antes de generar A/B/C.',
     symbol: symbol,
     guiaSimbolo: claw
       ? 'Representa una garra o pata animal completa y reconocible como protección; no la conviertas en arañazo o ataque ni inventes una especie que el usuario no indicó.'
-      : 'Representa el símbolo indicado de forma reconocible; no lo sustituyas por otro objeto ni añadas acciones ajenas al concepto.',
+      : 'Representa únicamente el símbolo identificado en el concepto; no lo sustituyas por otro objeto ni añadas elementos que el usuario no indicó.',
     funcionSimbolica: protective ? 'Protección y cuidado' : (_pick(_POOLS.funcionSimbolica) || 'Emblema de identidad'),
     intencionEmocional: protective ? 'Seguridad y cuidado' : (_pick(_POOLS.intencionEmocional) || 'Certeza silenciosa')
   };
@@ -897,12 +920,20 @@ function _patternConflictsOf(cand) {
 function generateSet() {
   readStateFromDOM();
   const audsPerKey = resolveAudiences();
+  const fixedIdentity = _isLockedContactSet() ? _resolveContactIdentity(getObjectPool()) : null;
+  if (_isLockedContactSet() && (!fixedIdentity || !fixedIdentity.ok)) {
+    const statusEl = document.getElementById('status');
+    if (statusEl) statusEl.textContent = (fixedIdentity && fixedIdentity.reason)
+      || 'No se pudo resolver el símbolo principal. Especifica el objeto dominante.';
+    console.warn('[Motor] Generación detenida: identidad semántica no resuelta.');
+    return null;
+  }
 
   let best = null, bestScore = null, bestTotal = -1e9;          // mejor de todos (fallback)
   let bestOk = null, bestOkScore = null, bestOkTotal = -1e9;    // mejor que pasa TODOS los controles
 
   for (let i = 0; i < 3000; i++) {
-    const cand = buildCandidate(audsPerKey);
+    const cand = buildCandidate(audsPerKey, fixedIdentity);
     const m = scoreSet(cand);
 
     const ejesOk = new Set(K.map(function (k) { return cand[k].layout; })).size === 3
@@ -1353,7 +1384,7 @@ function crearLos3Disenos() {
     }
   } catch (e) {
     console.error('[Motor] Error:', e);
-    if (statusEl) statusEl.innerHTML = '<span class="bad">Error al generar: ' + e.message + '</span>';
+    if (statusEl) statusEl.textContent = 'Error al generar: ' + String(e && e.message ? e.message : 'error inesperado');
   }
 }
 
