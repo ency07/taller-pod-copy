@@ -105,6 +105,7 @@ let MOTOR_STATE = {
   dominioDetectado: 'auto',
   domImagen: 'Auto',
   workflowMode: 'explore',
+  explorationBrief: null,
   groupMode: 'distintos',
   objectMode: 'simple',
   designMode: 'contacto',
@@ -198,7 +199,7 @@ function getCurrentAudiencePool() {
 
 function resolveAudiences() {
   const base = MOTOR_STATE.audienceSet;
-  const multi = MOTOR_STATE.audienceMulti === 'si';
+  const multi = MOTOR_STATE.audienceMulti === 'si' && MOTOR_STATE.workflowMode !== 'explore';
   const market = MOTOR_STATE.market;
   const region = MOTOR_STATE.region;
 
@@ -575,9 +576,72 @@ function getObjectPool() {
   // Banco común genérico: PROHIBIDO en gospel (mezclaba secular con doctrinal y
   // hacía predominar gospel en otros). Y en mercados EN va el común en inglés:
   // OBJECT_BANK_COMMON está íntegramente en español y se filtraba al pool EN.
-  if (!gospel) pool = pool.concat(_commonBankForMarket());
+  // En exploración, una familia elegida sin banco compatible no debe contaminarse
+  // con el banco común (p. ej. mascotas por defecto).
+  const explicitExploreFamilyMissingBank = MOTOR_STATE.workflowMode === 'explore'
+    && MOTOR_STATE.subniche && MOTOR_STATE.subniche !== 'auto'
+    && !pool.length;
+  if (!gospel && !explicitExploreFamilyMissingBank) pool = pool.concat(_commonBankForMarket());
 
   return [...new Set(pool.filter(Boolean))];
+}
+
+/* --- Resolución universal del brief de exploración --- */
+function _resolveExplorationBrief() {
+  const explicitConcept = String(MOTOR_STATE.concept || '').trim();
+  const explicitSub = MOTOR_STATE.subniche && MOTOR_STATE.subniche !== 'auto' ? MOTOR_STATE.subniche : '';
+  const domain = dominioEfectivo();
+  let familyId = explicitSub || subnicheForDominio(domain) || effectiveSubniche() || '';
+  let candidates = [];
+  let selectedFrom = '';
+  function addBank(id) {
+    if (!id || typeof getBankForSubniche !== 'function') return [];
+    try {
+      const bank = getBankForSubniche(id, MOTOR_STATE.region, MOTOR_STATE.market);
+      return Array.isArray(bank) ? bank.filter(function (x) { return typeof x === 'string' && x.trim(); }) : [];
+    } catch (e) { return []; }
+  }
+  if (domain && isGospelMarket() && typeof getDominiosGospel === 'function') {
+    try {
+      const domains = getDominiosGospel(MOTOR_STATE.market) || {};
+      if (domains[domain] && Array.isArray(domains[domain].objetos)) {
+        candidates = domains[domain].objetos.filter(Boolean);
+        if (candidates.length) { familyId = domain; selectedFrom = 'domain-bank'; }
+      }
+    } catch (e) {}
+  }
+  if (!candidates.length && familyId) {
+    candidates = addBank(familyId);
+    if (candidates.length) selectedFrom = 'selected-family-bank';
+  }
+  if (!explicitSub && !domain && !candidates.length) {
+    const ids = _marketSubnicheIds().filter(function (id, i, all) {
+      return id && all.indexOf(id) === i && (!isGospelMarket() || id === 'gospel_es' || id === 'gospel_en');
+    });
+    const eligible = [];
+    ids.forEach(function (id) {
+      const bank = addBank(id);
+      if (bank.length) eligible.push({ id: id, bank: bank });
+    });
+    if (eligible.length) {
+      const selected = _pick(eligible);
+      familyId = selected.id;
+      candidates = selected.bank;
+      selectedFrom = 'market-compatible-bank';
+    }
+  }
+  const concept = explicitConcept || (candidates.length ? String(_pick(candidates) || '').trim() : '');
+  const familyLabel = familyId && typeof getSubnicheLabel === 'function'
+    ? (getSubnicheLabel(familyId, MOTOR_STATE.market) || familyId)
+    : (familyId || 'Auto — seleccionar una familia compatible del mercado activo');
+  return {
+    concept: concept, familyId: familyId, familyLabel: familyLabel,
+    bankFound: candidates.length > 0,
+    selectedFrom: selectedFrom || (explicitSub ? 'selected-family-without-bank' : 'no-compatible-bank'),
+    hasUserConcept: !!explicitConcept,
+    message: String(MOTOR_STATE.message || '').trim(),
+    support: String(MOTOR_STATE.support || '').trim()
+  };
 }
 
 /* --- Construcción de candidato --- */
@@ -745,11 +809,11 @@ function buildCandidate(audsPerKey, fixedIdentity) {
       // No escoger un objeto al azar solo por compartir nicho.
       v.objeto = _chooseConceptCompatibleObject(objectPool, semanticAnchor) || semanticAnchor || 'proponer un símbolo directamente derivado del concepto y la familia seleccionada';
     } else if (MOTOR_STATE.workflowMode === 'explore') {
-      const anchor = String(MOTOR_STATE.concept || MOTOR_STATE.message || '').trim();
-      // Exploración sin concepto: no introducir un objeto aleatorio antes de que la IA defina la idea.
+      const brief = MOTOR_STATE.explorationBrief || _resolveExplorationBrief();
+      const anchor = String(brief.concept || MOTOR_STATE.message || '').trim();
       v.objeto = anchor
         ? (_chooseConceptCompatibleObject(objectPool, anchor) || anchor)
-        : 'PROPUESTA PENDIENTE: elegir un objeto/símbolo después de definir concepto, familia y función; no seleccionar al azar del banco';
+        : 'PROPUESTA CONCEPTUAL PENDIENTE PARA LA FAMILIA SELECCIONADA: definir concepto y símbolo coherentes antes de diseñar';
     } else {
       let obj, g = 0;
       do {
@@ -823,7 +887,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     usedAxes.formaSimbolo.push(v.formaSimbolo);
 
     const tratBias = (productBias.trat || []).concat(audProfile.tratPref || []);
-    const fixedTreatment = contactIdentity ? _CONTACT_TREATMENT_ORDER[k] : '';
+    const fixedTreatment = (contactIdentity || MOTOR_STATE.workflowMode === 'explore') ? _CONTACT_TREATMENT_ORDER[k] : '';
     const fixedTreatmentSpec = fixedTreatment && _TRATAMIENTOS.find(function (x) { return _treatmentKey(x) === fixedTreatment; });
     v.tratamiento = fixedTreatmentSpec || _pickFreshTreatment(tratBias, _TRATAMIENTOS, usedAxes.tratamiento);
     usedAxes.tratamiento.push(v.tratamiento);
@@ -979,6 +1043,7 @@ function _patternConflictsOf(cand) {
 
 function generateSet() {
   readStateFromDOM();
+  MOTOR_STATE.explorationBrief = MOTOR_STATE.workflowMode === 'explore' ? _resolveExplorationBrief() : null;
   const audsPerKey = resolveAudiences();
   const fixedIdentity = _isLockedContactSet() ? _resolveContactIdentity(getObjectPool()) : null;
   if (_isLockedContactSet() && (!fixedIdentity || !fixedIdentity.ok)) {
@@ -1054,7 +1119,7 @@ function generateSet() {
   const usedObjs = K.filter(function (k) { return best[k].jerarquiaVisual !== 'SOLO_TEXTO'; }).map(function (k) { return best[k].objeto; });
   _addUsedObjects(historyKey, usedObjs);
 
-  LAST_RESULT = { set: best, score: bestScore, passed: passed };
+  LAST_RESULT = { set: best, score: bestScore, passed: passed, explorationBrief: MOTOR_STATE.explorationBrief };
   try { window.LAST_RESULT = LAST_RESULT; } catch (e) {}
   try { window.V = best; } catch (e) {} // Puente para el revisor IA (ia-revisor.js lee window.V con fichas A/B/C).
   return LAST_RESULT;
@@ -1131,7 +1196,8 @@ function formatPrompt(result) {
   const supportsPattern = ['MOCHILA', 'TOTE BAG', 'FUNDA MÓVIL'].indexOf(MOTOR_STATE.product) !== -1;
   const isPatron = MOTOR_STATE.designMode === 'patron' && !isVar && supportsPattern;
   const tplActive = _activeTemplateSafe();
-  const promptConcept = String(MOTOR_STATE.concept || '').trim() || String(MOTOR_STATE.message || '').trim() || '—';
+  const explorationBrief = MOTOR_STATE.workflowMode === 'explore' ? (MOTOR_STATE.explorationBrief || _resolveExplorationBrief()) : null;
+  const promptConcept = String((explorationBrief && explorationBrief.concept) || MOTOR_STATE.concept || '').trim() || String(MOTOR_STATE.message || '').trim() || '—';
   const promptMessage = String(MOTOR_STATE.message || '').trim() || '—';
   const isExplore = MOTOR_STATE.workflowMode === 'explore';
   const contactDNA = !isVar && !isPatron && !isExplore;
@@ -1143,8 +1209,8 @@ function formatPrompt(result) {
   const activeDomain = dominioEfectivo();
   let promptFamilyId = null;
   if (isGospelMarket()) promptFamilyId = activeDomain || null;
-  else promptFamilyId = subnicheForDominio(activeDomain)
-    || (_marketSubnicheIds().indexOf(activeDomain) !== -1 ? activeDomain : effectiveSubniche());
+  else promptFamilyId = (explorationBrief && explorationBrief.familyId) || subnicheForDominio(activeDomain)
+    || (_marketSubnicheIds().indexOf(activeDomain) !== -1 ? activeDomain : effectiveSubniche() || (MOTOR_STATE.subniche !== 'auto' ? MOTOR_STATE.subniche : null));
   let promptFamily = promptFamilyId && typeof getSubnicheLabel === 'function'
     ? getSubnicheLabel(promptFamilyId, MOTOR_STATE.market)
     : (promptFamilyId || 'Auto: inferir del concepto/mensaje y mantener en A/B/C');
@@ -1193,12 +1259,18 @@ function formatPrompt(result) {
     o += 'CONCEPTO: ' + promptConcept + ' | MENSAJE: ' + promptMessage + '\n';
     o += 'REPETICIÓN: ' + (MOTOR_STATE.repeatType || 'medio salto') + ' | CADA VARIANTE ES UN TILE DISTINTO DEL MISMO CONCEPTO\n\n';
   } else if (isExplore) {
-    o += '/EXPLORACIÓN CREATIVA — 3 DIRECCIONES · DESCUBRIR CONCEPTO · NADA CLONADO\n';
-    o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SUBNICHO: ' + MOTOR_STATE.subniche + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
-    o += 'MODO EXPLORACIÓN: el usuario aún no ha definido un concepto. Propón PRIMERO un concepto comercial claro y coherente con mercado, subnicho, audiencia y producto. Las tres direcciones A/B/C deben desarrollar ESE MISMO concepto, no tres ideas inconexas. Si hay mensaje visible escrito por el usuario, úsalo como restricción; si no, propone copy concreto y pertinente. No inventes referencias, datos ni citas bíblicas.\n';
-    o += 'DIRECCIONES: 01A HEAVY = impacto, masas y contraste; 01B SOFT = aire, formas abiertas y lectura amable; 01C MODERN = geometría, síntesis y lenguaje contemporáneo. Cambia composición, silueta, jerarquía y relación texto-imagen entre direcciones; no basta con recolorear ni cambiar técnica.\n';
-    o += 'CONCEPTO PROPUESTO: la IA de imagen debe declarar una propuesta concreta antes de describir cada diseño. Mantén el concepto común en A/B/C y diferencia la solución visual de cada una.\n';
-    o += 'MENSAJE/RESTRICCIONES DEL USUARIO: ' + (String(MOTOR_STATE.message || '').trim() || 'Sin mensaje fijado; proponer copy apropiado al mercado y producto.') + '\n\n';
+    const brief = explorationBrief || _resolveExplorationBrief();
+    const familyLabel = brief.familyLabel || promptFamily;
+    const conceptAnchor = String(brief.concept || '').trim();
+    o += '/EXPLORACIÓN CREATIVA — 3 DIRECCIONES · CONCEPTO ÚNICO · NADA CLONADO\\n';
+    o += 'MERCADO: ' + MOTOR_STATE.market + ' | REGIÓN: ' + MOTOR_STATE.region + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | FAMILIA/SUBNICHO BLOQUEADO: ' + familyLabel + ' (' + (brief.familyId || 'auto') + ') | SERIE: ' + (MOTOR_STATE.serie || '—') + '\\n';
+    o += 'ESTADO DEL CONCEPTO: ' + (conceptAnchor ? 'ANCLA RESUELTA: «' + conceptAnchor + '»' : 'SIN ANCLA DE BANCO: debes proponer un único concepto original, concreto y comercial ANTES de describir el arte') + '\\n';
+    o += 'CONTRATO DE FAMILIA: respeta exactamente la familia/subnicho seleccionado por el usuario. Fuente del candidato: ' + brief.selectedFrom + '. Banco compatible disponible: ' + (brief.bankFound ? 'sí' : 'no') + '. Si no hay banco compatible, NO sustituyas la familia, NO recurras al banco común ni importes mascotas/objetos de otro nicho por defecto; construye una idea directamente pertinente a la familia seleccionada.\\n';
+    o += 'BLOQUEO SEMÁNTICO: antes de describir A/B/C, declara una ficha compartida con (1) concepto comercial concreto, (2) función/intención, (3) objeto/escena/símbolo principal, (4) audiencia, (5) copy exacto principal, (6) copy secundario exacto solo si aporta y (7) tercer nivel solo si existe un dato real. Después reutiliza ESA ficha sin cambios semánticos en A/B/C. No declares un concepto distinto por dirección.\\n';
+    o += 'DIRECCIONES: 01A HEAVY = impacto, masas y contraste; 01B SOFT = aire, formas abiertas y lectura amable; 01C MODERN = geometría, síntesis y lenguaje contemporáneo. Son tratamientos subordinados al estilo artístico seleccionado: no reemplazan ni contradicen el estilo principal. Diferencia composición, silueta, jerarquía y relación texto-imagen, no solo color o textura.\\n';
+    o += 'COPY: idioma natural del mercado; si el usuario escribió mensaje, conservarlo como restricción literal. Si no escribió copy, crea una frase principal original exacta, breve y comercial; el mismo copy y significado deben mantenerse en A/B/C. Añade apoyo solo si mejora la idea. No inventes fechas, cifras, nombres, series, referencias, citas ni afirmaciones doctrinales/factuales. Nunca uses placeholders ni microtexto decorativo.\\n';
+    o += 'JERARQUÍA TEXTUAL: nivel 1 = copy principal legible y dominante; nivel 2 = frase de apoyo concreta o se omite; nivel 3 = solo dato real confirmado o se omite. Posición, escala relativa y tratamiento tipográfico pueden variar entre A/B/C; el orden semántico no. Indica palabras exactas, no solo dónde colocarlas.\\n';
+    o += 'RESTRICCIONES DEL USUARIO: concepto «' + (String(MOTOR_STATE.concept || '').trim() || 'no definido; descubrir dentro de la familia bloqueada') + '» | mensaje «' + (String(MOTOR_STATE.message || '').trim() || 'sin mensaje fijado; proponer copy original') + '» | apoyo «' + (String(MOTOR_STATE.support || '').trim() || 'sin apoyo fijado') + '».\\n\\n';
   } else {
     o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
@@ -1275,7 +1347,11 @@ function formatPrompt(result) {
       ? (contactMainText
         ? 'MENSAJE PRINCIPAL literal: «' + contactMainText + '»' + (contactSupportText ? ' · APOYO literal: «' + contactSupportText + '»' : '') + ' · sin texto terciario · ' + v.tipografia
         : 'COPY PROPUESTO: escribir frase final original exacta según jerarquía ' + v.jerarquiaVisual + '; apoyo opcional solo si aporta; no inventar datos ni usar microtexto · ' + v.tipografia)
-      : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia;
+      : (isExplore
+        ? (String(MOTOR_STATE.message || '').trim()
+          ? 'COPY PRINCIPAL LITERAL: «' + String(MOTOR_STATE.message).trim() + '»; no modificar palabras. APOYO: ' + (String(MOTOR_STATE.support || '').trim() ? '«' + String(MOTOR_STATE.support).trim() + '»' : 'omitir si no aporta') + '; tercer nivel solo con dato real; tipografía ' + v.tipografia
+          : 'COPY COMPARTIDO A/B/C: define palabras exactas de una frase principal original; conserva el mismo texto en las tres direcciones. Apoyo literal solo si aporta y también compartido; tercer nivel solo con dato real o se omite. Prohibidos placeholders y microtexto. Tipografía: ' + v.tipografia))
+        : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia);
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += contactDNA
         ? 'DIRECCIÓN: representar el mismo símbolo mediante la forma de las letras; sin añadir otros objetos ni ilustraciones.\n'
