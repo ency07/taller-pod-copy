@@ -798,6 +798,7 @@
         '{' +
         '"concepto": "idea central visual en 5-8 palabras", ' +
         '"mensaje_visible": "texto legible en la imagen o null si no hay", ' +
+        '"frase_apoyo_sugerida": "frase original de 2-5 palabras, coherente con la imagen y distinta del mensaje; null si no aporta", ' +
         '"simbolo_descripcion": "descripción visual detallada del símbolo principal", ' +
         '"subnicho_sugerido": "el subnicho más probable para esta imagen", ' +
         '"funcion_simbolica": "qué representa o comunica el símbolo", ' +
@@ -827,6 +828,7 @@
       fileInput.dataset.analysisSummary = JSON.stringify({
         concepto: analysis.concepto || '',
         mensaje_visible: analysis.mensaje_visible || '',
+        frase_apoyo_sugerida: analysis.frase_apoyo_sugerida || '',
         simbolo_descripcion: analysis.simbolo_descripcion || '',
         funcion_simbolica: analysis.funcion_simbolica || '',
         esencia_a_conservar: analysis.esencia_a_conservar || ''
@@ -838,6 +840,14 @@
       }
       if ($('message') && analysis.mensaje_visible) {
         $('message').value = analysis.mensaje_visible;
+      }
+      const supportSuggestion = String(analysis.frase_apoyo_sugerida || '').trim();
+      const supportField = $('support');
+      let supportSuggestionFilled = false;
+      if (supportField && supportSuggestion && !/^(null|none|ninguna|n\/a)$/i.test(supportSuggestion) && !supportField.value.trim()) {
+        supportField.value = supportSuggestion;
+        supportField.dispatchEvent(new Event('input', { bubbles: true }));
+        supportSuggestionFilled = true;
       }
       if ($('essence') && analysis.esencia_a_conservar) {
         $('essence').value = analysis.esencia_a_conservar;
@@ -851,7 +861,12 @@
 
       // Estado de éxito
       if (statusEl) {
-        statusEl.innerHTML = '<span class="good">Imagen analizada. Campos llenados automáticamente. Revisa y ajusta antes de crear.</span>';
+        const supportNote = supportSuggestion
+          ? (supportSuggestionFilled
+            ? ' Frase de apoyo sugerida y puesta en el campo; revísala antes de generar.'
+            : ' La IA sugirió «' + supportSuggestion + '», pero se conservó el apoyo que ya habías escrito.')
+          : ' No se sugirió una frase de apoyo.';
+        statusEl.textContent = 'Imagen analizada. Revisa y ajusta los campos antes de crear.' + supportNote;
       }
 
       // Mostrar sugerencias de banco

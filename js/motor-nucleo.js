@@ -33,6 +33,7 @@ const _SATURACION = typeof SATURACION !== 'undefined' ? SATURACION : {};
 const _OBJECT_BANK_COMMON = typeof OBJECT_BANK_COMMON !== 'undefined' ? OBJECT_BANK_COMMON : [];
 const _OBJECT_BANK_COMMON_EN = typeof OBJECT_BANK_COMMON_EN !== 'undefined' ? OBJECT_BANK_COMMON_EN : [];
 const _TEXTO_FALLBACK_SECULAR = typeof TEXTO_FALLBACK_SECULAR !== 'undefined' ? TEXTO_FALLBACK_SECULAR : {};
+const _CONTACT_TREATMENT_ORDER = { A: 'HEAVY', B: 'SOFT', C: 'MODERN' };
 
 /* --- Helpers de memoria (de memoria-local.js) --- */
 const _memGetJSON = typeof getJSON === 'function' ? getJSON : function () { return null; };
@@ -166,7 +167,7 @@ function readStateFromDOM() {
 
   const analysis = MOTOR_STATE.workflowMode === 'variation' ? MOTOR_STATE.imageAnalysis : null;
   const analysisText = analysis
-    ? [analysis.concepto, analysis.mensaje_visible, analysis.simbolo_descripcion, analysis.funcion_simbolica, analysis.esencia_a_conservar].filter(Boolean).join(' ')
+    ? [analysis.concepto, analysis.mensaje_visible, analysis.frase_apoyo_sugerida, analysis.simbolo_descripcion, analysis.funcion_simbolica, analysis.esencia_a_conservar].filter(Boolean).join(' ')
     : '';
   const detectorConcept = analysisText || MOTOR_STATE.concept;
   const detectorMessage = analysisText ? '' : MOTOR_STATE.message;
@@ -629,8 +630,12 @@ function _resolveContactIdentity(objectPool) {
   const relation = source.match(/^\s*(?:(?:a|an|the|un|una|el|la|los|las)\s+)?([A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ'’-]*(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ'’-]*){0,2}?)\s+(?:que|that|which)\s+(?:protege|protegen|proteger|protects|protect|guards|defends)\b/i);
   const symbol = (relation && relation[1] ? relation[1].trim() : '') || _pick(objectPool) || source || 'símbolo del nicho';
   const protective = /\b(proteg\w*|protect\w*|guard\w*|defend\w*|cuid\w*|care\w*|safe\w*)\b/i.test(concept + ' ' + message);
+  const claw = /\b(garra|claw|pata|paw)\b/i.test(source);
   return {
     symbol: symbol,
+    guiaSimbolo: claw
+      ? 'Representa una garra o pata animal completa y reconocible como protección; no la conviertas en arañazo o ataque ni inventes una especie que el usuario no indicó.'
+      : 'Representa el símbolo indicado de forma reconocible; no lo sustituyas por otro objeto ni añadas acciones ajenas al concepto.',
     funcionSimbolica: protective ? 'Protección y cuidado' : (_pick(_POOLS.funcionSimbolica) || 'Emblema de identidad'),
     intencionEmocional: protective ? 'Seguridad y cuidado' : (_pick(_POOLS.intencionEmocional) || 'Certeza silenciosa')
   };
@@ -652,7 +657,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
   const contactIdentity = _isLockedContactSet()
     ? (fixedIdentity || _resolveContactIdentity(objectPool))
     : null;
-  const contactPrimaryText = String(MOTOR_STATE.message || MOTOR_STATE.concept || '').trim().replace(/\s+/g, ' ');
+  const contactPrimaryText = String(MOTOR_STATE.message || '').trim().replace(/\s+/g, ' ');
   const contactSupportText = String(MOTOR_STATE.support || '').trim().replace(/\s+/g, ' ');
 
   K.forEach(function (k) {
@@ -704,7 +709,9 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     }
 
     v.tecnica = _pick(sp.tecnica || ['técnica mixta']);
-    v.relacion = _pick(sp.relacion || ['texto y símbolo integrados']);
+    v.relacion = contactIdentity
+      ? 'Integra el mensaje siguiendo solo el contorno y los espacios reales del símbolo; si afecta la lectura, separa texto e imagen. No añadas materiales u objetos no indicados.'
+      : _pick(sp.relacion || ['texto y símbolo integrados']);
 
     // Decisiones estructurales
     const productBias = _PRODUCT_BIAS[MOTOR_STATE.product] || {};
@@ -733,13 +740,18 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     usedAxes.formaSimbolo.push(v.formaSimbolo);
 
     const tratBias = (productBias.trat || []).concat(audProfile.tratPref || []);
-    v.tratamiento = _pickFreshTreatment(tratBias, _TRATAMIENTOS, usedAxes.tratamiento);
+    const fixedTreatment = contactIdentity ? _CONTACT_TREATMENT_ORDER[k] : '';
+    const fixedTreatmentSpec = fixedTreatment && _TRATAMIENTOS.find(function (x) { return _treatmentKey(x) === fixedTreatment; });
+    v.tratamiento = fixedTreatmentSpec || _pickFreshTreatment(tratBias, _TRATAMIENTOS, usedAxes.tratamiento);
     usedAxes.tratamiento.push(v.tratamiento);
 
     v.integracionTexto = _pickFresh(_INTEGRACION, _INTEGRACION, usedAxes.integracionTexto);
     usedAxes.integracionTexto.push(v.integracionTexto);
-    v.distribucionTexto = _pick(_POOLS.distribucionTexto || ['texto integrado al símbolo']);
+    v.distribucionTexto = contactIdentity
+      ? (contactPrimaryText ? 'texto autorizado con lectura prioritaria; integrado solo si no se deforma ni se oculta' : 'sin texto principal autorizado; no inventar')
+      : _pick(_POOLS.distribucionTexto || ['texto integrado al símbolo']);
     v.jerarquia = _pick(_POOLS.jerarquia || ['Balanceado']);
+    if (contactIdentity) v.guiaSimbolo = contactIdentity.guiaSimbolo;
     const productDensity = productBias.density || [];
     const audienceDensity = (typeof AUD_DENSITY_PREF !== 'undefined' ? AUD_DENSITY_PREF[v.audiencia] : []) || [];
     const compatibleDensity = productDensity.filter(function (x) { return audienceDensity.indexOf(x) !== -1; });
@@ -1011,10 +1023,10 @@ function formatPrompt(result) {
   let productRule = _PRODUCT_RULES[MOTOR_STATE.product] || '';
   if (MOTOR_STATE.product === 'GORRA') {
     const capRules = {
-      auto: 'Auto: conserva el estilo visual y adapta solo lo necesario al panel curvo; evita microtexto y detalles que no se lean a escala real. No afirmes que el arte esta validado para produccion.',
-      bordado: 'ACABADO: BORDADO. Conserva la direccion visual y adapta solo los detalles que no se lean a escala real. Contornos claros y espacios abiertos; evita microtexto. La digitalizacion y medidas finales dependen del proveedor.',
-      parche: 'ACABADO: PARCHE. Conserva concepto y estilo; define una silueta delimitada y separacion suficiente para leer sus detalles a escala real. Evita microtexto; medidas finales dependen del proveedor.',
-      impresion: 'ACABADO: IMPRESION. Permite mas detalle que el bordado, manteniendo contraste y lectura en el panel curvo.'
+      auto: 'GORRA · AUTO: decide por separado para cada dirección. Bordado solo para motivo simple, conectado, de pocos colores y texto muy corto; parche para emblema delimitado con más piezas; impresión para degradados, línea fina o texto mayor. Indica la elección como nota técnica fuera del arte. Adapta siempre al panel frontal curvo y pequeño.',
+      bordado: 'GORRA · BORDADO: esta técnica es obligatoria. Usa masas conectadas, contornos firmes, espacios abiertos y pocos colores; evita degradados, microtexto y líneas aisladas. Conserva la lectura del motivo en el panel frontal curvo y pequeño.',
+      parche: 'GORRA · PARCHE: esta técnica es obligatoria. Diseña emblema compacto de silueta cerrada, borde claro y separación entre piezas; evita microtexto y detalle que se pierda al reducirlo. La elección entre parche bordado o tejido y sus medidas depende del proveedor.',
+      impresion: 'GORRA · IMPRESIÓN DIRECTA: esta técnica es obligatoria. Puede conservar más detalle y degradado que el bordado, pero debe mantener contorno, contraste y lectura en el panel curvo pequeño; no extiendas el arte a costuras o visera.'
     };
     productRule += ' ' + capRules[MOTOR_STATE.capApplication || 'auto'];
   }
@@ -1022,7 +1034,9 @@ function formatPrompt(result) {
   const selectedPrintMethod = MOTOR_STATE.product === 'GORRA' ? MOTOR_STATE.capApplication : MOTOR_STATE.printMethod;
   const printPrepRule = typeof getPrintPrepRule === 'function' ? getPrintPrepRule(MOTOR_STATE.product, selectedPrintMethod) : '';
   const printMethodLabels = typeof PRINT_METHOD_LABELS !== 'undefined' ? PRINT_METHOD_LABELS : {};
-  const printMethodName = printMethodLabels[selectedPrintMethod] || printMethodLabels.auto || 'Auto';
+  const printMethodName = MOTOR_STATE.product === 'GORRA' && selectedPrintMethod === 'auto'
+    ? 'Auto: elegir técnica por dirección (bordado / parche / impresión)'
+    : (printMethodLabels[selectedPrintMethod] || printMethodLabels.auto || 'Auto');
   const supportsPattern = ['MOCHILA', 'TOTE BAG', 'FUNDA MÓVIL'].indexOf(MOTOR_STATE.product) !== -1;
   const isPatron = MOTOR_STATE.designMode === 'patron' && !isVar && supportsPattern;
   const tplActive = _activeTemplateSafe();
@@ -1030,17 +1044,22 @@ function formatPrompt(result) {
   const promptMessage = String(MOTOR_STATE.message || '').trim() || '—';
   const contactDNA = !isVar && !isPatron;
   const contactSymbol = contactDNA && set.A ? String(set.A.objeto || '').trim() : '';
+  const contactSymbolGuide = contactDNA && set.A ? String(set.A.guiaSimbolo || '').trim() : '';
   const contactFunction = contactDNA && set.A ? String(set.A.funcionSimbolica || '').trim() : '';
-  const contactMainText = String(MOTOR_STATE.message || MOTOR_STATE.concept || '').trim().replace(/\s+/g, ' ');
+  const contactMainText = String(MOTOR_STATE.message || '').trim().replace(/\s+/g, ' ');
   const contactSupportText = String(MOTOR_STATE.support || '').trim().replace(/\s+/g, ' ');
   const activeDomain = dominioEfectivo();
   let promptFamilyId = null;
   if (isGospelMarket()) promptFamilyId = activeDomain || null;
   else promptFamilyId = subnicheForDominio(activeDomain)
     || (_marketSubnicheIds().indexOf(activeDomain) !== -1 ? activeDomain : effectiveSubniche());
-  const promptFamily = promptFamilyId && typeof getSubnicheLabel === 'function'
+  let promptFamily = promptFamilyId && typeof getSubnicheLabel === 'function'
     ? getSubnicheLabel(promptFamilyId, MOTOR_STATE.market)
     : (promptFamilyId || 'Auto: inferir del concepto/mensaje y mantener en A/B/C');
+  if (isGospelMarket() && promptFamilyId && typeof getDominiosGospel === 'function') {
+    const gospelFamilies = getDominiosGospel(MOTOR_STATE.market) || {};
+    if (gospelFamilies[promptFamilyId] && gospelFamilies[promptFamilyId].label) promptFamily = gospelFamilies[promptFamilyId].label;
+  }
   let o = '';
   if (isVar) {
     const image = MOTOR_STATE.imageReference;
@@ -1052,7 +1071,7 @@ function formatPrompt(result) {
     o += 'CONCEPTO: ' + promptConcept + ' | MENSAJE: ' + promptMessage + '\n';
     if (hasAnalysis) {
       o += 'REFERENCIA: imagen analizada en el generador. Este texto no contiene el archivo: adjuntalo tambien en la IA de imagen. No inventes detalles ausentes del analisis.\n';
-      o += 'ANALISIS CONFIRMADO: concepto ' + (analysis.concepto || 'sin dato') + '; texto visible ' + (analysis.mensaje_visible || 'no detectado') + '; simbolo ' + (analysis.simbolo_descripcion || 'sin dato') + '; funcion ' + (analysis.funcion_simbolica || 'sin dato') + '; esencia ' + (analysis.esencia_a_conservar || 'sin dato') + '.\n';
+      o += 'ANALISIS CONFIRMADO: concepto ' + (analysis.concepto || 'sin dato') + '; texto visible ' + (analysis.mensaje_visible || 'no detectado') + '; apoyo sugerido ' + (analysis.frase_apoyo_sugerida || 'ninguno') + '; simbolo ' + (analysis.simbolo_descripcion || 'sin dato') + '; funcion ' + (analysis.funcion_simbolica || 'sin dato') + '; esencia ' + (analysis.esencia_a_conservar || 'sin dato') + '.\n';
     } else if (image) {
       o += 'REFERENCIA: hay un archivo en el generador, pero no analisis confirmado. Adjunta la imagen en la IA de imagen si debe usarse; no supongas su contenido.\n';
     } else {
@@ -1076,7 +1095,9 @@ function formatPrompt(result) {
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
     o += 'CONCEPTO: ' + promptConcept + ' | MENSAJE: ' + promptMessage + '\n';
     if (contactDNA) {
-      o += 'ADN IGUAL EN A/B/C: símbolo «' + (contactSymbol || 'derivado del concepto') + '» · mensaje literal «' + (contactMainText || 'sin texto indicado') + '» · función «' + (contactFunction || 'una misma función protectora') + '»\n\n';
+      o += 'ADN IGUAL EN A/B/C: símbolo «' + (contactSymbol || 'derivado del concepto') + '» · mensaje literal «' + (contactMainText || 'sin texto indicado; no se imprime') + '» · apoyo literal «' + (contactSupportText || 'no indicado; no se imprime') + '» · función «' + (contactFunction || 'una misma función') + '»\n';
+      if (contactSymbolGuide) o += 'LECTURA CONSTANTE DEL SÍMBOLO: ' + contactSymbolGuide + '\n';
+      o += 'ORDEN FIJO DE TRATAMIENTOS: 01A HEAVY · 01B SOFT · 01C MODERN. Cada tratamiento gobierna composición, jerarquía, tipografía, contraste, densidad y formas; el estilo artístico lo ejecuta sin contradecirlo.\n\n';
     } else {
       o += 'ADN IGUAL EN A/B/C: concepto · mensaje · dominio · función simbólica · intención emocional\n\n';
     }
@@ -1118,7 +1139,8 @@ function formatPrompt(result) {
     o += 'PATRON: cada variante es un tile sin costura visible (bordes que empatan al repetirse); motivo y fondo definidos por ficha; repetición ' + (MOTOR_STATE.repeatType || 'medio salto') + ' en toda la superficie aplicable.\n';
     o += 'TEXTO EN TILE: mínimo o nulo; si hay texto debe funcionar repetido (sin lectura lineal, sin frase que se corte entre repeticiones).\n';
   } else if (contactDNA) {
-    o += 'TEXTOS: usa literalmente solo el mensaje indicado' + (contactSupportText ? ' y el apoyo indicado' : '') + '; no inventes texto secundario ni terciario. Letras grandes, correctas y legibles a escala real de ' + MOTOR_STATE.product + '; si falta espacio, elimina primero el apoyo y conserva íntegro el mensaje principal. PROHIBIDO microtexto y pseudo-letras.\n';
+    o += 'TEXTOS: imprime literalmente solo el mensaje y el apoyo indicados arriba; si no hay mensaje, no añadas palabras. No inventes texto secundario/terciario, sellos, fechas ni números. Legibilidad primero: letras grandes, correctas y legibles a escala real de ' + MOTOR_STATE.product + '; no deformes, cortes ni tapes las palabras. Si falta espacio, elimina primero el apoyo y conserva íntegro el mensaje. PROHIBIDO microtexto y pseudo-letras.\n';
+    o += 'COLOR: separa tinta, fondo del arte y color de la prenda; no uses el mismo color para fondo y tinta. Mantén contraste claro sobre el producto y no presentes el mockup como validación de producción.\n';
   } else {
     o += 'TEXTOS: tres niveles con peso real, todos legibles; PROHIBIDO microtexto decorativo.\n';
   }
@@ -1180,7 +1202,7 @@ function renderCards(result) {
     card.className = 'vcard';
 
     let html = '<div class="vhead"><span class="vname">' + n + '</span><span class="vstyle">' + escHtml(v.estilo) + '</span>'
-      + '<button class="ghost" style="margin-left:auto;font-size:14px;padding:2px 8px;" title="Re-tirar solo ' + n + '" onclick="rerollSingle(\'' + k + '\')">\u{1F3B2}</button></div>';
+      + '<button type="button" class="ghost" style="margin-left:auto;font-size:14px;padding:2px 8px;" title="Re-tirar solo ' + n + '" aria-label="Volver a generar ' + n + '" onclick="window.rerollSingle(\'' + k + '\')">\u{1F3B2}</button></div>';
     html += '<div class="vbody">';
 
     html += '<div class="vrow"><span class="vk">Estilo</span><span class="vv"><select data-card="' + k + '" data-lock="estilo" onchange="setCardLock(this)">'
@@ -1265,7 +1287,11 @@ function rerollSingle(keyLetter) {
       var score = (cf.ok ? 100 : 0) - cf.maxMatches * 20 + Math.random() * 5;
       if (score > bestScore) { bestScore = score; best = v; if (cf.ok) break; }
     }
-    if (!best) return;
+    if (!best) {
+      var noFitStatus = document.getElementById('status');
+      if (noFitStatus) noFitStatus.innerHTML = '<span class="warn">No encontré otra ficha que respete las diferencias con los selectores actuales. Cambia un bloqueo y vuelve a intentarlo.</span>';
+      return;
+    }
     LAST_RESULT.set[keyLetter] = best;
     try { window.LAST_RESULT = LAST_RESULT; } catch (e) {}
     try { window.V = LAST_RESULT.set; } catch (e) {}
@@ -1274,7 +1300,13 @@ function rerollSingle(keyLetter) {
     renderGates({ score: scoreSet(LAST_RESULT.set) });
     var outEl = document.getElementById('out');
     if (outEl) outEl.value = formatPrompt(LAST_RESULT);
-  } catch (e) { console.warn(e); }
+    var rerollStatus = document.getElementById('status');
+    if (rerollStatus) rerollStatus.innerHTML = '<span class="good">' + N[K.indexOf(keyLetter)] + ' regenerada. Símbolo, mensaje y función conservados.</span>';
+  } catch (e) {
+    console.warn(e);
+    var errorStatus = document.getElementById('status');
+    if (errorStatus) errorStatus.innerHTML = '<span class="bad">No se pudo regenerar la ficha: ' + escHtml(e && e.message ? e.message : 'error inesperado') + '</span>';
+  }
 }
 
 /* --- Renderizado de gates --- */

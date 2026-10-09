@@ -191,19 +191,25 @@ const PRINT_METHOD_LABELS = {
   impresion: "Impresion segun proveedor"
 };
 const PRINT_PREP_RULES = {
-  auto: "Conserva intactos el estilo visual, la composicion, los colores y los detalles intencionales. No simplifiques ni conviertas a vector por defecto. Mantiene bordes limpios, contraste y lectura a la escala del producto; las medidas y tolerancias finales dependen del proveedor.",
-  dtf: "PREPARACION DTF: conserva el estilo, degradados, textura y detalle intencional. Define bordes nítidos sin halos ni píxeles sueltos; evita líneas o huecos tan finos que desaparezcan al tamaño de impresión. Mantén el arte imprimible claramente separado del mockup; no simules ni dibujes la base blanca del RIP, salvo que sea parte visible del diseño.",
-  sublimacion: "PREPARACION PARA SUBLIMACION: conserva color, degradados y detalle; no fuerces paleta plana ni simplificacion. Mantén textos y elementos esenciales dentro de zona segura; usa sangrado o repeticion solo cuando la superficie y plantilla del producto lo permitan. Separa el arte imprimible del mockup.",
-  bordado: "PREPARACION PARA BORDADO: conserva el concepto y la direccion visual, traduciendo solo los detalles que no sean legibles a escala real. Favorece contornos claros, formas conectadas y espacios abiertos; evita microtexto, hilos aislados y lineas demasiado finas. No declares el arte digitalizado ni listo para maquina.",
-  parche: "PREPARACION PARA PARCHE: conserva concepto y direccion visual; crea silueta delimitada, zonas de color legibles y espacio suficiente entre detalles. Evita microtexto y bordes extremadamente finos. No declares el arte listo para bordado o tejido sin digitalizacion y medidas del proveedor.",
-  impresion: "PREPARACION PARA IMPRESION: conserva estilo, color y detalle intencional; evita halos, bordes accidentales y elementos esenciales fuera del area segura. La tecnologia, material y medidas dependen del proveedor."
+  auto: "AUTO: conserva el estilo, la composición y los detalles intencionales; aplica solo los cuidados generales de limpieza de bordes, contraste y lectura a escala del producto. No conviertas a vector ni simplifiques por defecto. La técnica, el material, las medidas y tolerancias finales deben confirmarse con el proveedor.",
+  dtf: "PREPARACIÓN DTF: conserva color, degradados y textura intencional. Pide contornos limpios, sin halos, píxeles sueltos ni líneas/huecos que desaparezcan a tamaño real. Mantén el arte de impresión separado del mockup y no dibujes una base blanca de RIP. Fondo transparente solo si la herramienta puede producirlo; de lo contrario, fondo uniforme fácil de retirar en edición.",
+  sublimacion: "PREPARACIÓN PARA SUBLIMACIÓN: conserva color completo, degradados y detalle; no fuerces tintas planas. Mantén texto y elementos esenciales en zona segura; usa sangrado o repetición solo si la superficie lo permite. Asume sustrato blanco compatible y no simules tinta blanca. Separa el arte del mockup y confirma material/plantilla con el proveedor.",
+  bordado: "PREPARACIÓN PARA BORDADO: conserva concepto y dirección visual, pero traduce el dibujo a formas de hilo viables a escala real: áreas conectadas, contornos firmes, huecos abiertos y paleta reducida. Evita degradados, microtexto, líneas aisladas y puntadas demasiado finas. No declares el arte digitalizado ni listo para máquina.",
+  parche: "PREPARACIÓN PARA PARCHE: conserva concepto y estilo; usa silueta cerrada con borde delimitado, zonas de color amplias y separación visible entre detalles. Evita microtexto, degradados y líneas finas. No declares el arte listo para bordado/tejido sin digitalización, material y medidas del proveedor.",
+  impresion: "PREPARACIÓN PARA IMPRESIÓN: conserva estilo, color y detalle intencional; define bordes limpios, contraste y zona segura propios del producto. Separa el arte del mockup. La tecnología, el material, la resolución y las medidas finales dependen del proveedor."
 };
 function getPrintMethods(product) {
   return PRINT_METHODS_BY_PRODUCT[product] || ["auto"];
 }
 function getPrintPrepRule(product, method) {
-  const chosen = product === "GORRA" ? (method || "auto") : (method || "auto");
+  const allowed = product === "GORRA"
+    ? ["auto", "bordado", "parche", "impresion"]
+    : getPrintMethods(product);
+  const chosen = allowed.indexOf(method || "auto") !== -1 ? (method || "auto") : "auto";
   let rule = PRINT_PREP_RULES[chosen] || PRINT_PREP_RULES.auto;
+  if (product === "GORRA" && chosen === "auto") {
+    rule += " Para cada dirección, elige bordado solo si el motivo es simple y conectado; parche si necesita emblema delimitado con más piezas; impresión si requiere degradados, líneas finas o texto mayor. Declara la elección como nota técnica, nunca como palabras dentro del arte.";
+  }
   if (chosen === "sublimacion" && product === "MUG") rule += " Aplicar solo a taza con recubrimiento apto para sublimacion; confirmarlo con el proveedor.";
   else if (chosen === "sublimacion" && isTextile(product)) rule += " En textil, aplicar solo si la fibra es poliester compatible; no asumir que una camiseta de algodon admite sublimacion.";
   return "ESTILO VISUAL y PREPARACION TECNICA son decisiones separadas. " + rule;
