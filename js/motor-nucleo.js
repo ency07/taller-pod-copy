@@ -205,6 +205,14 @@ function resolveAudiences() {
 
   const pool = getCurrentAudiencePool();
 
+  if (MOTOR_STATE.workflowMode === 'explore') {
+    const requested = base !== 'Auto' && pool.indexOf(base) !== -1 ? base : '';
+    const lockSet = _loadLocks(market, MOTOR_STATE.product);
+    const lockedA = lockSet && lockSet.audiencia && lockSet.audiencia.A;
+    const shared = requested || (lockedA && lockedA !== 'Auto' && pool.indexOf(lockedA) !== -1 ? lockedA : '') || _pick(pool) || pool[0] || '';
+    return { A: shared, B: shared, C: shared };
+  }
+
   const locks = _loadLocks(market, MOTOR_STATE.product);
   const result = {};
   const autos = [];
@@ -812,7 +820,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
       const brief = MOTOR_STATE.explorationBrief || _resolveExplorationBrief();
       const anchor = String(brief.concept || MOTOR_STATE.message || '').trim();
       v.objeto = anchor
-        ? (_chooseConceptCompatibleObject(objectPool, anchor) || anchor)
+        ? anchor
         : 'PROPUESTA CONCEPTUAL PENDIENTE PARA LA FAMILIA SELECCIONADA: definir concepto y símbolo coherentes antes de diseñar';
     } else {
       let obj, g = 0;
@@ -1262,15 +1270,15 @@ function formatPrompt(result) {
     const brief = explorationBrief || _resolveExplorationBrief();
     const familyLabel = brief.familyLabel || promptFamily;
     const conceptAnchor = String(brief.concept || '').trim();
-    o += '/EXPLORACIÓN CREATIVA — 3 DIRECCIONES · CONCEPTO ÚNICO · NADA CLONADO\\n';
-    o += 'MERCADO: ' + MOTOR_STATE.market + ' | REGIÓN: ' + MOTOR_STATE.region + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | FAMILIA/SUBNICHO BLOQUEADO: ' + familyLabel + ' (' + (brief.familyId || 'auto') + ') | SERIE: ' + (MOTOR_STATE.serie || '—') + '\\n';
-    o += 'ESTADO DEL CONCEPTO: ' + (conceptAnchor ? 'ANCLA RESUELTA: «' + conceptAnchor + '»' : 'SIN ANCLA DE BANCO: debes proponer un único concepto original, concreto y comercial ANTES de describir el arte') + '\\n';
-    o += 'CONTRATO DE FAMILIA: respeta exactamente la familia/subnicho seleccionado por el usuario. Fuente del candidato: ' + brief.selectedFrom + '. Banco compatible disponible: ' + (brief.bankFound ? 'sí' : 'no') + '. Si no hay banco compatible, NO sustituyas la familia, NO recurras al banco común ni importes mascotas/objetos de otro nicho por defecto; construye una idea directamente pertinente a la familia seleccionada.\\n';
-    o += 'BLOQUEO SEMÁNTICO: antes de describir A/B/C, declara una ficha compartida con (1) concepto comercial concreto, (2) función/intención, (3) objeto/escena/símbolo principal, (4) audiencia, (5) copy exacto principal, (6) copy secundario exacto solo si aporta y (7) tercer nivel solo si existe un dato real. Después reutiliza ESA ficha sin cambios semánticos en A/B/C. No declares un concepto distinto por dirección.\\n';
-    o += 'DIRECCIONES: 01A HEAVY = impacto, masas y contraste; 01B SOFT = aire, formas abiertas y lectura amable; 01C MODERN = geometría, síntesis y lenguaje contemporáneo. Son tratamientos subordinados al estilo artístico seleccionado: no reemplazan ni contradicen el estilo principal. Diferencia composición, silueta, jerarquía y relación texto-imagen, no solo color o textura.\\n';
-    o += 'COPY: idioma natural del mercado; si el usuario escribió mensaje, conservarlo como restricción literal. Si no escribió copy, crea una frase principal original exacta, breve y comercial; el mismo copy y significado deben mantenerse en A/B/C. Añade apoyo solo si mejora la idea. No inventes fechas, cifras, nombres, series, referencias, citas ni afirmaciones doctrinales/factuales. Nunca uses placeholders ni microtexto decorativo.\\n';
-    o += 'JERARQUÍA TEXTUAL: nivel 1 = copy principal legible y dominante; nivel 2 = frase de apoyo concreta o se omite; nivel 3 = solo dato real confirmado o se omite. Posición, escala relativa y tratamiento tipográfico pueden variar entre A/B/C; el orden semántico no. Indica palabras exactas, no solo dónde colocarlas.\\n';
-    o += 'RESTRICCIONES DEL USUARIO: concepto «' + (String(MOTOR_STATE.concept || '').trim() || 'no definido; descubrir dentro de la familia bloqueada') + '» | mensaje «' + (String(MOTOR_STATE.message || '').trim() || 'sin mensaje fijado; proponer copy original') + '» | apoyo «' + (String(MOTOR_STATE.support || '').trim() || 'sin apoyo fijado') + '».\\n\\n';
+    o += '/EXPLORACIÓN CREATIVA — 3 DIRECCIONES · CONCEPTO ÚNICO · NADA CLONADO\n';
+    o += 'MERCADO: ' + MOTOR_STATE.market + ' | REGIÓN: ' + MOTOR_STATE.region + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | FAMILIA/SUBNICHO BLOQUEADO: ' + familyLabel + ' (' + (brief.familyId || 'auto') + ') | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
+    o += 'ESTADO DEL CONCEPTO: ' + (conceptAnchor ? 'ANCLA RESUELTA: «' + conceptAnchor + '»' : 'SIN ANCLA DE BANCO: debes proponer un único concepto original, concreto y comercial ANTES de describir el arte') + '\n';
+    o += 'CONTRATO DE FAMILIA: respeta exactamente la familia/subnicho seleccionado por el usuario. Fuente del candidato: ' + brief.selectedFrom + '. Banco compatible disponible: ' + (brief.bankFound ? 'sí' : 'no') + '. Si no hay banco compatible, NO sustituyas la familia, NO recurras al banco común ni importes mascotas/objetos de otro nicho por defecto; construye una idea directamente pertinente a la familia seleccionada.\n';
+    o += 'BLOQUEO SEMÁNTICO: antes de describir A/B/C, declara una ficha compartida con (1) concepto comercial concreto, (2) función/intención, (3) objeto/escena/símbolo principal, (4) audiencia, (5) copy exacto principal, (6) copy secundario exacto solo si aporta y (7) tercer nivel solo si existe un dato real. Después reutiliza ESA ficha sin cambios semánticos en A/B/C. No declares un concepto distinto por dirección.\n';
+    o += 'DIRECCIONES: 01A HEAVY = impacto, masas y contraste; 01B SOFT = aire, formas abiertas y lectura amable; 01C MODERN = geometría, síntesis y lenguaje contemporáneo. Son tratamientos subordinados al estilo artístico seleccionado: no reemplazan ni contradicen el estilo principal. Diferencia composición, silueta, jerarquía y relación texto-imagen, no solo color o textura.\n';
+    o += 'COPY: idioma natural del mercado; si el usuario escribió mensaje, conservarlo como restricción literal. Si no escribió copy, crea una frase principal original exacta, breve y comercial; el mismo copy y significado deben mantenerse en A/B/C. Añade apoyo solo si mejora la idea. No inventes fechas, cifras, nombres, series, referencias, citas ni afirmaciones doctrinales/factuales. Nunca uses placeholders ni microtexto decorativo.\n';
+    o += 'JERARQUÍA TEXTUAL: nivel 1 = copy principal legible y dominante; nivel 2 = frase de apoyo concreta o se omite; nivel 3 = solo dato real confirmado o se omite. Posición, escala relativa y tratamiento tipográfico pueden variar entre A/B/C; el orden semántico no. Indica palabras exactas, no solo dónde colocarlas.\n';
+    o += 'RESTRICCIONES DEL USUARIO: concepto «' + (String(MOTOR_STATE.concept || '').trim() || 'no definido; descubrir dentro de la familia bloqueada') + '» | mensaje «' + (String(MOTOR_STATE.message || '').trim() || 'sin mensaje fijado; proponer copy original') + '» | apoyo «' + (String(MOTOR_STATE.support || '').trim() || 'sin apoyo fijado') + '».\n\n';
   } else {
     o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
@@ -1362,6 +1370,7 @@ function formatPrompt(result) {
     } else {
       o += 'DIRECCIÓN: ' + v.arquitectura + '; ' + v.composicion + '; ' + v.layout + '\n';
       o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
+      o += 'ESTILO PRINCIPAL (prioridad): ' + v.estilo + '. Gobierna el lenguaje visual; forma, técnica y tratamiento son secundarios y no pueden introducir estéticas incompatibles.\\n';
       o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
       o += 'TEXTO: ' + textLine + '\n';
       o += 'TEXTO/IMAGEN: ' + v.distribucionTexto + '; ' + v.integracionTexto + '; ' + v.relacion + '\n';
