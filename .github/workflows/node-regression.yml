@@ -1,0 +1,37 @@
+name: Node regression tests
+
+on:
+  push:
+    branches:
+      - fix/redteam-semantic-identity
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        run: |
+          node --check js/motor-nucleo.js
+          for file in js/*.js tests/*.test.js; do
+            node --check "$file"
+          done
+      - name: Run regression suite
+        run: |
+          set -e
+          for file in tests/*.test.js; do
+            echo "=== $file ==="
+            node "$file"
+          done
