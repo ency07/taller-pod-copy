@@ -25,14 +25,21 @@ MOTOR_STATE.concept = 'Cruz';
 const explicit = _resolveContactIdentity([]);
 ok(explicit.ok && explicit.symbol === 'Cruz', 'debe aceptar un símbolo breve y explícito aunque no esté en el banco');
 
-MOTOR_STATE.concept = 'un concepto largo sin objeto visual identificable que debe aclararse';
-const ambiguous = _resolveContactIdentity(['león sobre escudo','cruz sobre escudo']);
-ok(!ambiguous.ok, 'debe rechazar conceptos ambiguos sin identidad principal inequívoca');
-ok(!!ambiguous.reason, 'debe explicar por qué se detiene la generación');
+MOTOR_STATE.concept = 'lugares turísticos de Barranquilla';
+const descriptive = _resolveContactIdentity(['león sobre escudo','cruz sobre escudo']);
+ok(descriptive.ok, 'debe aceptar conceptos descriptivos aunque no nombren un único objeto');
+ok(descriptive.symbol === MOTOR_STATE.concept, 'si el banco no ofrece una coincidencia inequívoca, debe conservar el concepto completo como ancla');
+ok(descriptive.identityMode === 'concept', 'debe distinguir el ancla conceptual de un símbolo del banco');
 
 MOTOR_STATE.concept = 'un león que protege una cruz';
 const relation = _resolveContactIdentity(['león en escudo','cruz sobre escudo']);
-ok(!relation.ok, 'no debe resolver por selección arbitraria una relación ambigua entre símbolos');
+ok(relation.ok, 'debe aceptar relaciones entre varios símbolos sin bloquear la generación');
+ok(relation.symbol === MOTOR_STATE.concept, 'no debe elegir al azar uno de los símbolos relacionados');
+
+MOTOR_STATE.concept = '';
+const missing = _resolveContactIdentity(['león sobre escudo']);
+ok(!missing.ok, 'solo debe bloquear cuando falta el concepto principal');
+ok(!!missing.reason, 'debe explicar qué dato mínimo falta');
 
 console.log((failures.length ? 'FAIL' : 'PASS') + ' semantic-identity (' + checks + ' aserciones, ' + failures.length + ' fallos)');
 failures.forEach(function (msg) { console.error(' - ' + msg); });
