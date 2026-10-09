@@ -104,7 +104,7 @@ let MOTOR_STATE = {
   dominio: 'auto',
   dominioDetectado: 'auto',
   domImagen: 'Auto',
-  workflowMode: 'new',
+  workflowMode: 'explore',
   groupMode: 'distintos',
   objectMode: 'simple',
   designMode: 'contacto',
@@ -620,7 +620,7 @@ function _pickFreshTreatment(biasPool, fullPool, used) {
 }
 
 function _isLockedContactSet() {
-  return MOTOR_STATE.workflowMode !== 'variation' && MOTOR_STATE.designMode !== 'patron';
+  return MOTOR_STATE.workflowMode !== 'variation' && MOTOR_STATE.workflowMode !== 'explore' && MOTOR_STATE.designMode !== 'patron';
 }
 
 function _resolveContactIdentity(objectPool) {
@@ -1095,7 +1095,8 @@ function formatPrompt(result) {
   const tplActive = _activeTemplateSafe();
   const promptConcept = String(MOTOR_STATE.concept || '').trim() || String(MOTOR_STATE.message || '').trim() || '—';
   const promptMessage = String(MOTOR_STATE.message || '').trim() || '—';
-  const contactDNA = !isVar && !isPatron;
+  const isExplore = MOTOR_STATE.workflowMode === 'explore';
+  const contactDNA = !isVar && !isPatron && !isExplore;
   const contactSymbol = contactDNA && set.A ? String(set.A.objeto || '').trim() : '';
   const contactSymbolGuide = contactDNA && set.A ? String(set.A.guiaSimbolo || '').trim() : '';
   const contactFunction = contactDNA && set.A ? String(set.A.funcionSimbolica || '').trim() : '';
@@ -1153,6 +1154,13 @@ function formatPrompt(result) {
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
     o += 'CONCEPTO: ' + promptConcept + ' | MENSAJE: ' + promptMessage + '\n';
     o += 'REPETICIÓN: ' + (MOTOR_STATE.repeatType || 'medio salto') + ' | CADA VARIANTE ES UN TILE DISTINTO DEL MISMO CONCEPTO\n\n';
+  } else if (isExplore) {
+    o += '/EXPLORACIÓN CREATIVA — 3 DIRECCIONES · DESCUBRIR CONCEPTO · NADA CLONADO\n';
+    o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SUBNICHO: ' + MOTOR_STATE.subniche + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
+    o += 'MODO EXPLORACIÓN: el usuario aún no ha definido un concepto. Propón PRIMERO un concepto comercial claro y coherente con mercado, subnicho, audiencia y producto. Las tres direcciones A/B/C deben desarrollar ESE MISMO concepto, no tres ideas inconexas. Si hay mensaje visible escrito por el usuario, úsalo como restricción; si no, propone copy concreto y pertinente. No inventes referencias, datos ni citas bíblicas.\n';
+    o += 'DIRECCIONES: 01A HEAVY = impacto, masas y contraste; 01B SOFT = aire, formas abiertas y lectura amable; 01C MODERN = geometría, síntesis y lenguaje contemporáneo. Cambia composición, silueta, jerarquía y relación texto-imagen entre direcciones; no basta con recolorear ni cambiar técnica.\n';
+    o += 'CONCEPTO PROPUESTO: la IA de imagen debe declarar una propuesta concreta antes de describir cada diseño. Mantén el concepto común en A/B/C y diferencia la solución visual de cada una.\n';
+    o += 'MENSAJE/RESTRICCIONES DEL USUARIO: ' + (String(MOTOR_STATE.message || '').trim() || 'Sin mensaje fijado; proponer copy apropiado al mercado y producto.') + '\n\n';
   } else {
     o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
