@@ -744,6 +744,12 @@ function buildCandidate(audsPerKey, fixedIdentity) {
       const semanticAnchor = String(analysis.concepto || MOTOR_STATE.concept || MOTOR_STATE.message || '').trim();
       // No escoger un objeto al azar solo por compartir nicho.
       v.objeto = _chooseConceptCompatibleObject(objectPool, semanticAnchor) || semanticAnchor || 'proponer un símbolo directamente derivado del concepto y la familia seleccionada';
+    } else if (MOTOR_STATE.workflowMode === 'explore') {
+      const anchor = String(MOTOR_STATE.concept || MOTOR_STATE.message || '').trim();
+      // Exploración sin concepto: no introducir un objeto aleatorio antes de que la IA defina la idea.
+      v.objeto = anchor
+        ? (_chooseConceptCompatibleObject(objectPool, anchor) || anchor)
+        : 'PROPUESTA PENDIENTE: elegir un objeto/símbolo después de definir concepto, familia y función; no seleccionar al azar del banco';
     } else {
       let obj, g = 0;
       do {
@@ -1209,7 +1215,13 @@ function formatPrompt(result) {
   o += 'NICHO/FAMILIA: ' + promptFamily + '\n';
   o += contactDNA
     ? 'ANCLA: misma ' + (contactSymbol ? '«' + contactSymbol + '»' : 'idea central') + ', mensaje y función en A/B/C; variar su tratamiento visual, tipografía, composición y jerarquía.\n'
-    : 'ANCLA: mismo nicho/concepto en A/B/C; variar expresion. SOLO_TEXTO: nombrar el nicho en el texto.\n';
+    : 'ANCLA: mismo nicho/concepto en A/B/C; variar expresión. SOLO_TEXTO: nombrar el nicho en el texto.\n';
+  o += 'PROTOCOLO SEMÁNTICO UNIVERSAL — OBLIGATORIO EN TODOS LOS MERCADOS, NICHOS, PRODUCTOS Y MODOS:\n';
+  o += '1) RESOLVER ANTES DE DIBUJAR: identifica la idea central, intención/mensaje, audiencia, mercado, producto y familia más pertinente. Si la familia está fijada por el usuario, respétala; si está en Auto, infiere la familia más específica compatible usando las familias y bancos disponibles para el mercado activo. No cambies de familia por conveniencia visual.\n';
+  o += '2) USAR EL BANCO CORRECTO: consulta candidatos de esa familia/subnicho y mercado; el banco es una fuente de candidatos, no una orden de escoger cualquier elemento. No mezcles bancos de mercados, regiones, idiomas o tradiciones incompatibles.\n';
+  o += '3) VALIDAR EL OBJETO: el objeto/símbolo debe representar directamente el concepto o cumplir una función simbólica explicable. Comprueba la relación concepto → familia → objeto → mensaje. Descarta objetos que solo compartan nicho o palabras. Si no hay coincidencia clara en el banco, conserva el concepto como ancla y propone una representación coherente; nunca rellenes con selección aleatoria.\n';
+  o += '4) RESOLVER EL TEXTO: si el usuario escribió texto, conserva sus palabras salvo que el modo permita reescritura. Si no escribió texto y no prohibió copy, propone texto final concreto en el idioma del mercado, adecuado a la audiencia y a la jerarquía visual. No inventes datos, referencias, citas ni afirmaciones doctrinales/factuales. Si el texto no aporta, explica/indica que se omita; no uses placeholders ni microtexto.\n';
+  o += '5) COMPROBACIÓN FINAL: antes de entregar A/B/C, verifica que objeto, copy, familia, audiencia, producto y función simbólica encajen. Si hay contradicción, corrige la ficha antes de generar. Mantén el mismo ADN conceptual en A/B/C y diferencia la solución visual, no la idea central.\n';
   o += 'REGLAS INQUEBRANTABLES:\n';
   if (langDir) o += 'IDIOMA: ' + langDir + '\n';
   if (cultDir) o += 'CULTURA: ' + cultDir + '\n';
