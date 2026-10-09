@@ -1453,3 +1453,40 @@ window.memPatternMarket = memPatternMarket;
 window.memLocksMarket = memLocksMarket;
 window.MOTOR_STATE = MOTOR_STATE;
 window.readStateFromDOM = readStateFromDOM;
+
+/* --- Enlace explícito de controles de la vista Taller --- */
+(function bindTallerControls() {
+  function bind() {
+    const director = document.getElementById('btnDirector');
+    const build = document.getElementById('btnBuild');
+    const clear = document.getElementById('btnNewSet');
+
+    if (director && !director.dataset.podBound) {
+      director.addEventListener('click', function (event) {
+        event.preventDefault();
+        crearLos3Disenos();
+      });
+      director.dataset.podBound = '1';
+    }
+    if (build && !build.dataset.podBound) {
+      build.addEventListener('click', function (event) {
+        event.preventDefault();
+        crearLos3Disenos();
+      });
+      build.dataset.podBound = '1';
+    }
+    if (clear && !clear.dataset.podBound) {
+      clear.addEventListener('click', function (event) {
+        event.preventDefault();
+        limpiarFichas();
+      });
+      clear.dataset.podBound = '1';
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bind, { once: true });
+  } else {
+    bind();
+  }
+})();
