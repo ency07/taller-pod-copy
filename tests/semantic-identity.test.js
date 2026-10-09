@@ -15,6 +15,14 @@ const JS = path.join(ROOT, 'js');
 ['data-mercados.js','data-audiencias.js','data-bancos.js','data-estilos.js','dominios.js','data-productos.js','memoria-local.js','motor-nucleo.js']
   .forEach(function (file) { vm.runInThisContext(fs.readFileSync(path.join(JS, file), 'utf8'), { filename: file }); });
 
+// La selección de objetos no debe confundir pertenecer al nicho con ser semánticamente pertinente.
+const bearAnchor = _chooseConceptCompatibleObject(['pelota de lana desenrollada','cama elevada para gato','oso aventurero con gafas de sol'], 'oso aventurero con gafas de sol');
+ok(/oso aventurero/i.test(bearAnchor), 'debe seleccionar el candidato compatible con el concepto del oso');
+const noMatch = _chooseConceptCompatibleObject(['pelota de lana desenrollada','gato junto a una ventana'], 'oso aventurero con gafas de sol');
+ok(/oso aventurero/i.test(noMatch), 'si ningún objeto del banco encaja, debe conservar el concepto en vez de elegir al azar');
+const catMatch = _chooseConceptCompatibleObject(['pelota de lana desenrollada','gato aventurero con mochila'], 'gato aventurero con mochila');
+ok(/gato aventurero/i.test(catMatch), 'debe preferir una coincidencia semántica clara del banco');
+
 MOTOR_STATE.concept = 'astronauta en el espacio profundo sosteniendo una roca';
 MOTOR_STATE.message = 'A los que aman a Dios, todas las cosas les ayudan a bien';
 const clearMatch = _resolveContactIdentity(['astronauta con casco espacial','roca lunar agrietada']);
