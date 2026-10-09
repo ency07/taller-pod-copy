@@ -579,16 +579,15 @@ function getObjectPool() {
     try { pool = getBankForSubniche(gid, MOTOR_STATE.region, MOTOR_STATE.market) || []; } catch (e) {}
   }
 
-  const personalObjs = _getPersonalObjects(MOTOR_STATE.market, sub || 'auto');
-  pool = pool.concat(personalObjs);
-  // Banco común genérico: PROHIBIDO en gospel (mezclaba secular con doctrinal y
-  // hacía predominar gospel en otros). Y en mercados EN va el común en inglés:
-  // OBJECT_BANK_COMMON está íntegramente en español y se filtraba al pool EN.
-  // En exploración, una familia elegida sin banco compatible no debe contaminarse
-  // con el banco común (p. ej. mascotas por defecto).
+  // Capturar la falta de banco antes de añadir objetos personales: estos no autorizan
+  // a importar el banco común de otra familia.
   const explicitExploreFamilyMissingBank = MOTOR_STATE.workflowMode === 'explore'
     && MOTOR_STATE.subniche && MOTOR_STATE.subniche !== 'auto'
     && !pool.length;
+  const personalObjs = _getPersonalObjects(MOTOR_STATE.market, sub || 'auto');
+  pool = pool.concat(personalObjs);
+  // Banco común solo como complemento normal; nunca como fallback de una familia
+  // manual que no dispone de banco compatible en el mercado activo.
   if (!gospel && !explicitExploreFamilyMissingBank) pool = pool.concat(_commonBankForMarket());
 
   return [...new Set(pool.filter(Boolean))];
