@@ -626,30 +626,44 @@ function _isLockedContactSet() {
 function _resolveContactIdentity(objectPool) {
   const concept = String(MOTOR_STATE.concept || '').trim();
   const message = String(MOTOR_STATE.message || '').trim();
-  // El concepto tiene prioridad. No inferir el símbolo principal desde el mensaje
-  // ni sustituirlo por un objeto aleatorio del banco cuando la identidad es ambigua.
-  const source = concept;
-  const normalizedSource = typeof _normalizeTxt === 'function'
-    ? _normalizeTxt(source)
-    : source.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // La identidad se infiere exclusivamente del concepto; nunca se inventa
+  // una sustitución aleatoria si el texto es ambiguo.
+  const normalize = function (value) {
+    return (typeof _normalizeTxt === 'function' ? _normalizeTxt(String(value || '')) : String(value || '').toLowerCase())
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+  };
+  const source = normalize(concept);
+  const stop = new Set(['que','con','para','desde','hacia','sobre','entre','una','uno','unos','unas','los','las','el','la','de','del','en','por','como','sin','the','and','with','for','from','into','over','under','that','which','holding','sosteniendo','representa','lugares','turisticos','tourist','places','profundo','deep']);
+  const tokens = source.split(/\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); });
   const pool = Array.isArray(objectPool) ? objectPool : [];
-  const matches = pool.map(function (item) {
+  const scored = pool.map(function (item) {
     const label = String(item || '').trim();
-    const normalizedLabel = typeof _normalizeTxt === 'function'
-      ? _normalizeTxt(label)
-      : label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    return { label: label, normalized: normalizedLabel };
-  }).filter(function (item) {
-    return item.normalized.length >= 4 && normalizedSource.indexOf(item.normalized) !== -1;
-  }).sort(function (a, b) { return b.normalized.length - a.normalized.length; });
+    const normLabel = normalize(label);
+    const labelTokens = [...new Set(normLabel.split(/\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); }))];
+    const overlap = labelTokens.filter(function (t) { return tokens.indexOf(t) !== -1; });
+    const distinctive = overlap.filter(function (t) { return t.length >= 5; });
+    return { label: label, normLabel: normLabel, overlap: overlap, distinctive: distinctive,
+      score: distinctive.reduce(function (sum, t) { return sum + Math.min(t.length, 10); }, 0) };
+  }).filter(function (x) { return x.score > 0; })
+    .sort(function (a, b) { return b.score - a.score || b.distinctive.length - a.distinctive.length; });
 
-  // Un símbolo se resuelve solo cuando una entrada concreta del banco está
-  // explícitamente contenida en el concepto, o cuando el usuario dio un nombre
-  // breve y directo (1–3 palabras) sin una relación ambigua.
-  const simpleConcept = source.split(/\s+/).filter(Boolean).length <= 3
-    && !/\b(que|con|para|desde|hacia|sobre|entre|sosteniendo|holding|protects?|protege|representa|lugares|lugares turisticos|tourist places)\b/i.test(normalizedSource);
-  const symbol = matches.length ? matches[0].label : (simpleConcept ? source : '');
-  const resolved = !!symbol;
+  let symbol = '';
+  let resolved = false;
+  if (scored.length && scored[0].distinctive.length) {
+    const first = scored[0], second = scored[1];
+    // No aceptar un empate: dos objetos igualmente plausibles requieren aclaración.
+    if (!second || first.score > second.score) {
+      symbol = first.label;
+      resolved = true;
+    }
+  }
+  // Para un nombre de símbolo breve y explícito se permite usar literalmente
+  // la entrada del usuario, aunque no exista una ficha idéntica en el banco.
+  if (!resolved && tokens.length >= 1 && tokens.length <= 2 && source.length <= 40
+      && !/\b(protege|protegen|proteger|protect|protects|guard|defiende|defend|sosteniendo|holding)\b/.test(source)) {
+    symbol = concept;
+    resolved = true;
+  }
   const protective = /\b(proteg\w*|protect\w*|guard\w*|defend\w*|cuid\w*|care\w*|safe\w*)\b/i.test(concept + ' ' + message);
   const claw = /\b(garra|claw|pata|paw)\b/i.test(source);
   return {
