@@ -683,7 +683,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
   const hierarchyPerKey = resolveTextImageModes(estilos, audsPerKey);
   const objectPool = getObjectPool();
   const isVar = MOTOR_STATE.workflowMode === 'variation';
-  const conservarSimb = isVar && !!MOTOR_STATE.imageReference && MOTOR_STATE.variationOptions.simbolo === 'conservar';
+  const conservarSimb = isVar && !!MOTOR_STATE.imageReference && MOTOR_STATE.variationOptions.simbolo !== 'sustituir';
   const conservarPaleta = isVar && !!MOTOR_STATE.imageReference && MOTOR_STATE.variationOptions.paleta === 'conservar';
   const textosImagen = isVar && !!MOTOR_STATE.imageReference && MOTOR_STATE.variationOptions.textos === 'conservar_palabras';
   const textosMensaje = isVar && MOTOR_STATE.variationOptions.textos === 'mismo_mensaje';
@@ -710,7 +710,8 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     } else if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       v.objeto = 'SIN OBJETO — composición tipográfica pura';
     } else if (conservarSimb) {
-      v.objeto = '(símbolo de la imagen REDIBUJADO: misma función simbólica; prohibido copiar silueta)';
+      const refSymbol = String((MOTOR_STATE.imageAnalysis || {}).simbolo_descripcion || (MOTOR_STATE.imageAnalysis || {}).concepto || 'símbolo principal de la imagen');
+      v.objeto = 'REDIBUJAR EL MISMO SÍMBOLO DE REFERENCIA: ' + refSymbol + '. Mantener identidad reconocible en A/B/C; variar solo la interpretación gráfica, técnica y composición. No sustituir por otro objeto.';
     } else {
       let obj, g = 0;
       do {
@@ -733,8 +734,9 @@ function buildCandidate(audsPerKey, fixedIdentity) {
       v.textoApoyo = '(conservar literalmente las palabras secundarias de la imagen)';
       v.textoTerciario = '(conservar referencia legible si existe)';
     } else if (textosMensaje) {
-      v.textoApoyo = '(mantener la misma idea secundaria; reformular sin añadir)';
-      v.textoTerciario = '(conservar referencia si existe; no inventar)';
+      v.textoPrincipal = 'REDACTAR DE NUEVO el mensaje original con palabras distintas y naturales; preservar exactamente su significado, intención y audiencia. No copiar literalmente la frase fuente.';
+      v.textoApoyo = 'Crear una frase secundaria distinta que amplíe la misma idea sin repetir el título ni añadir afirmaciones.';
+      v.textoTerciario = 'Conservar literalmente solo fechas, cifras, nombres propios o referencias que sean datos; no inventar datos.';
     } else {
       v.textoApoyo = _pick(sp.textoApoyo || _TEXTO_FALLBACK_SECULAR.textoApoyo || ['texto de apoyo con peso']);
       v.textoTerciario = _pick(sp.textoTerciario || _TEXTO_FALLBACK_SECULAR.textoTerciario || ['dato de serie legible']);
@@ -1124,11 +1126,20 @@ function formatPrompt(result) {
     }
     if (MOTOR_STATE.variationOptions.esencia) o += 'ESENCIA ESCRITA POR EL USUARIO: ' + MOTOR_STATE.variationOptions.esencia + '\n';
     o += 'SELECTORES: simbolo=' + MOTOR_STATE.variationOptions.simbolo + '; color=' + MOTOR_STATE.variationOptions.paleta + '; textos=' + MOTOR_STATE.variationOptions.textos + '.\n';
-    if (MOTOR_STATE.variationOptions.simbolo === 'conservar' && !hasAnalysis) o += 'Si se adjunta referencia, conserva funcion y silueta; sin imagen no finjas conocer el simbolo.\n';
+    if (MOTOR_STATE.variationOptions.simbolo !== 'sustituir') {
+      o += 'SIMBOLO: REDIBUJAR EL MISMO SIMBOLO DE LA REFERENCIA en las tres direcciones. La descripción del análisis identifica qué debe dibujarse; no es una sugerencia para reemplazarlo. Cada ficha debe representar el mismo oso/animal/objeto reconocible, con cambios de técnica, línea, volumen y composición solamente. Prohibido reemplazarlo por taza, zorro, brújula u otro objeto no solicitado.\n';
+      if (!hasAnalysis) o += 'Sin análisis confirmado, no afirmes conocer detalles concretos: usa la imagen adjunta como fuente visual directa y conserva el símbolo que se ve.\n';
+    } else if (hasAnalysis) {
+      o += 'SIMBOLO: SUSTITUCION EXPLICITA. Proponer tres símbolos alternativos conceptualmente relacionados con el concepto y la función simbólica confirmados; no elegir objetos al azar ni perder el mensaje.\n';
+    }
     if (MOTOR_STATE.variationOptions.paleta === 'conservar' && !hasAnalysis) o += 'Si se adjunta referencia, conserva sus colores; sin imagen usa la paleta explicita de cada ficha y no afirmes que replica la original.\n';
-    if (MOTOR_STATE.variationOptions.textos === 'conservar_palabras') o += 'Conserva literalmente solo texto fuente visible en el analisis o escrito en MENSAJE/CONCEPTO; si no existe, no inventes palabras que deban conservarse.\n';
-    else if (MOTOR_STATE.variationOptions.textos === 'mismo_mensaje') o += 'Conserva la idea de MENSAJE/CONCEPTO; permite reformular sin cambiar su sentido.\n';
-    else o += 'Crea redaccion nueva desde CONCEPTO/MENSAJE, sin atribuirla a la imagen fuente.\n';
+    if (MOTOR_STATE.variationOptions.textos === 'conservar_palabras') {
+      o += 'TEXTOS: conservar literalmente cada frase visible de la referencia, respetando palabras y cifras detectadas. No sustituir ni inventar texto. Si el análisis no detecta una frase con confianza, indicar al modelo que lea la imagen directamente y no invente texto ilegible.\n';
+    } else if (MOTOR_STATE.variationOptions.textos === 'mismo_mensaje') {
+      o += 'TEXTOS: REESCRITURA OBLIGATORIA, no basta con decir “reformular”. Para cada dirección A/B/C, redactar una versión nueva y natural en inglés nativo del mensaje fuente: cambiar la construcción y el vocabulario manteniendo el mismo significado, intención y audiencia. Las tres redacciones deben ser distintas entre sí y no copiar la frase original. No añadir afirmaciones ni datos. Mantener literalmente cifras/fechas/nombres propios solo si son datos confirmados. Mostrar las frases finales exactas en el diseño, con lectura clara y sin microtexto.\n';
+    } else {
+      o += 'TEXTOS: crear copy original desde el concepto y el mensaje indicados; no atribuirlo a la imagen fuente. Para A/B/C, redactar frases distintas, coherentes con el concepto y en inglés nativo. No inventar datos ni introducir marcas registradas.\n';
+    }
     o += 'ESQUEMAS: aplica las decisiones particulares de cada ficha.\n\n';
   } else if (isPatron) {
     o += '/PATRON REPETIDO — 3 VARIANTES DE TILE · MISMO CONCEPTO\n';
