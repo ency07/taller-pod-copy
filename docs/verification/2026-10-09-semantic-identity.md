@@ -60,3 +60,29 @@ Se corrigieron en esta rama dos fallos observados en un prompt real:
 - [ ] Revisar todas las fichas de estilos para detectar contradicciones entre estilo artístico y tratamiento HEAVY/SOFT/MODERN: sigue como deuda independiente.
 
 No integrar en main hasta ejecutar los tests y comprobar el Preview.
+
+
+## Actualización — originalidad visual, contratos de selectores y revisión inicial de DOM (2026-10-09)
+
+### Cambios en esta iteración
+- `js/motor-nucleo.js`: la opción de redibujar ahora indica conservar el ADN conceptual sin calcar el rostro, pose, ángulo, encuadre, silueta, marco o distribución de la referencia.
+- `js/motor-nucleo.js`: la opción de sustituir pide reinterpretaciones relacionadas con concepto, función simbólica y nicho; prohíbe elegir objetos arbitrarios del banco.
+- `js/motor-nucleo.js`: se añadió una regla general de originalidad visual que prohíbe el mero recoloreado, el cambio superficial de técnica y la réplica con texto sustituido, y exige decisiones independientes de representación, encuadre, composición e integración tipográfica.
+- `js/motor-nucleo.js`: se reforzó la instrucción de texto para exigir frases concretas distintas por dirección, sin placeholders ni simples instrucciones de reformulación.
+- `js/motor-nucleo.js`: el render de muestras valida el color como hexadecimal antes de insertarlo en CSS; el error de regeneración pasa a `textContent`; `escHtml` escapa también apóstrofos.
+
+### Verificación disponible
+- [x] Rama aislada; `main` sigue sin cambios.
+- [x] Relectura de `js/motor-nucleo.js` e `index.html` en la rama.
+- [x] Análisis sintáctico del texto completo de `motor-nucleo.js` con compilación JS sin ejecución: PASS. Esto no sustituye `node --check` en el entorno real.
+- [x] Confirmado que PR #1 sigue abierto, en borrador y sin fusionar.
+- [ ] No hay workflow de GitHub Actions asociado al último commit y el repo no tiene `package.json` en raíz; suite Node todavía no ejecutada.
+- [ ] No se generaron imágenes ni se hizo evaluación visual automatizada.
+
+### Seguridad — resultado preliminar, no auditoría completa
+- En `js/motor-nucleo.js`, la mayoría de los valores dinámicos visibles en las tarjetas pasan por `escHtml`; el color de muestras ahora tiene una allowlist hexadecimal y el error de regeneración utiliza `textContent`.
+- Esto no confirma ausencia de XSS en el repositorio completo: quedan por inspeccionar otros archivos JS y las rutas de datos que alimentan el DOM.
+- No se pudo confirmar el almacenamiento de claves IA ni las políticas Supabase con la búsqueda disponible del conector; siguen siendo riesgos no verificados, no vulnerabilidades confirmadas.
+
+### Siguiente gate
+Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localizar los módulos de credenciales y Supabase, ejecutar los tests desde un checkout con Node y después probar el Preview de Vercel. No fusionar hasta pasar esos gates.
