@@ -623,6 +623,27 @@ function _isLockedContactSet() {
   return MOTOR_STATE.workflowMode !== 'variation' && MOTOR_STATE.workflowMode !== 'explore' && MOTOR_STATE.designMode !== 'patron';
 }
 
+/* El banco aporta candidatos, no sustituye la semántica del concepto.
+   Si ningún objeto del banco coincide claramente, conserva el concepto como ancla. */
+function _chooseConceptCompatibleObject(objectPool, concept) {
+  const normalize = function (value) {
+    return (typeof _normalizeTxt === 'function' ? _normalizeTxt(String(value || '')) : String(value || '').toLowerCase())
+      .replace(/[^\\p{L}\\p{N}\\s]/gu, ' ').replace(/\\s+/g, ' ').trim();
+  };
+  const source = normalize(concept);
+  if (!source) return '';
+  const stop = new Set(['que','con','para','desde','hacia','sobre','entre','una','uno','unos','unas','los','las','el','la','de','del','en','por','como','sin','the','and','with','for','from','into','over','under','that','which','holding','sosteniendo','representa','lugares','turisticos','tourist','places','profundo','deep','my','a','an','of','to']);
+  const tokens = [...new Set(source.split(/\\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); }))];
+  const ranked = (Array.isArray(objectPool) ? objectPool : []).map(function (item) {
+    const label = String(item || '').trim();
+    const words = [...new Set(normalize(label).split(/\\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); }))];
+    const overlap = words.filter(function (t) { return tokens.indexOf(t) !== -1; });
+    return { label: label, score: overlap.reduce(function (sum, t) { return sum + Math.min(t.length, 10); }, 0), matches: overlap.length };
+  }).filter(function (x) { return x.score > 0; }).sort(function (a, b) { return b.score - a.score || b.matches - a.matches; });
+  if (ranked.length && (!ranked[1] || ranked[0].score > ranked[1].score)) return ranked[0].label;
+  return String(concept).trim();
+}
+
 function _resolveContactIdentity(objectPool) {
   const concept = String(MOTOR_STATE.concept || '').trim();
   const message = String(MOTOR_STATE.message || '').trim();
@@ -718,6 +739,11 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     } else if (conservarSimb) {
       const refSymbol = String((MOTOR_STATE.imageAnalysis || {}).simbolo_descripcion || (MOTOR_STATE.imageAnalysis || {}).concepto || 'símbolo principal de la imagen');
       v.objeto = 'REDIBUJAR EL MISMO SÍMBOLO DE REFERENCIA: ' + refSymbol + '. Mantener identidad reconocible en A/B/C; variar solo la interpretación gráfica, técnica y composición. No sustituir por otro objeto.';
+    } else if (isVar) {
+      const analysis = MOTOR_STATE.imageAnalysis || {};
+      const semanticAnchor = String(analysis.concepto || MOTOR_STATE.concept || MOTOR_STATE.message || '').trim();
+      // No escoger un objeto al azar solo por compartir nicho.
+      v.objeto = _chooseConceptCompatibleObject(objectPool, semanticAnchor) || semanticAnchor || 'proponer un símbolo directamente derivado del concepto y la familia seleccionada';
     } else {
       let obj, g = 0;
       do {
@@ -748,9 +774,15 @@ function buildCandidate(audsPerKey, fixedIdentity) {
       v.textoTerciario = _pick(sp.textoTerciario || _TEXTO_FALLBACK_SECULAR.textoTerciario || ['dato de serie legible']);
     }
     if (contactIdentity) {
-      v.textoPrincipal = contactPrimaryText;
-      v.textoApoyo = contactSupportText;
-      v.textoTerciario = '';
+      if (contactPrimaryText) {
+        v.textoPrincipal = contactPrimaryText;
+        v.textoApoyo = contactSupportText;
+        v.textoTerciario = '';
+      } else {
+        v.textoPrincipal = 'PROPONER una frase original, concreta y natural en el idioma del mercado; escribir el texto final exacto y adaptarlo a la jerarquía ' + v.jerarquiaVisual + '.';
+        v.textoApoyo = contactSupportText || 'proponer apoyo solo si mejora el concepto; si no, omitirlo';
+        v.textoTerciario = 'no añadir fechas, cifras, sellos ni microtexto sin datos confirmados';
+      }
     }
 
     v.tecnica = _pick(sp.tecnica || ['técnica mixta']);
@@ -793,7 +825,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     v.integracionTexto = _pickFresh(_INTEGRACION, _INTEGRACION, usedAxes.integracionTexto);
     usedAxes.integracionTexto.push(v.integracionTexto);
     v.distribucionTexto = contactIdentity
-      ? (contactPrimaryText ? 'texto autorizado con lectura prioritaria; integrado solo si no se deforma ni se oculta' : 'sin texto principal autorizado; no inventar')
+      ? (contactPrimaryText ? 'texto autorizado con lectura prioritaria; integrado solo si no se deforma ni se oculta' : 'proponer copy original y exacto según la jerarquía visual; no inventar datos')
       : _pick(_POOLS.distribucionTexto || ['texto integrado al símbolo']);
     v.jerarquia = _pick(_POOLS.jerarquia || ['Balanceado']);
     if (contactIdentity) v.guiaSimbolo = contactIdentity.guiaSimbolo;
@@ -1210,8 +1242,12 @@ function formatPrompt(result) {
     o += 'PATRON: cada variante es un tile sin costura visible (bordes que empatan al repetirse); motivo y fondo definidos por ficha; repetición ' + (MOTOR_STATE.repeatType || 'medio salto') + ' en toda la superficie aplicable.\n';
     o += 'TEXTO EN TILE: mínimo o nulo; si hay texto debe funcionar repetido (sin lectura lineal, sin frase que se corte entre repeticiones).\n';
   } else if (contactDNA) {
-    o += 'TEXTOS: imprime literalmente solo el mensaje y el apoyo indicados arriba; si no hay mensaje, no añadas palabras. No inventes texto secundario/terciario, sellos, fechas ni números. Legibilidad primero: letras grandes, correctas y legibles a escala real de ' + MOTOR_STATE.product + '; no deformes, cortes ni tapes las palabras. Si falta espacio, elimina primero el apoyo y conserva íntegro el mensaje. PROHIBIDO microtexto y pseudo-letras.\n';
-    o += 'COLOR: separa tinta, fondo del arte y color de la prenda; no uses el mismo color para fondo y tinta. Mantén contraste claro sobre el producto y no presentes el mockup como validación de producción.\n';
+    if (contactMainText) {
+      o += 'TEXTOS: conserva literalmente el mensaje principal «' + contactMainText + '». Si hay apoyo autorizado, consérvalo literalmente; si no lo hay, no inventes datos, fechas, cifras ni sellos. Legibilidad primero: letras grandes y correctas a escala real de ' + MOTOR_STATE.product + '.\\n';
+    } else {
+      o += 'TEXTOS: no se proporcionó mensaje, pero NO se ha prohibido el copy. Propón para cada dirección una frase comercial original, concreta y nativa en el idioma del mercado; escribe el texto exacto final, no instrucciones ni placeholders. La jerarquía visual manda: TEXTO_DOMINANTE = frase protagonista; BALANCEADO = texto y símbolo equilibrados; OBJETO_DOMINANTE = símbolo protagonista y frase breve secundaria. No inventes fechas, cifras, nombres propios ni afirmaciones factuales. Omite texto de apoyo si no aporta valor.\\n';
+    }
+    o += 'COLOR: separa tinta, fondo del arte y color de la prenda; no uses el mismo color para fondo y tinta. Mantén contraste claro sobre el producto y no presentes el mockup como validación de producción.\\n';
   } else {
     o += 'TEXTOS: tres niveles con peso real, todos legibles; PROHIBIDO microtexto decorativo.\n';
   }
@@ -1224,7 +1260,9 @@ function formatPrompt(result) {
     o += 'OBJETO: ' + v.objeto + '\n';
     if (contactDNA) o += 'FUNCIÓN CONSTANTE: ' + v.funcionSimbolica + ' · intención ' + v.intencionEmocional + '\n';
     const textLine = contactDNA
-      ? 'MENSAJE PRINCIPAL literal: «' + (contactMainText || 'ninguno indicado; no inventar') + '»' + (contactSupportText ? ' · APOYO literal: «' + contactSupportText + '»' : '') + ' · sin texto terciario · ' + v.tipografia
+      ? (contactMainText
+        ? 'MENSAJE PRINCIPAL literal: «' + contactMainText + '»' + (contactSupportText ? ' · APOYO literal: «' + contactSupportText + '»' : '') + ' · sin texto terciario · ' + v.tipografia
+        : 'COPY PROPUESTO: escribir frase final original exacta según jerarquía ' + v.jerarquiaVisual + '; apoyo opcional solo si aporta; no inventar datos ni usar microtexto · ' + v.tipografia)
       : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia;
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += contactDNA
