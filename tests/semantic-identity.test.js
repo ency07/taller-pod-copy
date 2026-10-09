@@ -23,6 +23,11 @@ ok(/oso aventurero/i.test(noMatch), 'si ningún objeto del banco encaja, debe co
 const catMatch = _chooseConceptCompatibleObject(['pelota de lana desenrollada','gato aventurero con mochila'], 'gato aventurero con mochila');
 ok(/gato aventurero/i.test(catMatch), 'debe preferir una coincidencia semántica clara del banco');
 
+const spanishFaith = _chooseConceptCompatibleObject(['candelabro decorativo','cruz de madera con ramas','gato con gafas'], 'cruz de madera con ramas');
+ok(/cruz de madera/i.test(spanishFaith), 'debe respetar el concepto en español y elegir el objeto relacionado');
+const unrelatedConcept = _chooseConceptCompatibleObject(['luna creciente','rosa con espinas','tabla de surf'], 'camión de bomberos vintage');
+ok(/camión de bomberos/i.test(unrelatedConcept), 'debe conservar el concepto aunque el banco de esa familia no tenga coincidencias');
+
 MOTOR_STATE.concept = 'astronauta en el espacio profundo sosteniendo una roca';
 MOTOR_STATE.message = 'A los que aman a Dios, todas las cosas les ayudan a bien';
 const clearMatch = _resolveContactIdentity(['astronauta con casco espacial','roca lunar agrietada']);
