@@ -1127,18 +1127,19 @@ function formatPrompt(result) {
     if (MOTOR_STATE.variationOptions.esencia) o += 'ESENCIA ESCRITA POR EL USUARIO: ' + MOTOR_STATE.variationOptions.esencia + '\n';
     o += 'SELECTORES: simbolo=' + MOTOR_STATE.variationOptions.simbolo + '; color=' + MOTOR_STATE.variationOptions.paleta + '; textos=' + MOTOR_STATE.variationOptions.textos + '.\n';
     if (MOTOR_STATE.variationOptions.simbolo !== 'sustituir') {
-      o += 'SIMBOLO: REDIBUJAR EL MISMO SIMBOLO DE LA REFERENCIA en las tres direcciones. La descripción del análisis identifica qué debe dibujarse; no es una sugerencia para reemplazarlo. Cada ficha debe representar el mismo oso/animal/objeto reconocible, con cambios de técnica, línea, volumen y composición solamente. Prohibido reemplazarlo por taza, zorro, brújula u otro objeto no solicitado.\n';
-      if (!hasAnalysis) o += 'Sin análisis confirmado, no afirmes conocer detalles concretos: usa la imagen adjunta como fuente visual directa y conserva el símbolo que se ve.\n';
-    } else if (hasAnalysis) {
-      o += 'SIMBOLO: SUSTITUCION EXPLICITA. Proponer tres símbolos alternativos conceptualmente relacionados con el concepto y la función simbólica confirmados; no elegir objetos al azar ni perder el mensaje.\n';
-    }
-    if (MOTOR_STATE.variationOptions.paleta === 'conservar' && !hasAnalysis) o += 'Si se adjunta referencia, conserva sus colores; sin imagen usa la paleta explicita de cada ficha y no afirmes que replica la original.\n';
-    if (MOTOR_STATE.variationOptions.textos === 'conservar_palabras') {
-      o += 'TEXTOS: conservar literalmente cada frase visible de la referencia, respetando palabras y cifras detectadas. No sustituir ni inventar texto. Si el análisis no detecta una frase con confianza, indicar al modelo que lea la imagen directamente y no invente texto ilegible.\n';
-    } else if (MOTOR_STATE.variationOptions.textos === 'mismo_mensaje') {
-      o += 'TEXTOS: REESCRITURA OBLIGATORIA, no basta con decir “reformular”. Para cada dirección A/B/C, redactar una versión nueva y natural en inglés nativo del mensaje fuente: cambiar la construcción y el vocabulario manteniendo el mismo significado, intención y audiencia. Las tres redacciones deben ser distintas entre sí y no copiar la frase original. No añadir afirmaciones ni datos. Mantener literalmente cifras/fechas/nombres propios solo si son datos confirmados. Mostrar las frases finales exactas en el diseño, con lectura clara y sin microtexto.\n';
+      o += 'SIMBOLO: CONSERVAR EL ADN CONCEPTUAL, NO CALCAR LA REPRESENTACION. Mantén reconocible la categoría del símbolo/personaje, pero crea una representación gráfica nueva. No reproduzcas el mismo rostro, pose, ángulo, encuadre, silueta, marco ni distribución de la referencia. Rediseña la construcción visual y la relación con la composición; conserva solo los rasgos conceptuales necesarios para entender quién/qué es. Cada dirección debe resolverlo de forma distinta.\\n';
+      if (!hasAnalysis) o += 'Sin análisis confirmado, no afirmes detalles que no conoces: usa la imagen adjunta para identificar el concepto, pero construye una solución visual independiente.\\n';
     } else {
-      o += 'TEXTOS: crear copy original desde el concepto y el mensaje indicados; no atribuirlo a la imagen fuente. Para A/B/C, redactar frases distintas, coherentes con el concepto y en inglés nativo. No inventar datos ni introducir marcas registradas.\n';
+      o += 'SIMBOLO: REINTERPRETACION CONCEPTUAL. Para cada dirección, propón una representación visual nueva derivada del concepto, la función simbólica y el nicho. Puede cambiar la forma del símbolo, pero cada elección debe tener una relación explicable con la intención original; no selecciones objetos arbitrarios solo porque aparecen en un banco. No copies el rostro, la pose, la silueta ni la composición distintiva de la referencia.\\n';
+    }
+    o += 'ORIGINALIDAD VISUAL: la referencia sirve para entender la idea, no como plantilla de trazado. No hagas una versión recoloreada, un simple cambio de técnica ni una réplica con texto reemplazado. Replantea la pose/representación, el encuadre, la estructura compositiva y la integración tipográfica. Mantén el ADN conceptual, pero toma decisiones visuales independientes y diferentes entre A/B/C.\\n';
+    if (MOTOR_STATE.variationOptions.paleta === 'conservar' && !hasAnalysis) o += 'Si se adjunta referencia, conserva sus colores; sin imagen usa la paleta explicita de cada ficha y no afirmes que replica la original.\\n';
+    if (MOTOR_STATE.variationOptions.textos === 'conservar_palabras') {
+      o += 'TEXTOS: conservar literalmente cada frase visible de la referencia, respetando palabras y cifras detectadas. No sustituir ni inventar texto. Si el análisis no detecta una frase con confianza, indicar al modelo que lea la imagen directamente y no invente texto ilegible.\\n';
+    } else if (MOTOR_STATE.variationOptions.textos === 'mismo_mensaje') {
+      o += 'TEXTOS: REESCRITURA OBLIGATORIA. Primero interpreta la idea, después redacta tres frases finales concretas en inglés nativo: una exclusiva para 01A, otra para 01B y otra para 01C. Cambia vocabulario y estructura, conserva significado/intención/audiencia y evita calcos sintácticos. No uses la frase original como título. Las tres frases deben ser diferentes entre sí y adecuadas a la jerarquía de cada ficha. No inventes datos; conserva cifras/fechas/nombres propios solo si son datos confirmados. Especifica el texto exacto que debe aparecer, sin placeholders ni instrucciones genéricas como “reformular”.\\n';
+    } else {
+      o += 'TEXTOS: crear copy original desde el concepto, función y nicho, no desde la disposición de la referencia. Propón frases concretas y distintas para 01A/01B/01C, en inglés nativo, con una intención comunicativa común y enfoques expresivos diferentes. No inventes datos ni introduzcas marcas registradas. Indica el texto exacto que debe aparecer; evita placeholders y microtexto.\\n';
     }
     o += 'ESQUEMAS: aplica las decisiones particulares de cada ficha.\n\n';
   } else if (isPatron) {
@@ -1238,7 +1239,11 @@ function formatPrompt(result) {
 }
 
 /* --- Renderizado de fichas en el DOM --- */
-function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function safeCssColor(value) {
+  const color = String(value == null ? '' : value).trim();
+  return /^#[0-9a-f]{3}(?:[0-9a-f]{3})?(?:[0-9a-f]{2})?$/i.test(color) ? color : '#777777';
+}
 function renderCards(result) {
   const root = document.getElementById('cards');
   if (!root || !result || !result.set) return;
@@ -1294,7 +1299,7 @@ function renderCards(result) {
     if (v._esquema) {
       html += '<div class="sws">';
       ['bg', 'dom', 'acc', 'ink'].forEach(function (c) {
-        html += '<span class="sw" style="background:' + v._esquema[c] + '"></span>';
+        html += '<span class="sw" style="background:' + safeCssColor(v._esquema[c]) + '"></span>';
       });
       html += '</div>';
     }
@@ -1361,7 +1366,7 @@ function rerollSingle(keyLetter) {
   } catch (e) {
     console.warn(e);
     var errorStatus = document.getElementById('status');
-    if (errorStatus) errorStatus.innerHTML = '<span class="bad">No se pudo regenerar la ficha: ' + escHtml(e && e.message ? e.message : 'error inesperado') + '</span>';
+    if (errorStatus) { errorStatus.textContent = 'No se pudo regenerar la ficha: ' + String(e && e.message ? e.message : 'error inesperado'); errorStatus.className = 'bad'; }
   }
 }
 
