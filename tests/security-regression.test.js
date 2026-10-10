@@ -42,6 +42,7 @@ ok(!/service_role/i.test(sync.match(/var DEFAULT_CFG = \{[\s\S]*?\n  \};/)?.[0] 
 ok(/function getGeminiSlot\(\)[\s\S]*?window\.sessionStorage[\s\S]*?sessionKeys\[index\]/.test(analysis), 'legacy Gemini helper must use session-scoped keys');
 ok(!/return slots\.find\(function \(s\) \{[\s\S]*?s\.key/.test(analysis), 'legacy Gemini helper must not return persisted keys');
 ok(/_escapeOptionText\(r\.id\)/.test(analysis) && /_escapeOptionText\(r\.label\)/.test(analysis), 'region option values and labels must be escaped');
+ok(/function _subnicheOptions\(ids\)[\s\S]*?_escapeOptionText\(id\)[\s\S]*?_escapeOptionText\(label\)/.test(analysis), 'subniche option values and labels must be escaped');
 ok(/_escapeOptionText\(a\)/.test(analysis) && /_escapeOptionText\(label\)/.test(analysis), 'audience option values and labels must be escaped');
 ok(/_escapeOptionText\(id\)[\s\S]*?_escapeOptionText\(langs\[id\]\)/.test(analysis), 'language selector values and labels must be escaped');
 ok(!/el\.innerHTML\s*=\s*['"]Template activo:/.test(analysis), 'template hint must not interpolate persistent template data into HTML');
