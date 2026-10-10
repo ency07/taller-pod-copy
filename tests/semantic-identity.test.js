@@ -113,6 +113,11 @@ ok(motorSource.includes('toma decisiones visuales independientes y diferentes en
 ok(motorSource.includes('Cada tratamiento gobierna composición, jerarquía, tipografía, contraste, densidad y formas; el estilo artístico lo ejecuta sin contradecirlo.'), 'el tratamiento debe afectar estructura y no solo color/textura');
 ok(motorSource.includes('DIRECCIONES: 01A HEAVY = impacto, masas y contraste; 01B SOFT = aire, formas abiertas y lectura amable; 01C MODERN = geometría, síntesis y lenguaje contemporáneo.'), 'exploración debe definir diferencias funcionales para HEAVY/SOFT/MODERN');
 ok(motorSource.includes('Diferencia composición, silueta, jerarquía y relación texto-imagen, no solo color o textura.'), 'exploración debe prohibir diferencias cosméticas como única variación');
+ok(motorSource.includes('CONTRATO CREATIVO: conserva concepto, familia, función y mensaje; no inventes objetos, datos ni texto.'), 'el prompt debe usar un contrato creativo compacto y concreto');
+ok(motorSource.includes('el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo.'), 'el tratamiento debe subordinarse al estilo artístico sin reemplazarlo');
+ok(motorSource.includes('const explicitlyChosenStyle = !!(locksNow && locksNow.estilo && locksNow.estilo[keyLetter] && locksNow.estilo[keyLetter] !== \'Auto\' && locksNow.estilo[keyLetter] === v.estilo);'), 'una selección de estilo explícita no debe descartarse solo por coincidir con otra tarjeta');
+ok(motorSource.includes('No añadas paneles explicativos, objetos decorativos, logotipos, firmas ni texto no solicitado.'), 'el prompt debe limitar añadidos no solicitados para reducir alucinaciones visuales');
+
 
 console.log((failures.length ? 'FAIL' : 'PASS') + ' semantic-identity (' + checks + ' aserciones, ' + failures.length + ' fallos)');
 failures.forEach(function (msg) { console.error(' - ' + msg); });
