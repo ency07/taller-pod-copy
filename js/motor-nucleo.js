@@ -1373,12 +1373,11 @@ function formatPrompt(result) {
   o += contactDNA
     ? 'ANCLA: misma ' + (contactSymbol ? '«' + contactSymbol + '»' : 'idea central') + ', mensaje y función en A/B/C; variar su tratamiento visual, tipografía, composición y jerarquía.\n'
     : 'ANCLA: mismo nicho/concepto en A/B/C; variar expresión. SOLO_TEXTO: nombrar el nicho en el texto.\n';
-  o += 'PROTOCOLO SEMÁNTICO UNIVERSAL — OBLIGATORIO EN TODOS LOS MERCADOS, NICHOS, PRODUCTOS Y MODOS:\n';
-  o += '1) RESOLVER ANTES DE DIBUJAR: identifica la idea central, intención/mensaje, audiencia, mercado, producto y familia más pertinente. Si la familia está fijada por el usuario, respétala; si está en Auto, infiere la familia más específica compatible usando las familias y bancos disponibles para el mercado activo. No cambies de familia por conveniencia visual.\n';
-  o += '2) USAR EL BANCO CORRECTO: consulta candidatos de esa familia/subnicho y mercado; el banco es una fuente de candidatos, no una orden de escoger cualquier elemento. No mezcles bancos de mercados, regiones, idiomas o tradiciones incompatibles.\n';
-  o += '3) VALIDAR EL OBJETO: el objeto/símbolo debe representar directamente el concepto o cumplir una función simbólica explicable. Comprueba la relación concepto → familia → objeto → mensaje. Descarta objetos que solo compartan nicho o palabras. Si no hay coincidencia clara en el banco, conserva el concepto como ancla y propone una representación coherente; nunca rellenes con selección aleatoria.\n';
-  o += '4) RESOLVER EL TEXTO: si el usuario escribió texto, conserva sus palabras salvo que el modo permita reescritura. Si no escribió texto y no prohibió copy, propone texto final concreto en el idioma del mercado, adecuado a la audiencia y a la jerarquía visual. No inventes datos, referencias, citas ni afirmaciones doctrinales/factuales. Si el texto no aporta, explica/indica que se omita; no uses placeholders ni microtexto.\n';
-  o += '5) COMPROBACIÓN FINAL: antes de entregar A/B/C, verifica que objeto, copy, familia, audiencia, producto y función simbólica encajen. Si hay contradicción, corrige la ficha antes de generar. Mantén el mismo ADN conceptual en A/B/C y diferencia la solución visual, no la idea central.\n';
+  o += 'CONTRATO CREATIVO: conserva concepto, familia, función y mensaje; no inventes objetos, datos ni texto. Si falta un dato, omítelo.\\n';
+  o += 'DIRECCIÓN: el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo. No mezcles instrucciones incompatibles.\\n';
+  o += 'A/B/C: misma identidad semántica, soluciones distintas en composición, silueta, tipografía y relación texto-imagen; no basta recolorear o cambiar textura.\\n';
+  o += 'COPY: conserva literalmente el texto proporcionado. Si no hay texto fijado y se permite copy, escribe el texto final exacto en el idioma del mercado; sin placeholders ni microtexto.\\n';
+  o += 'SALIDA: produce solo el arte solicitado y los mockups indicados. No añadas paneles explicativos, objetos decorativos, logotipos, firmas ni texto no solicitado.\\n';
   o += 'REGLAS INQUEBRANTABLES:\n';
   if (langDir) o += 'IDIOMA: ' + langDir + '\n';
   if (cultDir) o += 'CULTURA: ' + cultDir + '\n';
@@ -1567,7 +1566,9 @@ function rerollSingle(keyLetter) {
       var v = cand[keyLetter];
       var clash = others.some(function (o) {
         var w = LAST_RESULT.set[o];
-        return w.estilo === v.estilo || (!_isLockedContactSet() && w.objeto === v.objeto) || w.layout === v.layout || w.tipografia === v.tipografia || w.integracionTexto === v.integracionTexto || _treatmentKey(w.tratamiento) === _treatmentKey(v.tratamiento);
+        const locksNow = _loadLocks(memLocksMarket(), MOTOR_STATE.product);
+        const explicitlyChosenStyle = !!(locksNow && locksNow.estilo && locksNow.estilo[keyLetter] && locksNow.estilo[keyLetter] !== 'Auto' && locksNow.estilo[keyLetter] === v.estilo);
+        return (w.estilo === v.estilo && !explicitlyChosenStyle) || (!_isLockedContactSet() && w.objeto === v.objeto) || w.layout === v.layout || w.tipografia === v.tipografia || w.integracionTexto === v.integracionTexto || _treatmentKey(w.tratamiento) === _treatmentKey(v.tratamiento);
       });
       if (clash) continue;
       var pat = { estilo: _getStyleBase(v.estilo), formaSimbolo: v.formaSimbolo, tratamiento: String(v.tratamiento).split(':')[0].trim(), layout: String(v.layout).split(':')[0].trim(), familiaColor: v.familiaColor };
