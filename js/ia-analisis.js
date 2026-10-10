@@ -23,7 +23,13 @@
 
   function tell(msg) {
     const statusEl = $('status');
-    if (statusEl) statusEl.textContent = String(msg == null ? '' : msg);
+    if (!statusEl) return;
+    // Compatibilidad con los mensajes heredados (<span class="good|bad|info">),
+    // pero nunca interpretar etiquetas o atributos suministrados por datos dinámicos.
+    const raw = String(msg == null ? '' : msg);
+    const classMatch = raw.match(/<span\s+class=["'](good|bad|info|blue)["'][^>]*>/i);
+    statusEl.className = classMatch ? classMatch[1] : '';
+    statusEl.textContent = raw.replace(/<\/?span\b[^>]*>/gi, '');
   }
 
   /* --- Referencias a funciones globales (de otros scripts) --- */
