@@ -598,6 +598,108 @@ const AUD_PROFILES = {
   }
 };
 
+/* ============================================================
+   GOSPEL — AUDIENCIAS CANÓNICAS SIMPLIFICADAS
+   Los perfiles antiguos se conservan por compatibilidad con memorias,
+   preferencias y bancos existentes. La UI nueva usa estos seis IDs.
+   Edad, identidad y dirección artística son dimensiones separadas.
+   ============================================================ */
+Object.assign(AUD_PROFILES, {
+  gospel_hombre: {
+    label: "Hombre cristiano",
+    region: "universal",
+    genero: "masculino",
+    edad: "todas",
+    perfil: "Audiencia masculina cristiana; adaptar al concepto y edad concreta sin estereotipos.",
+    codigos: "fe, identidad, comunidad, vida cotidiana, discipulado",
+    rechaza: "estereotipos de masculinidad, promesas mágicas, confusión doctrinal",
+    contexto: "uso personal, comunidad, evento o regalo",
+    directiva: "Diseñar para público masculino solo cuando sea relevante al concepto; no imponer estética agresiva.",
+    tipoPref: ["Sans humanista limpia", "Serif clásica titulada", "Grotesca black condensada"],
+    modoCol: ["Contraste duro", "Claro editorial", "Bicolor monocromo"],
+    tratPref: ["MODERN", "HEAVY", "SOFT"],
+    formaPref: ["silueta sólida a una tinta", "contorno lineal calibrado"]
+  },
+  gospel_mujer: {
+    label: "Mujer cristiana",
+    region: "universal",
+    genero: "femenino",
+    edad: "todas",
+    perfil: "Audiencia femenina cristiana; adaptar al concepto y edad concreta sin estereotipos.",
+    codigos: "fe, identidad, comunidad, vida cotidiana, discipulado",
+    rechaza: "estereotipos de feminidad, paleta rosa automática, confusión doctrinal",
+    contexto: "uso personal, comunidad, evento o regalo",
+    directiva: "Diseñar para público femenino solo cuando sea relevante; no imponer delicadeza ni paletas estereotipadas.",
+    tipoPref: ["Serif moderna alto contraste", "Sans humanista limpia", "Hand-Drawn"],
+    modoCol: ["Claro editorial", "Medio con acento", "Bicolor monocromo"],
+    tratPref: ["MODERN", "SOFT", "HEAVY"],
+    formaPref: ["contorno lineal calibrado", "orgánico gestual con pincel"]
+  },
+  gospel_infantil: {
+    label: "Infantil cristiana",
+    region: "universal",
+    genero: "infantil",
+    edad: "infantil",
+    perfil: "Niños y niñas; verdad bíblica clara y tratamiento adecuado a la edad.",
+    codigos: "familia, historias bíblicas, esperanza, aprendizaje",
+    rechaza: "miedo, violencia gráfica, complejidad ilegible, confusión doctrinal",
+    contexto: "familia, escuela dominical, regalo o actividad infantil",
+    directiva: "Formas claras, lectura sencilla y complejidad visual apropiada a la edad.",
+    tipoPref: ["Kids Storybook", "Rounded amable", "Sans humanista limpia"],
+    modoCol: ["Claro editorial", "Medio con acento"],
+    tratPref: ["SOFT", "MODERN"],
+    formaPref: ["orgánico gestual con pincel", "silueta sólida a una tinta"]
+  },
+  gospel_familia: {
+    label: "Familia cristiana",
+    region: "universal",
+    genero: "familia",
+    edad: "mixta",
+    perfil: "Familia cristiana; lectura compartida entre edades.",
+    codigos: "familia, hogar, fe compartida, cuidado, comunidad",
+    rechaza: "miedo, exclusión, jerarquía ilegible, confusión doctrinal",
+    contexto: "regalo familiar, celebración, hogar o comunidad",
+    directiva: "Composición legible para distintas edades; evitar infantilizar toda la pieza.",
+    tipoPref: ["Rounded amable", "Sans humanista limpia", "Serif clásica titulada"],
+    modoCol: ["Claro editorial", "Medio con acento"],
+    tratPref: ["SOFT", "MODERN"],
+    formaPref: ["contorno lineal calibrado", "orgánico gestual con pincel"]
+  },
+  gospel_pareja: {
+    label: "Parejas cristianas",
+    region: "universal",
+    genero: "pareja",
+    edad: "adulto",
+    perfil: "Parejas y matrimonios cristianos; el concepto determina el tono relacional.",
+    codigos: "compromiso, cuidado, compañerismo, pacto",
+    rechaza: "suposiciones doctrinales no seleccionadas, clichés románticos obligatorios",
+    contexto: "regalo de pareja, aniversario o uso coordinado",
+    directiva: "Diseñar para dos personas cuando el concepto lo solicite; evitar duplicar elementos sin propósito.",
+    tipoPref: ["Serif clásica titulada", "Sans humanista limpia", "Hand-Drawn"],
+    modoCol: ["Claro editorial", "Bicolor monocromo"],
+    tratPref: ["SOFT", "MODERN"],
+    formaPref: ["contorno lineal calibrado", "orgánico gestual con pincel"]
+  },
+  gospel_comunidad: {
+    label: "Comunidad cristiana / unisex",
+    region: "universal",
+    genero: "unisex",
+    edad: "todas",
+    perfil: "Comunidad, congregación, grupos y diseños intencionalmente unisex.",
+    codigos: "unidad, adoración, servicio, comunidad, fe compartida",
+    rechaza: "marcadores de género no solicitados, confusión doctrinal",
+    contexto: "congregación, evento, ministerio, grupo o uso personal",
+    directiva: "Solución adaptable a públicos mixtos; unisex es una elección explícita, no un fallback.",
+    tipoPref: ["Sans humanista limpia", "Serif clásica titulada", "Grotesca black condensada"],
+    modoCol: ["Contraste duro", "Claro editorial", "Bicolor monocromo"],
+    tratPref: ["MODERN", "SOFT", "HEAVY"],
+    formaPref: ["silueta sólida a una tinta", "contorno lineal calibrado"]
+  }
+});
+
+/* Las nuevas audiencias heredan preferencias visuales deliberadas.
+   Se agregan antes de exportar, sin eliminar las claves legacy. */
+
 const AUD_NAMES = Object.keys(AUD_PROFILES);
 
 /* ============================================================
@@ -1041,12 +1143,16 @@ const MARKET_AUDIENCES = {
 };
 
 function getAudiencesForMarketRegion(marketId, regionId) {
-  // Diáspora: lista propia sin importar la sub-región elegida
+  // Gospel ES/EN comparte un catálogo compacto; solo cambia el idioma/mercado.
+  if (marketId === "gospel_es" || marketId === "gospel_en") {
+    return ["gospel_hombre", "gospel_mujer", "gospel_infantil", "gospel_familia", "gospel_pareja", "gospel_comunidad"];
+  }
+
+  // Diáspora: lista propia sin importar la sub-región elegida.
   if (marketId === "diaspora_col") return MARKET_AUDIENCE_LISTS.diaspora.slice();
 
-  // Región "todas" = ANTES devolvía REGION_AUDIENCES.todas = los 25 perfiles
-  // del sistema: Colombia terminaba viendo audiencias Global y Gospel.
-  if (regionId === "todas") {
+  // "todas" es válido para Colombia, no debe contaminar otros mercados.
+  if (regionId === "todas" && marketId === "colombia") {
     return [
       "coste_joven_m", "coste_joven_f", "coste_adulto_m", "coste_adulta_f",
       "andino_joven_m", "andino_joven_f", "andino_adulto_m", "andino_adulta_f",
@@ -1055,12 +1161,15 @@ function getAudiencesForMarketRegion(marketId, regionId) {
     ];
   }
 
-  // Región que define una lista propia de mercado (spain/latam/...)
+  // Región que define una lista propia de mercado (spain/latam/...).
   if (MARKET_AUDIENCES[regionId]) return MARKET_AUDIENCES[regionId].slice();
 
-  // Mercado latam: fuera de sus regiones con lista propia, nada colombiano
-  if (marketId === "latam" && !MARKET_AUDIENCES[regionId]) {
+  // Mercados hispanos globales y LATAM no deben heredar perfiles regionales colombianos.
+  if (marketId === "latam" || marketId === "spain" || marketId === "global_es") {
     return MARKET_AUDIENCE_LISTS.neutral_es.slice();
+  }
+  if (marketId === "global_en" || marketId === "anglo") {
+    return MARKET_AUDIENCE_LISTS.neutral_en.slice();
   }
 
   return getAudiencesForRegion(regionId);
@@ -1084,6 +1193,40 @@ function getAudienceSelectOptions(region) {
 
   return '<option value="Auto">Auto</option>' + options;
 }
+
+/* Preferencias para las audiencias Gospel canónicas. */
+Object.assign(AUD_STYLE_PREF, {
+  gospel_hombre: ["Grabado / Linóleo", "Vintage Desgastado", "Minimal Modern", "Brutalist"],
+  gospel_mujer: ["Hand-Drawn", "Grabado / Linóleo", "Minimal Modern", "Folk Popular"],
+  gospel_infantil: ["Kids Storybook", "Hand-Drawn", "Collage Cut-Paper"],
+  gospel_familia: ["Hand-Drawn", "Minimal Modern", "Folk Popular"],
+  gospel_pareja: ["Hand-Drawn", "Minimal Modern", "Vintage Desgastado"],
+  gospel_comunidad: ["Grabado / Linóleo", "Minimal Modern", "Vintage Desgastado"]
+});
+Object.assign(AUD_HIERARCHY_PREF, {
+  gospel_hombre: ["OBJETO_DOMINANTE", "BALANCEADO"],
+  gospel_mujer: ["BALANCEADO", "TEXTO_DOMINANTE"],
+  gospel_infantil: ["OBJETO_DOMINANTE", "BALANCEADO"],
+  gospel_familia: ["BALANCEADO", "OBJETO_DOMINANTE"],
+  gospel_pareja: ["BALANCEADO", "TEXTO_DOMINANTE"],
+  gospel_comunidad: ["BALANCEADO", "TEXTO_DOMINANTE"]
+});
+Object.assign(AUD_DENSITY_PREF, {
+  gospel_hombre: ["Balanced", "Heavy"],
+  gospel_mujer: ["Balanced", "Minimal"],
+  gospel_infantil: ["Minimal", "Balanced"],
+  gospel_familia: ["Minimal", "Balanced"],
+  gospel_pareja: ["Minimal", "Balanced"],
+  gospel_comunidad: ["Balanced", "Minimal"]
+});
+Object.assign(AUD_LAYOUT_PREF, {
+  gospel_hombre: ["Emblema circular", "Axial centrado", "Tarjeta interior"],
+  gospel_mujer: ["Editorial asimétrica", "Tarjeta interior", "Axial centrado"],
+  gospel_infantil: ["Tarjeta interior", "Órbita radial", "Axial centrado"],
+  gospel_familia: ["Tarjeta interior", "Órbita radial", "Arco y cúpula"],
+  gospel_pareja: ["Axial centrado", "Emblema circular", "Tarjeta interior"],
+  gospel_comunidad: ["Emblema circular", "Tarjeta interior", "Arco y cúpula"]
+});
 
 /* Compatibilidad explícita para otros scripts */
 window.AUD_PROFILES = AUD_PROFILES;
