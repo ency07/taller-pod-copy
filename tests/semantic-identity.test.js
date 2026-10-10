@@ -117,8 +117,8 @@ ok(motorSource.includes('CONTRATO CREATIVO: conserva concepto, familia, función
 ok(motorSource.includes('el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo.'), 'el tratamiento debe subordinarse al estilo artístico sin reemplazarlo');
 ok(motorSource.includes("var chosenStyle = locksNow.estilo && locksNow.estilo[keyLetter] && locksNow.estilo[keyLetter] !== 'Auto'"), 'el dado individual debe respetar el estilo fijado explícitamente en esa tarjeta');
 ok(motorSource.includes("MOTOR_STATE.workflowMode === 'variation') {\n      _applyStructuralProfile(v, _CONTACT_TREATMENT_ORDER[k], productBias);"), 'la variación guiada debe aplicar perfiles estructurales fijos HEAVY/SOFT/MODERN');
-ok(motorSource.includes('VARIACIÓN GUIADA — REINTERPRETACIÓN REAL: la referencia aporta solo identidad semántica, nunca una plantilla compositiva.'), 'variación guiada debe prohibir explícitamente reutilizar la composición de referencia');
-ok(motorSource.includes('si dos propuestas se leen como la misma imagen con otro color, técnica o textura, descarta y replantea una de ellas.'), 'variación guiada debe rechazar imágenes que solo cambian de color, técnica o textura');
+ok(motorSource.includes('VARIACIÓN: usa la referencia solo para concepto y datos visibles; no copies su composición, silueta, encuadre ni jerarquía.'), 'variación guiada debe separar identidad semántica de la composición de referencia');
+ok(motorSource.includes('Si dos diseños parecen la misma imagen recoloreada, replantea su estructura.'), 'variación guiada debe rechazar imágenes que solo cambian de color');
 ok(motorSource.includes('No añadas paneles explicativos, objetos decorativos, logotipos, firmas ni texto no solicitado.'), 'el prompt debe limitar añadidos no solicitados para reducir alucinaciones visuales');
 const rerollStart = motorSource.indexOf('function rerollSingle(keyLetter) {');
 const rerollEnd = motorSource.indexOf('/* --- Renderizado de gates --- */', rerollStart);
