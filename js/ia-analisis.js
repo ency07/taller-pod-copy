@@ -352,7 +352,7 @@
     try {
       if (typeof getActiveTemplate === 'function') tpl = getActiveTemplate(prod);
     } catch (e) { tpl = null; }
-    el.replaceChildren();
+    el.textContent = '';
     if (tpl) {
       el.appendChild(document.createTextNode('Template activo: '));
       var strong = document.createElement('b');
@@ -385,7 +385,7 @@
     if (!sel) return;
     const marketId = _marketId();
     const prev = sel.value;
-    sel.replaceChildren();
+    sel.innerHTML = '';
     const common = document.createElement('option');
     common.value = '';
     common.textContent = 'Banco general';
