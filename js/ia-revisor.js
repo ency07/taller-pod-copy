@@ -208,9 +208,9 @@
           }
         };
 
-        var r = await fetch(ep(s.provider, s.model) + '?key=' + encodeURIComponent(s.key), {
+        var r = await fetch(ep(s.provider, s.model), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': s.key },
           body: JSON.stringify(body),
           signal: c.signal
         });
