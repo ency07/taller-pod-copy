@@ -185,16 +185,19 @@ function readStateFromDOM() {
 function getCurrentAudiencePool() {
   const market = MOTOR_STATE.market;
   const region = MOTOR_STATE.region;
+  const subniche = MOTOR_STATE.subniche;
   let pool = typeof getAudiencesForMarketRegion === 'function'
     ? getAudiencesForMarketRegion(market, region)
     : (typeof getAudiencesForRegion === 'function' ? getAudiencesForRegion(region) : _AUD_NAMES.slice());
 
-  if (MOTOR_STATE.subniche !== 'auto' && typeof getAudiencesForSubniche === 'function') {
-    const subPool = getAudiencesForSubniche(MOTOR_STATE.subniche, region) || [];
-    const compatible = pool.filter(function (aud) { return subPool.indexOf(aud) !== -1; });
-    if (compatible.length) pool = compatible;
+  if (typeof getAudiencesForSubniche === 'function') {
+    const subPool = getAudiencesForSubniche(subniche, region, market) || [];
+    const allowed = new Set(subPool);
+    const compatible = pool.filter(function (aud) { return allowed.has(aud); });
+    // Nunca abrir la lista a perfiles de otros mercados como recuperación silenciosa.
+    pool = compatible.length ? compatible : pool;
   }
-  return pool.length ? pool : _AUD_NAMES.slice();
+  return pool.filter(function (id) { return !!id; });
 }
 
 function resolveAudiences() {
@@ -1774,37 +1777,48 @@ window.readStateFromDOM = readStateFromDOM;
 
 /* --- Enlace explícito de controles de la vista Taller --- */
 (function bindTallerControls() {
+  function refreshAudienceSelector() {
+    const select = document.getElementById('audienceSet');
+    if (!select || typeof getAudienceSelectOptions !== 'function') return;
+    const market = document.getElementById('market');
+    const region = document.getElementById('region');
+    const subniche = document.getElementById('subniche');
+    const previous = select.value || 'Auto';
+    select.innerHTML = getAudienceSelectOptions(
+      region ? region.value : 'global',
+      market ? market.value : 'global_en',
+      subniche ? subniche.value : 'auto'
+    );
+    const allowed = Array.from(select.options).some(function (option) { return option.value === previous; });
+    select.value = allowed ? previous : 'Auto';
+    if (typeof MOTOR_STATE !== 'undefined') MOTOR_STATE.audienceSet = select.value;
+  }
+
   function bind() {
     const director = document.getElementById('btnDirector');
     const build = document.getElementById('btnBuild');
     const clear = document.getElementById('btnNewSet');
-
+    ['market', 'region', 'subniche'].forEach(function (id) {
+      const control = document.getElementById(id);
+      if (control && !control.dataset.audienceRefreshBound) {
+        control.addEventListener('change', refreshAudienceSelector);
+        control.dataset.audienceRefreshBound = '1';
+      }
+    });
+    refreshAudienceSelector();
     if (director && !director.dataset.podBound) {
-      director.addEventListener('click', function (event) {
-        event.preventDefault();
-        crearLos3Disenos();
-      });
+      director.addEventListener('click', function (event) { event.preventDefault(); crearLos3Disenos(); });
       director.dataset.podBound = '1';
     }
     if (build && !build.dataset.podBound) {
-      build.addEventListener('click', function (event) {
-        event.preventDefault();
-        crearLos3Disenos();
-      });
+      build.addEventListener('click', function (event) { event.preventDefault(); crearLos3Disenos(); });
       build.dataset.podBound = '1';
     }
     if (clear && !clear.dataset.podBound) {
-      clear.addEventListener('click', function (event) {
-        event.preventDefault();
-        limpiarFichas();
-      });
+      clear.addEventListener('click', function (event) { event.preventDefault(); limpiarFichas(); });
       clear.dataset.podBound = '1';
     }
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bind, { once: true });
-  } else {
-    bind();
-  }
-})();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
+  else bind();
+})();;
