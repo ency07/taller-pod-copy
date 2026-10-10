@@ -115,7 +115,7 @@ ok(motorSource.includes('DIRECCIONES: 01A HEAVY = impacto, masas y contraste; 01
 ok(motorSource.includes('Diferencia composición, silueta, jerarquía y relación texto-imagen, no solo color o textura.'), 'exploración debe prohibir diferencias cosméticas como única variación');
 ok(motorSource.includes('CONTRATO CREATIVO: conserva concepto, familia, función y mensaje; no inventes objetos, datos ni texto.'), 'el prompt debe usar un contrato creativo compacto y concreto');
 ok(motorSource.includes('el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo.'), 'el tratamiento debe subordinarse al estilo artístico sin reemplazarlo');
-ok(motorSource.includes('const explicitlyChosenStyle = !!(locksNow && locksNow.estilo && locksNow.estilo[keyLetter] && locksNow.estilo[keyLetter] !== \'Auto\' && locksNow.estilo[keyLetter] === v.estilo);'), 'una selección de estilo explícita no debe descartarse solo por coincidir con otra tarjeta');
+ok(motorSource.includes("var chosenStyle = locksNow.estilo && locksNow.estilo[keyLetter] && locksNow.estilo[keyLetter] !== 'Auto'"), 'el dado individual debe respetar el estilo fijado explícitamente en esa tarjeta');
 ok(motorSource.includes('No añadas paneles explicativos, objetos decorativos, logotipos, firmas ni texto no solicitado.'), 'el prompt debe limitar añadidos no solicitados para reducir alucinaciones visuales');
 const rerollStart = motorSource.indexOf('function rerollSingle(keyLetter) {');
 const rerollEnd = motorSource.indexOf('/* --- Renderizado de gates --- */', rerollStart);
