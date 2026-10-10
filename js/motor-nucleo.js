@@ -971,12 +971,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     v.tratamiento = fixedTreatmentSpec || _pickFreshTreatment(tratBias, _TRATAMIENTOS, usedAxes.tratamiento);
     usedAxes.tratamiento.push(v.tratamiento);
 
-    // En contactos y exploración, A/B/C son perfiles estructurales, no solo nombres.
-    if (contactIdentity || MOTOR_STATE.workflowMode === 'explore') {
-      const structuralKey = _CONTACT_TREATMENT_ORDER[k];
-      _applyStructuralProfile(v, structuralKey, productBias);
-    }
-
+    // Asignación provisional; el perfil fijo se aplica al final para que ningún selector aleatorio lo sobrescriba.
     v.integracionTexto = _pickFresh(_INTEGRACION, _INTEGRACION, usedAxes.integracionTexto);
     usedAxes.integracionTexto.push(v.integracionTexto);
     v.distribucionTexto = contactIdentity
@@ -990,6 +985,12 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     const densityPool = compatibleDensity.length ? compatibleDensity : (productDensity.length ? productDensity : (audienceDensity.length ? audienceDensity : (_POOLS.densidad || ['Balanced'])));
     v.densidad = _pick(densityPool);
     v.negativeSpace = _pick(_POOLS.negativeSpace || ['aire alrededor del motivo']);
+
+    // Aplicar al final: A/B/C conservan perfiles estructurales fijos también en variación guiada.
+    // Evita contradicciones entre el nombre del tratamiento y el perfil que llega al generador de imágenes.
+    if (contactIdentity || MOTOR_STATE.workflowMode === 'explore' || MOTOR_STATE.workflowMode === 'variation') {
+      _applyStructuralProfile(v, _CONTACT_TREATMENT_ORDER[k], productBias);
+    }
     v.funcionSimbolica = contactIdentity
       ? contactIdentity.funcionSimbolica
       : _pick(_POOLS.funcionSimbolica || ['Emblema de identidad']);
@@ -1376,6 +1377,7 @@ function formatPrompt(result) {
   o += 'CONTRATO CREATIVO: conserva concepto, familia, función y mensaje; no inventes objetos, datos ni texto. Si falta un dato, omítelo.\\n';
   o += 'DIRECCIÓN: el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo. No mezcles instrucciones incompatibles.\\n';
   o += 'A/B/C: misma identidad semántica, soluciones distintas en composición, silueta, tipografía y relación texto-imagen; no basta recolorear o cambiar textura.\\n';
+  if (isVar) o += 'VARIACIÓN GUIADA — REINTERPRETACIÓN REAL: la referencia aporta solo identidad semántica, nunca una plantilla compositiva. Conserva el concepto y el mensaje autorizado, pero cambia de verdad el encuadre, la silueta global, la distribución de masas, el recorrido visual y la arquitectura tipográfica. HEAVY = estructura compacta y contundente; SOFT = composición abierta con respiración; MODERN = sistema geométrico y asimétrico controlado. Cada dirección debe poder distinguirse en miniatura por su estructura, incluso en escala de grises. No repitas la misma agrupación central de objetos ni el mismo apilado de titular; si dos propuestas se leen como la misma imagen con otro color, técnica o textura, descarta y replantea una de ellas.\\n';
   o += 'COPY: conserva literalmente el texto proporcionado. Si no hay texto fijado y se permite copy, escribe el texto final exacto en el idioma del mercado; sin placeholders ni microtexto.\\n';
   o += 'SALIDA: produce solo el arte solicitado y los mockups indicados. No añadas paneles explicativos, objetos decorativos, logotipos, firmas ni texto no solicitado.\\n';
   o += 'REGLAS INQUEBRANTABLES:\n';
