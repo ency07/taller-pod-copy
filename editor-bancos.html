@@ -439,6 +439,17 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
 
       function $(id) { return document.getElementById(id); }
 
+      function escHtml(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+
+      function safeTemplateImage(value) {
+        return /^data:image\/(?:png|jpeg|webp|gif);base64,[a-z0-9+/=\s]+$/i.test(String(value || ''))
+          ? String(value) : '';
+      }
+
       function tell(msg, type) {
         var el = $('status');
         if (el) {
@@ -478,7 +489,7 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
             var label = (typeof getSubnicheLabel === 'function')
               ? getSubnicheLabel(id, marketId)
               : id;
-            html += '<option value="' + id + '">' + label + '</option>';
+            html += '<option value="' + escHtml(id) + '">' + escHtml(label) + '</option>';
           });
 
           var tempIds = getSubnicheIdsForMarket(marketId, 'temporada', 'todas');
@@ -796,16 +807,16 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
         var el = $('tplList');
         if (!el || typeof listTemplates !== 'function') return;
         var items = listTemplates();
-        if (!items.length) { el.innerHTML = '<div class="hint">Todavía no hay templates. Sube la plantilla plana de tu mochila, bolso o funda.</div>'; return; }
+        if (!items.length) { el.textContent = 'Todavía no hay templates. Sube la plantilla plana de tu mochila, bolso o funda.'; el.className = 'hint'; return; }
         var html = '';
         items.forEach(function (t) {
           var active = (typeof getActiveTemplate === 'function' && getActiveTemplate(t.producto) && getActiveTemplate(t.producto).id === t.id);
           html += '<div style="display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:var(--r);padding:8px;margin-bottom:8px;">'
-            + (t.imagen ? '<img src="' + t.imagen + '" style="width:56px;height:56px;object-fit:cover;border-radius:4px;" />' : '')
-            + '<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">' + t.nombre.replace(/</g, '&lt;') + '</div>'
-            + '<div class="hint" style="margin:0;">' + t.producto + (active ? ' · <b>ACTIVO</b>' : '') + '</div></div>'
-            + '<button class="ghost" data-tpl-act="' + t.id + '">' + (active ? 'Quitar' : 'Activar') + '</button>'
-            + '<button class="ghost" data-tpl-del="' + t.id + '" style="color:var(--bad);">Borrar</button>'
+            + (safeTemplateImage(t.imagen) ? '<img src="' + safeTemplateImage(t.imagen) + '" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:4px;" />' : '')
+            + '<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">' + escHtml(t.nombre) + '</div>'
+            + '<div class="hint" style="margin:0;">' + escHtml(t.producto) + (active ? ' · <b>ACTIVO</b>' : '') + '</div></div>'
+            + '<button class="ghost" data-tpl-act="' + escHtml(t.id) + '">' + (active ? 'Quitar' : 'Activar') + '</button>'
+            + '<button class="ghost" data-tpl-del="' + escHtml(t.id) + '" style="color:var(--bad);">Borrar</button>'
             + '</div>';
         });
         el.innerHTML = html;
@@ -869,7 +880,7 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
           const prev = tgt.value;
           let html = '<option value="">Banco general del subnicho</option>';
           listPersonalBanks(market).forEach(function (b) {
-            html += '<option value="nb:' + b.id + '">' + b.name.replace(/</g, '&lt;') +
+            html += '<option value="nb:' + escHtml(b.id) + '">' + escHtml(b.name) +
               ' (' + (b.objects.length + b.phrases.length) + ')</option>';
           });
           tgt.innerHTML = html;
@@ -881,7 +892,7 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
         if (!el || typeof listPersonalBanks !== 'function') return;
         var items = listPersonalBanks(market);
         if (!items.length) {
-          el.innerHTML = '<div class="hint">Sin bancos con nombre. Crea uno arriba para diferenciar tus colecciones.</div>';
+          el.textContent = 'Sin bancos con nombre. Crea uno arriba para diferenciar tus colecciones.'; el.className = 'hint';
           return;
         }
         const sub = nbSubniche();
@@ -890,13 +901,13 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
           const isActive = (typeof getActivePersonalBank === 'function' &&
             getActivePersonalBank(market, sub) && getActivePersonalBank(market, sub).id === b.id);
           html += '<div style="display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:var(--r);padding:8px;margin-bottom:8px;">'
-            + '<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">' + b.name.replace(/</g, '&lt;') + '</div>'
-            + '<div class="hint" style="margin:0;">' + b.subniche + ' · ' + b.objects.length + ' objetos · ' + b.phrases.length + ' frases'
+            + '<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">' + escHtml(b.name) + '</div>'
+            + '<div class="hint" style="margin:0;">' + escHtml(b.subniche) + ' · ' + b.objects.length + ' objetos · ' + b.phrases.length + ' frases'
             + (isActive ? ' · <b>ACTIVO</b>' : '') + '</div></div>'
-            + '<button class="ghost" data-nb-act="' + b.id + '">' + (isActive ? 'Quitar' : 'Activar') + '</button>'
-            + '<button class="ghost" data-nb-clone="' + b.id + '">Clonar</button>'
-            + '<button class="ghost" data-nb-ren="' + b.id + '">Renombrar</button>'
-            + '<button class="ghost" data-nb-del="' + b.id + '" style="color:var(--bad);">Borrar</button>'
+            + '<button class="ghost" data-nb-act="' + escHtml(b.id) + '">' + (isActive ? 'Quitar' : 'Activar') + '</button>'
+            + '<button class="ghost" data-nb-clone="' + escHtml(b.id) + '">Clonar</button>'
+            + '<button class="ghost" data-nb-ren="' + escHtml(b.id) + '">Renombrar</button>'
+            + '<button class="ghost" data-nb-del="' + escHtml(b.id) + '" style="color:var(--bad);">Borrar</button>'
             + '</div>';
         });
         el.innerHTML = html;
