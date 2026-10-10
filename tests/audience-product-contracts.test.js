@@ -31,6 +31,21 @@ ok(getAudiencesForMarketRegion('colombia', 'todas').every(function (id) { return
   ok(!!AUD_PROFILES[id], 'mantener perfil legacy ' + id);
 });
 
+// Contratos nuevos: catálogo por mercado, compatibilidad por subnicho y selector dinámico.
+ok(typeof getAudiencesForSubniche === 'function', 'resolver por subnicho debe estar exportado');
+ok(typeof getAudienceSelectOptions === 'function', 'helper de opciones de audiencia debe estar exportado');
+ok(getAudiencesForSubniche('skate_culture', 'global', 'global_en').every(function (id) {
+  return ['global_young_en','global_adult_en','global_family_en'].includes(id);
+}), 'subnicho global en inglés debe conservar el pool del mercado y no importar audiencias colombianas');
+ok(getAudiencesForSubniche('fe_popular_col', 'todas', 'colombia').every(function (id) {
+  return id.indexOf('global_') !== 0 && id.indexOf('gospel_') !== 0;
+}), 'fe_popular_col en Colombia no debe cruzar perfiles globales ni Gospel');
+ok(getAudiencesForSubniche('gospel_es', 'global', 'gospel_es').every(function (id) {
+  return id.indexOf('gospel_') === 0;
+}), 'subnicho Gospel debe limitarse al catálogo Gospel');
+ok(getAudienceSelectOptions('global', 'global_es', 'auto').includes('global_joven_es'), 'selector debe usar mercado global español');
+ok(!getAudienceSelectOptions('global', 'global_es', 'auto').includes('coste_joven_m'), 'selector global español no debe incluir audiencia costeña');
+
 const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const products = ['CAMISETA SOFT','CAMISETA APPAREL','HOODIE','GORRA','MUG','MOCHILA','TOTE BAG','FUNDA MÓVIL','ILUSTRACION PREMIUM APPAREL','DISPLATE'];
 products.forEach(function (product) { ok(index.includes('<option>' + product + '</option>') || index.includes('<option selected>' + product + '</option>'), 'selector UI debe conservar el producto ' + product); });
