@@ -23,7 +23,7 @@
 
   function tell(msg) {
     const statusEl = $('status');
-    if (statusEl) statusEl.innerHTML = msg;
+    if (statusEl) statusEl.textContent = String(msg == null ? '' : msg);
   }
 
   /* --- Referencias a funciones globales (de otros scripts) --- */
@@ -557,7 +557,7 @@
       } catch (e) { return { ok: false, ms: Date.now() - t0 }; }
     }
     const results = await Promise.all([
-      ping('https://generativelanguage.googleapis.com/v1beta/models?key=AIzaSyTESTCONNECTIVITY'),
+      ping('https://generativelanguage.googleapis.com/v1beta/models'),
       ping('https://openrouter.ai/api/v1/models')
     ]);
     return { google: results[0].ok, openrouter: results[1].ok, ms: { google: results[0].ms, openrouter: results[1].ms } };
@@ -614,13 +614,13 @@
       generationConfig: { temperature: 0.2, maxOutputTokens: 2048, responseMimeType: 'application/json' }
     };
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
-      encodeURIComponent(target.model) + ':generateContent?key=' + encodeURIComponent(target.key);
+      encodeURIComponent(target.model) + ':generateContent';
     let lastErr = null;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const response = await fetchWithTimeout(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': target.key },
           body: JSON.stringify(body)
         }, target.timeoutMs);
         if (!response.ok) {
@@ -716,7 +716,7 @@
           encodeURIComponent(target.model) + ':generateContent?key=' + encodeURIComponent(target.key);
         const r = await fetchWithTimeout(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': target.key },
           body: JSON.stringify({ contents: [{ parts: [{ text: 'Responde solo: ok' }] }] })
         }, 15000);
         if (!r.ok) return { ok: false, message: visionHttpMessage(r.status, 'Gemini') };
