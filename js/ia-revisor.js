@@ -325,7 +325,10 @@
 
   function tellStatus(msg) {
     var st = document.getElementById('status');
-    if (st) st.innerHTML = '<span class="blue">' + msg + '</span>';
+    if (st) {
+      st.textContent = String(msg == null ? '' : msg);
+      st.className = 'blue';
+    }
   }
 
   /* --- Panel de configuración --- */
