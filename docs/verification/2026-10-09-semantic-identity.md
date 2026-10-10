@@ -111,3 +111,18 @@ Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localiza
 - [x] Implementación aislada en `fix/redteam-semantic-identity`.
 - [ ] CI de sintaxis y suite completa tras este commit.
 - [ ] Validación visual real en varios estilos, productos y mercados.
+
+
+## Actualización — DEBT-004/005: endurecimiento inicial del DOM y claves (2026-10-10)
+
+### Cambios implementados en la rama
+- El estado informativo en `js/ia-analisis.js` inserta mensajes como texto (`textContent`) en vez de interpretar HTML arbitrario desde `tell()`.
+- Se elimina la clave ficticia fija de la URL de preflight Gemini; la comprobación de conectividad ya no transmite una cadena con forma de clave API.
+- Las llamadas Gemini Vision y su prueba de conexión pasan la clave en la cabecera `x-goog-api-key` en lugar de añadirla a la query string, reduciendo su exposición en URLs y logs.
+- `js/ia-revisor.js`: los estados del revisor usan texto plano en lugar de concatenar mensajes de error como HTML.
+
+### Límites y verificación
+- Es un endurecimiento inicial, no una certificación de seguridad completa. Una clave enviada desde el navegador sigue siendo visible para quien controla ese navegador. Para un despliegue multiusuario o público, se recomienda proxy/backend con secretos del lado servidor.
+- No se afirma evaluación de similitud de imágenes: requiere artefactos generados y un evaluador/métrica explícitos.
+- Supabase/RLS, conflictos de sincronización, UX móvil y Vercel Preview siguen pendientes de validar.
+- El CI verde del head anterior (`c26ad53af3f01bc96acbb8dd59f19b86211f3e60`) no valida estos cambios; quedan a la espera de su propio run.
