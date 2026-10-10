@@ -690,6 +690,78 @@ function _pickFreshTreatment(biasPool, fullPool, used) {
   return _pick(preferred.length ? preferred : available);
 }
 
+/* --- Perfiles estructurales universales HEAVY / SOFT / MODERN --- */
+/* El tratamiento deja de ser solo una etiqueta artística: gobierna decisiones
+   de composición, densidad, tipografía y espacio negativo. No cambia el concepto,
+   el mercado, la familia, el producto ni una jerarquía explícitamente elegida. */
+const _STRUCTURAL_PROFILES = {
+  HEAVY: {
+    density: ['Heavy'],
+    layout: ['Axial centrado', 'Emblema circular', 'Banda horizontal', 'Sangrado total', 'Arco y cúpula', 'Escalinata'],
+    type: ['Grotesca black condensada', 'Slab pesada de oficio', 'Stencil de plantilla', 'Gótica blackletter'],
+    negative: ['Campo de tinta con margen vivo', 'Perímetro simétrico controlado', 'Cortes diagonales de aire'],
+    hierarchy: ['Símbolo 70% / Texto 30%', 'Símbolo dominante + texto descubrible', 'Texto dominante + símbolo descubrible'],
+    form: ['silueta sólida a una tinta', 'tallado en bloque', 'fragmentado en planos'],
+    integration: ['la palabra principal es un elemento más del objeto', 'el título abraza y parte el símbolo', 'el título rompe la silueta del símbolo']
+  },
+  SOFT: {
+    density: ['Minimal', 'Balanced'],
+    layout: ['Editorial asimétrica', 'Retícula áurea', 'Sello descentrado', 'Columna apilada', 'Split 2/3-1/3'],
+    type: ['Sans humanista limpia', 'Rounded amable', 'Serif clásica titulada', 'Manuscrita de cuaderno'],
+    negative: ['Vacío como protagonista', 'Aire alrededor del motivo principal', 'Bloques de respiración laterales', 'Fragmentos separados por silencio visual'],
+    hierarchy: ['Símbolo dominante + texto descubrible', '50 / 50 equilibrado', 'Jerarquía en capas de lectura'],
+    form: ['contorno lineal calibrado', 'orgánico gestual con pincel', 'caligráfico de un solo trazo'],
+    integration: ['el texto corre por el contorno del símbolo', 'texto y símbolo comparten una sola línea de dibujo', 'el texto principal cruza un eje de la composición']
+  },
+  MODERN: {
+    density: ['Minimal', 'Balanced'],
+    layout: ['Editorial asimétrica', 'Split 2/3-1/3', 'Retícula áurea', 'Diagonal ascendente', 'Diagonal descendente', 'Tarjeta interior'],
+    type: ['Sans humanista limpia', 'Mono técnica', 'Geométrica deconstructivista', 'Custom modular geométrica'],
+    negative: ['Vacíos verticales que guían la lectura', 'Cortes diagonales de aire', 'Aire alrededor del motivo principal'],
+    hierarchy: ['Jerarquía en capas de lectura', '50 / 50 equilibrado', 'Texto dominante + símbolo descubrible'],
+    form: ['geometrizado por módulos', 'construido por retícula visible', 'fragmentado en planos'],
+    integration: ['las letras habitan la estructura del objeto', 'el título rompe la silueta del símbolo', 'el texto principal cruza un eje de la composición']
+  }
+};
+
+function _profilePick(pool, hints, fallback) {
+  const source = Array.isArray(pool) ? pool : [];
+  const matched = source.filter(function (item) {
+    return (hints || []).some(function (hint) { return String(item).indexOf(hint) !== -1; });
+  });
+  return _pick(matched.length ? matched : (source.length ? source : (fallback || [])));
+}
+
+function _applyStructuralProfile(v, profileKey, productBias) {
+  const profile = _STRUCTURAL_PROFILES[String(profileKey || '').toUpperCase()];
+  if (!profile) return v;
+  const bias = productBias || {};
+  // Prioridad: compatibilidad con el producto; el perfil selecciona dentro de ella
+  // siempre que exista intersección. Nunca inventar opciones fuera de los pools.
+  const layouts = (_LAYOUTS || []).filter(function (x) { return profile.layout.some(function (h) { return x.indexOf(h) === 0; }); });
+  const productLayouts = (bias.layout || []).length
+    ? layouts.filter(function (x) { return bias.layout.some(function (h) { return x.indexOf(h) === 0; }); })
+    : layouts;
+  v.layout = _pick(productLayouts.length ? productLayouts : (layouts.length ? layouts : _LAYOUTS));
+
+  const typeHints = profile.type || [];
+  const types = (_TIPOS || []).filter(function (x) { return typeHints.some(function (h) { return x.indexOf(h) === 0; }); });
+  v.tipografia = _pick(types.length ? types : _TIPOS);
+
+  const density = (_POOLS.densidad || []).filter(function (x) { return profile.density.indexOf(x) !== -1; });
+  const productDensity = (bias.density || []).length
+    ? density.filter(function (x) { return bias.density.indexOf(x) !== -1; })
+    : density;
+  v.densidad = _pick(productDensity.length ? productDensity : (density.length ? density : (_POOLS.densidad || [])));
+
+  v.negativeSpace = _profilePick(_POOLS.negativeSpace, profile.negative, ['Aire alrededor del motivo principal']);
+  v.jerarquia = _profilePick(_POOLS.jerarquia, profile.hierarchy, ['Jerarquía en capas de lectura']);
+  v.formaSimbolo = _profilePick(_FORMAS, profile.form, _FORMAS);
+  v.integracionTexto = _profilePick(_INTEGRACION, profile.integration, _INTEGRACION);
+  v.perfilEstructural = String(profileKey).toUpperCase();
+  return v;
+}
+
 function _isLockedContactSet() {
   return MOTOR_STATE.workflowMode !== 'variation' && MOTOR_STATE.workflowMode !== 'explore' && MOTOR_STATE.designMode !== 'patron';
 }
@@ -898,6 +970,12 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     const fixedTreatmentSpec = fixedTreatment && _TRATAMIENTOS.find(function (x) { return _treatmentKey(x) === fixedTreatment; });
     v.tratamiento = fixedTreatmentSpec || _pickFreshTreatment(tratBias, _TRATAMIENTOS, usedAxes.tratamiento);
     usedAxes.tratamiento.push(v.tratamiento);
+
+    // En contactos y exploración, A/B/C son perfiles estructurales, no solo nombres.
+    const structuralKey = (contactIdentity || MOTOR_STATE.workflowMode === 'explore')
+      ? _CONTACT_TREATMENT_ORDER[k]
+      : _treatmentKey(v.tratamiento);
+    _applyStructuralProfile(v, structuralKey, productBias);
 
     v.integracionTexto = _pickFresh(_INTEGRACION, _INTEGRACION, usedAxes.integracionTexto);
     usedAxes.integracionTexto.push(v.integracionTexto);
@@ -1348,6 +1426,7 @@ function formatPrompt(result) {
     const v = set[k];
     o += '### ' + N[i] + ' · ' + v.estilo + ' · ' + v.audiencia + '\n';
     o += 'JERARQUÍA: ' + v.jerarquiaVisual + '\n';
+    o += 'PERFIL ESTRUCTURAL: ' + (v.perfilEstructural || _treatmentKey(v.tratamiento)) + ' · densidad ' + v.densidad + ' · espacio negativo ' + v.negativeSpace + ' · jerarquía interna ' + v.jerarquia + '\\n';
     o += 'OBJETO: ' + v.objeto + '\n';
     if (contactDNA) o += 'FUNCIÓN CONSTANTE: ' + v.funcionSimbolica + ' · intención ' + v.intencionEmocional + '\n';
     const textLine = contactDNA
