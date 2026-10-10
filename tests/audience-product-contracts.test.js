@@ -1,0 +1,50 @@
+/* Contratos de audiencia y producto. Ejecutar con Node; sin DOM ni proveedores. */
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+const root = path.join(__dirname, '..');
+global.window = global;
+vm.runInThisContext(fs.readFileSync(path.join(root, 'js/data-audiencias.js'), 'utf8'), { filename: 'data-audiencias.js' });
+let checks = 0;
+const failures = [];
+function ok(condition, message) { checks++; if (!condition) failures.push(message); }
+
+const expectedGospel = ['gospel_hombre','gospel_mujer','gospel_infantil','gospel_familia','gospel_pareja','gospel_comunidad'];
+['gospel_es','gospel_en'].forEach(function (market) {
+  const ids = getAudiencesForMarketRegion(market, 'global');
+  ok(JSON.stringify(ids) === JSON.stringify(expectedGospel), market + ' debe exponer el catálogo Gospel canónico compacto');
+  ids.forEach(function (id) {
+    ok(!!AUD_PROFILES[id], market + ': perfil existente para ' + id);
+    ok(!!AUD_STYLE_PREF[id] && AUD_STYLE_PREF[id].length > 0, market + ': preferencias de estilo funcionales para ' + id);
+    ok(!!AUD_HIERARCHY_PREF[id] && AUD_HIERARCHY_PREF[id].length > 0, market + ': preferencias de jerarquía funcionales para ' + id);
+    ok(!!AUD_DENSITY_PREF[id] && AUD_DENSITY_PREF[id].length > 0, market + ': preferencias de densidad funcionales para ' + id);
+    ok(!!AUD_LAYOUT_PREF[id] && AUD_LAYOUT_PREF[id].length > 0, market + ': preferencias de composición funcionales para ' + id);
+  });
+});
+ok(getAudiencesForMarketRegion('global_en', 'global').every(function (id) { return id.indexOf('gospel_') !== 0; }), 'Global English no debe mostrar audiencias Gospel');
+ok(getAudiencesForMarketRegion('global_es', 'global').every(function (id) { return id.indexOf('gospel_') !== 0; }), 'Global Español no debe mostrar audiencias Gospel');
+ok(getAudiencesForMarketRegion('colombia', 'todas').every(function (id) { return id.indexOf('gospel_') !== 0 && id.indexOf('global_') !== 0; }), 'Colombia no debe mezclar audiencias Gospel/Global en región todas');
+
+// IDs legacy siguen existiendo para no romper memorias, locks ni datos guardados.
+['gospel_joven_fe','gospel_adulto_fe','gospel_familia_fe','gospel_youth_faith','gospel_adult_faith','gospel_family_faith'].forEach(function (id) {
+  ok(!!AUD_PROFILES[id], 'mantener perfil legacy ' + id);
+});
+
+const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const products = ['CAMISETA SOFT','CAMISETA APPAREL','HOODIE','GORRA','MUG','MOCHILA','TOTE BAG','FUNDA MÓVIL','ILUSTRACION PREMIUM APPAREL','DISPLATE'];
+products.forEach(function (product) { ok(index.includes('<option>' + product + '</option>') || index.includes('<option selected>' + product + '</option>'), 'selector UI debe conservar el producto ' + product); });
+const productSource = fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8');
+products.forEach(function (product) {
+  ok(productSource.includes('"' + product + '"'), 'datos de producto deben contemplar ' + product);
+});
+ok(/DISPLATE[\s\S]{0,700}NO usar lógica de camiseta/i.test(productSource), 'Displate debe prohibir la lógica de camiseta');
+ok(/GORRA[\s\S]{0,700}cero escenas completas/i.test(productSource), 'gorra debe priorizar arte compacto y legible');
+ok(/CAMISETA SOFT[\s\S]{0,700}cero microtexto/i.test(productSource), 'camiseta soft debe exigir legibilidad textil y evitar microtexto');
+ok(/ILUSTRACION PREMIUM APPAREL[\s\S]{0,700}no es póster de pared/i.test(productSource), 'ilustración premium apparel debe seguir siendo textil, no póster');
+if (failures.length) {
+  console.error('FAIL (' + failures.length + '/' + checks + ')\n- ' + failures.join('\n- '));
+  process.exitCode = 1;
+} else {
+  console.log('PASS (' + checks + ' checks): audience/product contracts');
+}
