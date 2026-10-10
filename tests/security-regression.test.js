@@ -23,6 +23,21 @@ ok(/LS\.setItem\(SLOTS_KEY, JSON\.stringify\(arr\.map\(function \(s\) \{ return 
 ok(/hasPersistedKeys/.test(reviewer) && /key: ''/.test(reviewer), 'legacy persisted keys must be scrubbed on read');
 ok(/Clave API \(solo esta pestaña\)/.test(reviewer), 'UI must disclose session-only key lifetime');
 
+
+const editor = fs.readFileSync(path.join(ROOT, 'editor-bancos.html'), 'utf8');
+const sync = fs.readFileSync(path.join(ROOT, 'js/sync-supabase.js'), 'utf8');
+const sql = fs.readFileSync(path.join(ROOT, 'supabase-sync.sql'), 'utf8');
+ok(/function escHtml\(value\)[\s\S]*?replace\(\/&\/g, '&amp;'\)[\s\S]*?replace\(\/>\/g, '&gt;'\)/.test(editor), 'editor must fully escape bank labels and names');
+ok(/function safeTemplateImage\(value\)[\s\S]*?data:image/.test(editor), 'template image sources must be restricted to supported image data URLs');
+ok(editor.includes('escHtml(t.nombre)') && editor.includes('escHtml(b.name)'), 'template and bank names must be escaped before HTML rendering');
+ok(/changeLink\.textContent = 'Cambiar'/.test(analysis) && /option\.textContent = String\(b\.name/.test(analysis), 'analysis UI must render template and bank names as text');
+ok(/const sessionKeys = JSON\.parse\(sessionRaw \|\| 'null'\)/.test(analysis), 'vision fallback should use only session-scoped API keys');
+ok(!/fetch\(ep\(s\.provider, s\.model\) \+ '\?key=/.test(reviewer), 'reviewer Gemini requests must not put API keys in URLs');
+ok(/using \(\(select auth\.uid\(\)\) = user_id\)/.test(sql), 'Supabase read policy must restrict rows to authenticated owner');
+ok(/with check \(\(select auth\.uid\(\)\) = user_id\)/.test(sql), 'Supabase insert/update policy must enforce authenticated owner');
+ok(/enable row level security/.test(sql) && /revoke all on table public\.pod_project_sync from anon/.test(sql), 'Supabase sync table must enable RLS and revoke anon privileges');
+ok(!/service_role/i.test(sync.match(/var DEFAULT_CFG = \{[\s\S]*?\n  \};/)?.[0] || ''), 'Supabase client defaults must not contain service_role credentials');
+
 const passed = failures.length === 0;
 console.log((passed ? 'PASS' : 'FAIL') + ' security-regression (' + checks + ' aserciones, ' + failures.length + ' fallos)');
 failures.forEach(function (f) { console.error(' - ' + f); });
