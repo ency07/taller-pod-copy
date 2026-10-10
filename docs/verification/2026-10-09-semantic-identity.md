@@ -162,3 +162,13 @@ Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localiza
 - [ ] Preview de Vercel, pruebas móvil/navegadores y evaluación visual real de A/B/C siguen pendientes.
 
 La suite de CI pasa en el HEAD indicado. No se declara la auditoría completa ni se fusiona el PR.
+
+
+## Actualización — controles estáticos de sincronización (2026-10-10)
+
+- Se añadieron pruebas para exigir sesión autenticada antes de sincronizar, filtrar lecturas por `user.id`, propagar errores de lectura/escritura y usar `mergeMemoryObjects` cuando esté disponible.
+- CI para el nuevo commit: pendiente en este momento; no marcar esta actualización como verificada hasta que el workflow termine.
+- Revisión de implementación: la fusión lee `updated_at`, pero no usa una condición atómica para evitar que dos dispositivos escriban simultáneamente. Existe riesgo de última escritura gana durante carreras concurrentes; se debe resolver con control de versión/función RPC atómica antes de certificar sincronización multi-dispositivo.
+- RLS revisado en el SQL versionado: tabla con RLS, lectura/inserción/actualización limitadas por `auth.uid() = user_id`, y privilegios revocados a `anon`. Esto solo valida el archivo del repositorio, no el estado real del proyecto Supabase desplegado.
+
+**Bloqueo de validación real:** falta ejecutar pruebas con dos sesiones/dispositivos y comprobar el esquema/policies activos en Supabase. No se inventan resultados de despliegue.
