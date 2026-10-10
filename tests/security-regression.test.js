@@ -42,6 +42,8 @@ ok(/if \(!user\) throw new Error\('Inicia sesión antes de sincronizar\.'\)/.tes
 ok(/\.eq\('user_id', user\.id\)/.test(sync), 'sync reads must be scoped to the authenticated user id');
 ok(/if \(q\.error\) throw q\.error/.test(sync) && /if \(up\.error\) throw up\.error/.test(sync), 'sync must stop on database read/write errors');
 ok(/mergeMemoryObjects\(localPayload, remotePayload\)/.test(sync), 'sync must use the explicit memory merge routine when available');
+ok(/\.eq\('updated_at', q\.data\.updated_at\)/.test(sync) && /if \(!up\.data\)/.test(sync), 'sync must reject stale concurrent updates instead of overwriting cloud changes');
+ok(/\.from\('pod_project_sync'\)\.insert\(nextRow\)/.test(sync) && /up\.error\.code === '23505'/.test(sync), 'first-sync race must fail safely when another device creates the row first');
 
 
 ok(/function getGeminiSlot\(\)[\s\S]*?window\.sessionStorage[\s\S]*?sessionKeys\[index\]/.test(analysis), 'legacy Gemini helper must use session-scoped keys');
