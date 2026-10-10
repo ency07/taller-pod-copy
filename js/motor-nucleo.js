@@ -621,7 +621,7 @@ function _resolveExplorationBrief() {
     candidates = addBank(familyId);
     if (candidates.length) selectedFrom = 'selected-family-bank';
   }
-  if (!explicitSub && !domain && !candidates.length) {
+  if (!explicitSub && !domain && !candidates.length && !explicitConcept && !String(MOTOR_STATE.message || '').trim()) {
     const ids = _marketSubnicheIds().filter(function (id, i, all) {
       return id && all.indexOf(id) === i && (!isGospelMarket() || id === 'gospel_es' || id === 'gospel_en');
     });
