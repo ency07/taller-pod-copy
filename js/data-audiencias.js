@@ -1148,8 +1148,10 @@ function getAudiencesForMarketRegion(marketId, regionId) {
     return ["gospel_hombre", "gospel_mujer", "gospel_infantil", "gospel_familia", "gospel_pareja", "gospel_comunidad"];
   }
 
-  // Diáspora: lista propia sin importar la sub-región elegida.
-  if (marketId === "diaspora_col") return MARKET_AUDIENCE_LISTS.diaspora.slice();
+  // Diáspora y mercado personalizado admiten ES/EN sin mezclar perfiles regionales.
+  if (marketId === "diaspora_col" || marketId === "custom") {
+    return MARKET_AUDIENCE_LISTS.diaspora.slice();
+  }
 
   // "todas" es válido para Colombia, no debe contaminar otros mercados.
   if (regionId === "todas" && marketId === "colombia") {
