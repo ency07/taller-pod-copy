@@ -94,3 +94,20 @@ Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localiza
 - El bloqueo queda reservado para el caso en que el campo de concepto está vacío.
 - `tests/semantic-identity.test.js`: actualizados los casos para cubrir conceptos descriptivos, relaciones entre símbolos y concepto ausente.
 - Verificación disponible: compilación sintáctica del contenido de los dos archivos revisados, pendiente ejecutar el test con Node real y probar el Preview.
+
+
+## Actualización — DEBT-003: perfiles estructurales (2026-10-09)
+
+### Implementación
+- Se formalizaron perfiles estructurales universales HEAVY, SOFT y MODERN en `js/motor-nucleo.js`.
+- Cada perfil define candidatos válidos de layout, tipografía, densidad, espacio negativo, jerarquía interna, forma del símbolo e integración texto/imagen.
+- En CONTACTSHEET y Exploración, A/B/C aplica los perfiles estructurales HEAVY/SOFT/MODERN respectivamente.
+- La selección se limita a opciones registradas en los pools; si el producto impone una restricción compatible disponible, esta prevalece.
+- Los perfiles no reemplazan concepto, familia, mercado, audiencia ni jerarquía principal elegida. Variación y patrón no reciben este bloqueo.
+- El prompt expone el perfil, densidad, espacio negativo y jerarquía interna para que la decisión sea auditable.
+- Se añadieron pruebas deterministas de pertenencia a pools, densidad, layout, tipografía y restricciones de producto.
+
+### Gates
+- [x] Implementación aislada en `fix/redteam-semantic-identity`.
+- [ ] CI de sintaxis y suite completa tras este commit.
+- [ ] Validación visual real en varios estilos, productos y mercados.
