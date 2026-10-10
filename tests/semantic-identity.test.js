@@ -106,3 +106,16 @@ ok(productConstrainedProfile.densidad === 'Heavy', 'si producto y perfil compart
 console.log((failures.length ? 'FAIL' : 'PASS') + ' semantic-identity (' + checks + ' aserciones, ' + failures.length + ' fallos)');
 failures.forEach(function (msg) { console.error(' - ' + msg); });
 process.exit(failures.length ? 1 : 0);
+
+
+// Contratos de originalidad del prompt CONTACTSHEET.
+// Son pruebas estáticas de instrucciones; no prueban similitud de imágenes generadas.
+const motorSource = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
+ok(motorSource.includes("ORDEN FIJO DE TRATAMIENTOS: 01A HEAVY · 01B SOFT · 01C MODERN"), 'CONTACTSHEET debe fijar el orden A/B/C de los tratamientos');
+ok(motorSource.includes('DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo y fondo NUNCA se repiten entre A/B/C.'), 'el prompt debe exigir diferencias estructurales explícitas entre A/B/C');
+ok(motorSource.includes('No hagas una versión recoloreada, un simple cambio de técnica ni una réplica con texto reemplazado.'), 'variación guiada debe prohibir recoloreado o cambios superficiales como única variación');
+ok(motorSource.includes('toma decisiones visuales independientes y diferentes entre A/B/C.'), 'variación guiada debe pedir decisiones visuales independientes');
+ok(motorSource.includes('Cada tratamiento gobierna composición, jerarquía, tipografía, contraste, densidad y formas; el estilo artístico lo ejecuta sin contradecirlo.'), 'el tratamiento debe afectar estructura y no solo color/textura');
+ok(motorSource.includes('DIRECCIONES: 01A HEAVY = impacto, masas y contraste; 01B SOFT = aire, formas abiertas y lectura amable; 01C MODERN = geometría, síntesis y lenguaje contemporáneo.'), 'exploración debe definir diferencias funcionales para HEAVY/SOFT/MODERN');
+ok(motorSource.includes('Diferencia composición, silueta, jerarquía y relación texto-imagen, no solo color o textura.'), 'exploración debe prohibir diferencias cosméticas como única variación');
+
