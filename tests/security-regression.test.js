@@ -38,6 +38,10 @@ ok(/using \(\(select auth\.uid\(\)\) = user_id\)/.test(sql), 'Supabase read poli
 ok(/with check \(\(select auth\.uid\(\)\) = user_id\)/.test(sql), 'Supabase insert/update policy must enforce authenticated owner');
 ok(/enable row level security/.test(sql) && /revoke all on table public\.pod_project_sync from anon/.test(sql), 'Supabase sync table must enable RLS and revoke anon privileges');
 ok(!/service_role/i.test(sync.match(/var DEFAULT_CFG = \{[\s\S]*?\n  \};/)?.[0] || ''), 'Supabase client defaults must not contain service_role credentials');
+ok(/if \(!user\) throw new Error\('Inicia sesión antes de sincronizar\.'\)/.test(sync), 'sync must require an authenticated user');
+ok(/\.eq\('user_id', user\.id\)/.test(sync), 'sync reads must be scoped to the authenticated user id');
+ok(/if \(q\.error\) throw q\.error/.test(sync) && /if \(up\.error\) throw up\.error/.test(sync), 'sync must stop on database read/write errors');
+ok(/mergeMemoryObjects\(localPayload, remotePayload\)/.test(sync), 'sync must use the explicit memory merge routine when available');
 
 
 ok(/function getGeminiSlot\(\)[\s\S]*?window\.sessionStorage[\s\S]*?sessionKeys\[index\]/.test(analysis), 'legacy Gemini helper must use session-scoped keys');
