@@ -469,7 +469,7 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
         var html = '';
         order.forEach(function (id) {
           if (markets[id]) {
-            html += '<option value="' + id + '">' + markets[id].label + '</option>';
+            html += '<option value="' + escHtml(id) + '">' + escHtml(markets[id].label) + '</option>';
           }
         });
         sel.innerHTML = html;
@@ -497,7 +497,7 @@ Estas acciones eliminan objetos y frases personales de LocalStorage. No afectan 
             var label = (typeof getSubnicheLabel === 'function')
               ? getSubnicheLabel(id, marketId)
               : id;
-            html += '<option value="' + id + '">' + label + '</option>';
+            html += '<option value="' + escHtml(id) + '">' + escHtml(label) + '</option>';
           });
         }
 
