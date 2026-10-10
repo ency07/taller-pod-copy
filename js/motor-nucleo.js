@@ -1869,4 +1869,4 @@ window.readStateFromDOM = readStateFromDOM;
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
   else bind();
-})();;
+})();
