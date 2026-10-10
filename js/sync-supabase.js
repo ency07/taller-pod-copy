@@ -152,18 +152,38 @@
       : Object.assign({}, remotePayload, localPayload);
 
     status('Guardando copia fusionada en nube...');
-    var up = await c
-      .from('pod_project_sync')
-      .upsert(
-        {
-          user_id: user.id,
-          payload: merged,
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: 'user_id' }
-      );
+    var nextRow = {
+      user_id: user.id,
+      payload: merged,
+      updated_at: new Date().toISOString()
+    };
+    var up;
 
-    if (up.error) throw up.error;
+    if (q.data && q.data.updated_at) {
+      // Optimistic concurrency: do not overwrite a cloud copy changed since our read.
+      up = await c
+        .from('pod_project_sync')
+        .update({ payload: nextRow.payload, updated_at: nextRow.updated_at })
+        .eq('user_id', user.id)
+        .eq('updated_at', q.data.updated_at)
+        .select('user_id')
+        .maybeSingle();
+
+      if (up.error) throw up.error;
+      if (!up.data) {
+        throw new Error('La copia en nube cambió durante la sincronización. No se sobrescribió; vuelve a sincronizar para fusionar la versión más reciente.');
+      }
+    } else {
+      // Insert rather than upsert: if another device creates the first row concurrently,
+      // the unique constraint rejects this write instead of silently replacing its payload.
+      up = await c.from('pod_project_sync').insert(nextRow);
+      if (up.error) {
+        if (up.error.code === '23505') {
+          throw new Error('Otro dispositivo creó la copia en nube al mismo tiempo. No se sobrescribió; vuelve a sincronizar.');
+        }
+        throw up.error;
+      }
+    }
 
     // Aplicar localmente
     Object.keys(merged).forEach(function (k) {
