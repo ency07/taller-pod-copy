@@ -46,6 +46,57 @@ ok(getAudiencesForSubniche('gospel_es', 'global', 'gospel_es').every(function (i
 ok(getAudienceSelectOptions('global', 'global_es', 'auto').includes('global_joven_es'), 'selector debe usar mercado global español');
 ok(!getAudienceSelectOptions('global', 'global_es', 'auto').includes('coste_joven_m'), 'selector global español no debe incluir audiencia costeña');
 
+// Regresión transversal: todos los mercados deben devolver IDs reales y aislados.
+const marketRegions = {
+  colombia: 'todas',
+  global_en: 'global',
+  global_es: 'global_es',
+  gospel_es: 'global',
+  gospel_en: 'global',
+  anglo: 'global',
+  latam: 'global',
+  spain: 'global',
+  diaspora_col: 'global',
+  custom: 'global'
+};
+Object.keys(marketRegions).forEach(function (market) {
+  const ids = getAudiencesForMarketRegion(market, marketRegions[market]);
+  ok(ids.length > 0, market + ': catálogo de audiencias no vacío');
+  ok(ids.every(function (id) { return !!AUD_PROFILES[id]; }), market + ': todos los IDs tienen perfil');
+  const options = getAudienceSelectOptions(marketRegions[market], market, 'auto');
+  ok(options.indexOf('value="Auto"') !== -1, market + ': selector conserva Auto');
+  ids.forEach(function (id) {
+    ok(options.indexOf('value="' + id + '"') !== -1, market + ': selector incluye ' + id);
+  });
+});
+ok(getAudiencesForMarketRegion('custom', 'global').some(function (id) { return id.indexOf('global_joven_es') === 0; }), 'custom debe permitir audiencias en español');
+ok(getAudiencesForMarketRegion('custom', 'global').some(function (id) { return id.indexOf('global_young_en') === 0; }), 'custom debe permitir audiencias en inglés');
+
+const globalSubniches = [
+  'pets','professions','hobbies','sarcasm_introvert','fitness_mental','family_milestones',
+  'music_fandom','food_drink','outdoors_nature','retro_nostalgia','travel_adventure',
+  'inspirational_clean','streetwear','tattoo_lifestyle','motorcycle_biker','vanlife_nomad',
+  'plant_parent','booktok_reader','gaming_setup','coffee_culture','skate_culture',
+  'surf_culture','crypto_web3','ai_tech','valentines','st_patricks','easter','mothers_day',
+  'fathers_day','pride','back_to_school','halloween','thanksgiving','christmas','new_year','black_friday'
+];
+Object.keys(marketRegions).forEach(function (market) {
+  globalSubniches.forEach(function (subniche) {
+    const base = getAudiencesForMarketRegion(market, marketRegions[market]);
+    const result = getAudiencesForSubniche(subniche, marketRegions[market], market);
+    ok(Array.isArray(result), market + '/' + subniche + ': devuelve una lista');
+    ok(result.length > 0, market + '/' + subniche + ': mantiene opciones válidas');
+    ok(result.every(function (id) { return base.indexOf(id) !== -1; }), market + '/' + subniche + ': no filtra audiencias de otro mercado');
+  });
+});
+
+// Los cambios de mercado/región/subnicho deben refrescar el selector en el motor.
+const motor = fs.readFileSync(path.join(root, 'js/motor-nucleo.js'), 'utf8');
+ok(/function refreshAudienceSelector\(\)/.test(motor), 'motor define actualización del selector de audiencia');
+ok(/\['market', 'region', 'subniche'\][\s\S]{0,220}refreshAudienceSelector/.test(motor), 'mercado, región y subnicho actualizan la audiencia');
+ok(/select\.value = allowed \? previous : 'Auto'/.test(motor), 'cambio de contexto reinicia a Auto una audiencia incompatible');
+ok(/getAudiencesForSubniche\(subniche, region, market\)/.test(motor), 'motor consulta compatibilidad por mercado y subnicho');
+
 const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const products = ['CAMISETA SOFT','CAMISETA APPAREL','HOODIE','GORRA','MUG','MOCHILA','TOTE BAG','FUNDA MÓVIL','ILUSTRACION PREMIUM APPAREL','DISPLATE'];
 products.forEach(function (product) { ok(index.includes('<option>' + product + '</option>') || index.includes('<option selected>' + product + '</option>'), 'selector UI debe conservar el producto ' + product); });
