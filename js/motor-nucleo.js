@@ -699,15 +699,15 @@ function _isLockedContactSet() {
 function _chooseConceptCompatibleObject(objectPool, concept) {
   const normalize = function (value) {
     return (typeof _normalizeTxt === 'function' ? _normalizeTxt(String(value || '')) : String(value || '').toLowerCase())
-      .replace(/[^\\p{L}\\p{N}\\s]/gu, ' ').replace(/\\s+/g, ' ').trim();
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
   };
   const source = normalize(concept);
   if (!source) return '';
   const stop = new Set(['que','con','para','desde','hacia','sobre','entre','una','uno','unos','unas','los','las','el','la','de','del','en','por','como','sin','the','and','with','for','from','into','over','under','that','which','holding','sosteniendo','representa','lugares','turisticos','tourist','places','profundo','deep','my','a','an','of','to']);
-  const tokens = [...new Set(source.split(/\\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); }))];
+  const tokens = [...new Set(source.split(/\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); }))];
   const ranked = (Array.isArray(objectPool) ? objectPool : []).map(function (item) {
     const label = String(item || '').trim();
-    const words = [...new Set(normalize(label).split(/\\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); }))];
+    const words = [...new Set(normalize(label).split(/\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); }))];
     const overlap = words.filter(function (t) { return tokens.indexOf(t) !== -1; });
     return { label: label, score: overlap.reduce(function (sum, t) { return sum + Math.min(t.length, 10); }, 0), matches: overlap.length };
   }).filter(function (x) { return x.score > 0; }).sort(function (a, b) { return b.score - a.score || b.matches - a.matches; });
