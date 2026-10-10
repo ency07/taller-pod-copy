@@ -38,6 +38,15 @@ ok(/with check \(\(select auth\.uid\(\)\) = user_id\)/.test(sql), 'Supabase inse
 ok(/enable row level security/.test(sql) && /revoke all on table public\.pod_project_sync from anon/.test(sql), 'Supabase sync table must enable RLS and revoke anon privileges');
 ok(!/service_role/i.test(sync.match(/var DEFAULT_CFG = \{[\s\S]*?\n  \};/)?.[0] || ''), 'Supabase client defaults must not contain service_role credentials');
 
+
+ok(/function getGeminiSlot\(\)[\s\S]*?window\.sessionStorage[\s\S]*?sessionKeys\[index\]/.test(analysis), 'legacy Gemini helper must use session-scoped keys');
+ok(!/return slots\.find\(function \(s\) \{[\s\S]*?s\.key/.test(analysis), 'legacy Gemini helper must not return persisted keys');
+ok(/_escapeOptionText\(r\.id\)/.test(analysis) && /_escapeOptionText\(r\.label\)/.test(analysis), 'region option values and labels must be escaped');
+ok(/_escapeOptionText\(a\)/.test(analysis) && /_escapeOptionText\(label\)/.test(analysis), 'audience option values and labels must be escaped');
+ok(/_escapeOptionText\(id\)[\s\S]*?_escapeOptionText\(langs\[id\]\)/.test(analysis), 'language selector values and labels must be escaped');
+ok(!/el\.innerHTML\s*=\s*['"]Template activo:/.test(analysis), 'template hint must not interpolate persistent template data into HTML');
+ok(/\.replace\(/.test(reviewer.match(/function escA\(s\)[\s\S]*?\n  }/)?.[0] || '') && /replace\(\/</.test(reviewer), 'reviewer HTML attribute escaping must include angle brackets');
+
 const passed = failures.length === 0;
 console.log((passed ? 'PASS' : 'FAIL') + ' security-regression (' + checks + ' aserciones, ' + failures.length + ' fallos)');
 failures.forEach(function (f) { console.error(' - ' + f); });
