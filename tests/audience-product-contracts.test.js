@@ -90,6 +90,25 @@ Object.keys(marketRegions).forEach(function (market) {
   });
 });
 
+const colombiaSubniches = [
+  'humor_costeno','humor_colombiano','comida_sabor','musica_ritmo_col',
+  'oficios_emprendimiento_col','familia_roles_col','deporte_barra_col','fe_popular_col',
+  'naturaleza_territorio_col','artesania_tradicion_col','metas_logro_col',
+  'comunidad_barrio_col','viaje_ruta_col','celebracion_col','calle_urbano_col',
+  'resistencia_orgullo_col','sonido_ritmo_urbano_col','concreto_ciudad_col',
+  'barranquilla_curramba','carnaval_fiesta','semana_santa_valle','dia_madre_padre',
+  'vacaciones_feria','amor_amistad_indep','navidad_colombia'
+];
+['colombia','diaspora_col'].forEach(function (market) {
+  colombiaSubniches.forEach(function (subniche) {
+    const region = market === 'colombia' ? 'todas' : 'global';
+    const base = getAudiencesForMarketRegion(market, region);
+    const result = getAudiencesForSubniche(subniche, region, market);
+    ok(result.length > 0, market + '/' + subniche + ': subnicho colombiano conserva audiencias');
+    ok(result.every(function (id) { return base.indexOf(id) !== -1; }), market + '/' + subniche + ': no mezcla mercados');
+  });
+});
+
 // Los cambios de mercado/región/subnicho deben refrescar el selector en el motor.
 const motor = fs.readFileSync(path.join(root, 'js/motor-nucleo.js'), 'utf8');
 ok(/function refreshAudienceSelector\(\)/.test(motor), 'motor define actualización del selector de audiencia');
