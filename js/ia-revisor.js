@@ -75,11 +75,18 @@
 
   function getSlots() {
     try {
-      var a = JSON.parse(LS.getItem(SLOTS_KEY) || 'null');
+      var raw = LS.getItem(SLOTS_KEY);
+      var a = JSON.parse(raw || 'null');
       if (!Array.isArray(a) || a.length !== 3) a = defSlots();
-      a = migrateSlots(a);
+      // Limpia claves heredadas que se hubieran guardado antes en localStorage.
+      var hasPersistedKeys = a.some(function (slot) { return !!(slot && slot.key); });
+      var nonSecretSlots = a.map(function (slot) { return Object.assign({}, slot, { key: '' }); });
+      nonSecretSlots = migrateSlots(nonSecretSlots);
+      if (hasPersistedKeys || !raw) {
+        try { LS.setItem(SLOTS_KEY, JSON.stringify(nonSecretSlots)); } catch (e) { /* preferencias pueden no persistir */ }
+      }
       var sessionKeys = readSessionKeys();
-      return a.map(function (slot, i) {
+      return nonSecretSlots.map(function (slot, i) {
         return Object.assign({}, slot, { key: String(sessionKeys[i] || '') });
       });
     } catch (e) {
