@@ -1193,11 +1193,11 @@ function getAudiencesForSubniche(subniche, region, marketId) {
 
   const id = String(subniche).toLowerCase();
   const faith = /gospel|faith|fe_popular|semana_santa|easter/.test(id);
-  const kids = /pets|food_drink|gaming_setup|back_to_school|halloween|christmas|easter|infantil|kids/.test(id);
-  const family = /family_milestones|valentines|mothers_day|fathers_day|thanksgiving|christmas|easter|dia_madre_padre|familia_roles_col|navidad_colombia/.test(id);
-  const couple = /valentines|family_milestones|vanlife_nomad|amor_amistad_indep/.test(id);
-  const youth = /skate_culture|gaming_setup|booktok_reader|back_to_school|music_fandom|crypto_web3|ai_tech|streetwear|tattoo_lifestyle|humor_costeno|humor_colombiano|calle_urbano|sonido_ritmo/.test(id);
-  const adult = /professions|coffee_culture|motorcycle_biker|retro_nostalgia|outdoors_nature|travel_adventure|plant_parent|crypto_web3|ai_tech|oficios|emprendimiento|artesania|concreto_ciudad/.test(id);
+  const kids = /pets|food_drink|gaming_setup|back_to_school|halloween|christmas|easter|infantil|kids|celebracion_col|carnaval_fiesta|vacaciones_feria/.test(id);
+  const family = /family_milestones|valentines|mothers_day|fathers_day|thanksgiving|christmas|easter|dia_madre_padre|familia_roles_col|navidad_colombia|celebracion_col|carnaval_fiesta|vacaciones_feria/.test(id);
+  const couple = /valentines|family_milestones|vanlife_nomad|amor_amistad_indep|amor_amistad/.test(id);
+  const youth = /skate_culture|gaming_setup|booktok_reader|back_to_school|music_fandom|crypto_web3|ai_tech|streetwear|tattoo_lifestyle|humor_costeno|humor_colombiano|calle_urbano|sonido_ritmo|barranquilla_curramba|musica_ritmo|deporte_barra|resistencia_orgullo|fitness_mental|sarcasm_introvert|hobbies|inspirational_clean|surf_culture|new_year|st_patricks|pride/.test(id);
+  const adult = /professions|coffee_culture|motorcycle_biker|retro_nostalgia|outdoors_nature|travel_adventure|plant_parent|crypto_web3|ai_tech|oficios|emprendimiento|artesania|concreto_ciudad|metas_logro|naturaleza_territorio|viaje_ruta|comida_sabor|food_drink|thanksgiving|black_friday|plants|retro|outdoors|travel|profession/.test(id);
   let wanted = null;
   if (faith) wanted = ["gospel_hombre","gospel_mujer","gospel_infantil","gospel_familia","gospel_pareja","gospel_comunidad","gospel_joven_fe","gospel_adulto_fe","gospel_familia_fe","gospel_youth_faith","gospel_adult_faith","gospel_family_faith"];
   else if (kids) wanted = ["infantil_col","global_familia_es","global_family_en","gospel_infantil","gospel_familia","gospel_joven_fe","gospel_youth_faith"];
