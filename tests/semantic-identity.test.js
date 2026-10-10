@@ -103,8 +103,6 @@ const productConstrainedProfile = _applyStructuralProfile({}, 'HEAVY', { layout:
 ok(productConstrainedProfile.layout.indexOf('Axial centrado') === 0, 'si producto y perfil comparten un layout permitido, debe respetarse');
 ok(productConstrainedProfile.densidad === 'Heavy', 'si producto y perfil comparten densidad permitida, debe respetarse');
 
-console.log((failures.length ? 'FAIL' : 'PASS') + ' semantic-identity (' + checks + ' aserciones, ' + failures.length + ' fallos)');
-failures.forEach(function (msg) { console.error(' - ' + msg); });
 // Contratos de originalidad del prompt CONTACTSHEET.
 // Son pruebas estáticas de instrucciones; no prueban similitud de imágenes generadas.
 const motorSource = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
