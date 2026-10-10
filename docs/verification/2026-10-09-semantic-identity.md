@@ -172,3 +172,14 @@ La suite de CI pasa en el HEAD indicado. No se declara la auditoría completa ni
 - RLS revisado en el SQL versionado: tabla con RLS, lectura/inserción/actualización limitadas por `auth.uid() = user_id`, y privilegios revocados a `anon`. Esto solo valida el archivo del repositorio, no el estado real del proyecto Supabase desplegado.
 
 **Bloqueo de validación real:** falta ejecutar pruebas con dos sesiones/dispositivos y comprobar el esquema/policies activos en Supabase. No se inventan resultados de despliegue.
+
+
+## Actualización — concurrencia de sincronización (2026-10-10)
+
+- [x] La sincronización ya no usa `upsert` para reemplazar silenciosamente una fila remota que otro dispositivo haya modificado después de la lectura.
+- [x] Para filas existentes, la escritura exige que `updated_at` siga coincidiendo con la versión leída; si cambió, aborta y pide volver a sincronizar.
+- [x] Para la primera sincronización, usa `insert`; si otro dispositivo crea la fila antes, el conflicto de unicidad se comunica en vez de sobrescribirla.
+- [x] Se añadieron contratos estáticos para ambos casos.
+- [ ] CI del nuevo HEAD debe pasar antes de considerar esta corrección verificada.
+- [ ] Esto reduce las sobrescrituras concurrentes, pero no es una transacción de fusión en servidor: aún hace falta prueba con dos sesiones reales y revisar que el tipo/precisión de `updated_at` se conserva en el cliente Supabase desplegado.
+- [ ] No se ha validado el estado RLS del proyecto remoto; el SQL del repositorio no demuestra por sí solo lo que está desplegado.
