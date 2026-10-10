@@ -85,7 +85,7 @@
 
     let html = '';
     regions.forEach(function (r) {
-      html += '<option value="' + r.id + '">' + r.label + '</option>';
+      html += '<option value="' + _escapeOptionText(r.id) + '">' + _escapeOptionText(r.label) + '</option>';
     });
     regionSel.innerHTML = html;
     // Reset total al cambiar de mercado (aunque el valor anterior siga válido).
@@ -165,7 +165,7 @@
     }
     audiences.forEach(function (a) {
       const label = (typeof getAudienceLabel === 'function') ? getAudienceLabel(a) : a;
-      html += '<option value="' + a + '">' + label + '</option>';
+      html += '<option value="' + _escapeOptionText(a) + '">' + _escapeOptionText(label) + '</option>';
     });
     audSel.innerHTML = html;
     if (_marketResetPending || prev === 'Auto' || !audiences.includes(prev)) audSel.value = 'Auto';
@@ -204,7 +204,7 @@
     let html = '';
     Object.keys(langs).forEach(function (id) {
       const selected = (!keepManual && !isAutoChoice && id === defaultLang) ? ' selected' : '';
-      html += '<option value="' + id + '"' + selected + '>' + langs[id] + '</option>';
+      html += '<option value="' + _escapeOptionText(id) + '"' + selected + '>' + _escapeOptionText(langs[id]) + '</option>';
     });
     // innerHTML RESETea la selección al primer option: había que restaurar el
     // valor guardado ANTES, no reasignar el valor ya perdido.
