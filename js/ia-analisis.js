@@ -713,7 +713,7 @@
     try {
       if (target.kind === 'gemini') {
         const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
-          encodeURIComponent(target.model) + ':generateContent?key=' + encodeURIComponent(target.key);
+          encodeURIComponent(target.model) + ':generateContent';
         const r = await fetchWithTimeout(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': target.key },
