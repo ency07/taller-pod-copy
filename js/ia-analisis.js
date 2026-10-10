@@ -352,12 +352,28 @@
     try {
       if (typeof getActiveTemplate === 'function') tpl = getActiveTemplate(prod);
     } catch (e) { tpl = null; }
+    el.replaceChildren();
     if (tpl) {
-      el.innerHTML = 'Template activo: <b>' + tpl.nombre.replace(/</g, '&lt;') + '</b> (' + tpl.producto + '). El prompt citará sus zonas. <a href="editor-bancos.html" target="_blank" rel="noopener">Cambiar</a>';
+      el.appendChild(document.createTextNode('Template activo: '));
+      var strong = document.createElement('b');
+      strong.textContent = String(tpl.nombre || '');
+      el.appendChild(strong);
+      el.appendChild(document.createTextNode(' (' + String(tpl.producto || prod) + '). El prompt citará sus zonas. '));
+      var changeLink = document.createElement('a');
+      changeLink.href = 'editor-bancos.html';
+      changeLink.target = '_blank';
+      changeLink.rel = 'noopener';
+      changeLink.textContent = 'Cambiar';
+      el.appendChild(changeLink);
     } else if (prod === 'MOCHILA' || prod === 'TOTE BAG' || prod === 'FUNDA MÓVIL') {
-      el.innerHTML = 'Sin template para ' + prod + '. <a href="editor-bancos.html" target="_blank" rel="noopener">Sube la plantilla</a> para no generar a ciegas.';
-    } else {
-      el.textContent = '';
+      el.appendChild(document.createTextNode('Sin template para ' + prod + '. '));
+      var uploadLink = document.createElement('a');
+      uploadLink.href = 'editor-bancos.html';
+      uploadLink.target = '_blank';
+      uploadLink.rel = 'noopener';
+      uploadLink.textContent = 'Sube la plantilla';
+      el.appendChild(uploadLink);
+      el.appendChild(document.createTextNode(' para no generar a ciegas.'));
     }
     updatePrintMethodOptions();
     if (typeof renderDesignToggle === 'function') renderDesignToggle();
@@ -369,16 +385,21 @@
     if (!sel) return;
     const marketId = _marketId();
     const prev = sel.value;
-    let html = '<option value="">Banco general</option>';
+    sel.replaceChildren();
+    const common = document.createElement('option');
+    common.value = '';
+    common.textContent = 'Banco general';
+    sel.appendChild(common);
     try {
       if (typeof listPersonalBanks === 'function') {
         listPersonalBanks(marketId).forEach(function (b) {
-          html += '<option value="nb:' + b.id + '">' + b.name.replace(/</g, '&lt;') +
-            ' (' + ((b.objects || []).length + (b.phrases || []).length) + ')</option>';
+          const option = document.createElement('option');
+          option.value = 'nb:' + String(b.id || '');
+          option.textContent = String(b.name || '') + ' (' + ((b.objects || []).length + (b.phrases || []).length) + ')';
+          sel.appendChild(option);
         });
       }
     } catch (e) {}
-    sel.innerHTML = html;
     const still = Array.prototype.some.call(sel.options, function (o) { return o.value === prev; });
     if (still) sel.value = prev;
   }
@@ -497,9 +518,21 @@
       }
     } catch (e) {}
     try {
+      // Nunca recuperar claves legacy persistidas en localStorage. Si el revisor
+      // no está cargado, solo aceptamos claves de la sesión de la pestaña actual.
       const raw = localStorage.getItem('pod2_ai_slots');
-      const arr = JSON.parse(raw);
-      if (Array.isArray(arr)) return arr.filter(function (s) { return s && s.key && s.model; });
+      const arr = JSON.parse(raw || 'null');
+      const sessionRaw = (typeof window.sessionStorage !== 'undefined')
+        ? window.sessionStorage.getItem('pod2_ai_session_keys')
+        : null;
+      const sessionKeys = JSON.parse(sessionRaw || 'null');
+      if (Array.isArray(arr) && Array.isArray(sessionKeys)) {
+        return arr.map(function (s, i) {
+          return s && s.model && sessionKeys[i]
+            ? Object.assign({}, s, { key: String(sessionKeys[i]) })
+            : null;
+        }).filter(function (s) { return s && s.key && s.model; });
+      }
     } catch (e) {}
     return [];
   }
