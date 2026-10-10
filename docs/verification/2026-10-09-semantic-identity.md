@@ -136,3 +136,16 @@ Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localiza
 - Las claves Gemini Vision se envían por la cabecera `x-goog-api-key`; el preflight no usa una clave ficticia ni se adjunta la clave a la URL.
 - Se añadió `tests/security-regression.test.js` con contratos estáticos para estas protecciones. Son regresiones de fuente, no sustituyen pruebas en navegador, un análisis completo de todas las inserciones DOM ni una revisión del backend.
 
+
+
+## Actualización — estado de CI y auditoría incremental de selectores (2026-10-10)
+
+- [x] GitHub Actions confirmó **PASS** para la suite de regresión en el commit `f1c29b2a97d8c1fd55e01a1727992c73a9023f39` (push y pull request).
+- [x] La revisión de los HTML dinámicos encontró que las opciones de subnicho se insertaban sin escape explícito en `js/ia-analisis.js`. Ahora se escapan tanto el valor como la etiqueta mediante `_escapeOptionText`.
+- [x] Se añadió una aserción de regresión para ese contrato.
+- [ ] La corrección del selector y la nueva aserción necesitan el resultado de CI del nuevo HEAD antes de considerarse verificadas.
+- [ ] La revisión sigue siendo estática y parcial: aún requiere auditoría manual de todos los sinks dinámicos y sus fuentes, prueba real del flujo de login/sincronización con Supabase y revisión en navegador.
+- [ ] No se ha verificado el proyecto Supabase desplegado ni se ha ejecutado una evaluación visual con imágenes generadas.
+- [ ] Preview Vercel, móvil/navegadores reales y prueba de originalidad visual A/B/C siguen pendientes.
+
+**Límite de cierre:** los tests estáticos y CI verde son necesarios, pero no equivalen a certificar ausencia total de XSS, seguridad de RLS desplegado o calidad visual final. Mantener PR #1 en borrador y no fusionar hasta completar los gates manuales.
