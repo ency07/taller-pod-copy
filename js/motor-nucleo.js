@@ -1378,6 +1378,39 @@ function formatPrompt(result) {
   o += 'DIRECCIÓN: el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo. No mezcles instrucciones incompatibles.\\n';
   o += 'A/B/C: misma identidad semántica, soluciones distintas en composición, silueta, tipografía y relación texto-imagen; no basta recolorear o cambiar textura.\\n';
   if (isVar) o += 'VARIACIÓN: usa la referencia solo para concepto y datos visibles; no copies su composición, silueta, encuadre ni jerarquía. No añadas objetos ni datos. A/HEAVY: masas compactas, contorno grueso, contraste alto. B/SOFT: formas abiertas, aire y transiciones suaves. C/MODERN: geometría limpia, retícula y asimetría controlada. Cambia layout, silueta y arquitectura tipográfica en cada dirección; el estilo elegido se conserva sin anular el perfil. El copy solo sigue el selector de texto. Si dos diseños parecen la misma imagen recoloreada, replantea su estructura.\\n';
+  if (isVar && MOTOR_STATE.imageReference) {
+    const symbolMode = String(MOTOR_STATE.variationOptions.simbolo || 'sustituir');
+    const textMode = String(MOTOR_STATE.variationOptions.textos || 'conservar_palabras');
+    const paletteMode = String(MOTOR_STATE.variationOptions.paleta || 'renovar');
+    o += 'SELECTORES DE VARIACIÓN — OBLIGATORIOS, NO INFERIDOS: ';
+    o += 'SÍMBOLO=' + symbolMode + '; ';
+    if (symbolMode === 'conservar' || symbolMode === 'mantener') {
+      o += 'conserva el símbolo principal reconocible de la referencia; no lo sustituyas. ';
+    } else if (symbolMode === 'reinterpretar') {
+      o += 'conserva el mismo símbolo/objeto, pero redibújalo con una forma y construcción visual distintas; no copies sus contornos exactos. ';
+    } else {
+      o += 'sustituye únicamente el símbolo principal por uno nuevo directamente derivado del concepto autorizado; no agregues objetos secundarios ni cambies el mensaje. ';
+    }
+    o += 'TEXTO=' + textMode + '; ';
+    if (textMode === 'conservar_palabras') {
+      o += 'transcribe y conserva exactamente las palabras legibles de la imagen; no reescribas, traduzcas ni inventes texto. Si una palabra no puede leerse con seguridad, omítela. ';
+    } else if (textMode === 'mismo_mensaje') {
+      o += 'conserva el significado del mensaje, pero redacta una frase nueva y exacta en el idioma del mercado; no añadas datos ni afirmaciones. ';
+    } else if (textMode === 'nuevo') {
+      o += 'crea un copy nuevo, breve y pertinente al concepto y mercado; no inventes datos, nombres, fechas ni citas. ';
+    } else if (textMode === 'sin_texto') {
+      o += 'elimina el texto del arte; no generes letras, números ni microtexto. ';
+    } else {
+      o += 'respeta literalmente la configuración de texto elegida y no inventes palabras. ';
+    }
+    o += 'PALETA=' + paletteMode + '; ';
+    if (paletteMode === 'conservar') {
+      o += 'mantén los colores dominantes de la referencia, ajustando solo contraste necesario para legibilidad. ';
+    } else {
+      o += 'cambia de forma visible la paleta respecto a la referencia; usa la paleta indicada en cada ficha y no recuperes automáticamente los colores originales. ';
+    }
+    o += 'VARIACIÓN VISUAL REAL: crea una nueva solución gráfica basada en la referencia, no una copia ni una limpieza de la misma. Cambia obligatoriamente composición, silueta global, encuadre, distribución de masas y jerarquía tipográfica. Conserva solo los elementos que exigen los selectores. No basta recolorear, cambiar textura, añadir borde ni aplicar filtro. No inventes objetos, texto, datos o símbolos fuera de las reglas anteriores.\\n';
+  }
   o += 'COPY: conserva literalmente el texto proporcionado. Si no hay texto fijado y se permite copy, escribe el texto final exacto en el idioma del mercado; sin placeholders ni microtexto.\\n';
   o += 'SALIDA: produce solo el arte solicitado y los mockups indicados. No añadas paneles explicativos, objetos decorativos, logotipos, firmas ni texto no solicitado.\\n';
   o += 'REGLAS INQUEBRANTABLES:\n';
