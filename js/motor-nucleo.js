@@ -1800,9 +1800,9 @@ window.readStateFromDOM = readStateFromDOM;
     const clear = document.getElementById('btnNewSet');
     ['market', 'region', 'subniche'].forEach(function (id) {
       const control = document.getElementById(id);
-      if (control && !control.dataset.audienceRefreshBound) {
+      if (control && !control.__podAudienceRefreshBound) {
         control.addEventListener('change', refreshAudienceSelector);
-        control.dataset.audienceRefreshBound = '1';
+        control.__podAudienceRefreshBound = true;
       }
     });
     refreshAudienceSelector();
