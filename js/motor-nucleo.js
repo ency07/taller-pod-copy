@@ -1551,36 +1551,75 @@ function setCardLock(sel) {
 
 function rerollSingle(keyLetter) {
   try {
-    if (!LAST_RESULT || !LAST_RESULT.set) { crearLos3Disenos(); return; }
+    if (K.indexOf(keyLetter) === -1) return;
+    if (!LAST_RESULT || !LAST_RESULT.set || !LAST_RESULT.set[keyLetter]) {
+      crearLos3Disenos();
+      return;
+    }
+
     readStateFromDOM();
     var auds = resolveAudiences();
     var others = K.filter(function (x) { return x !== keyLetter; });
-    var best = null, bestScore = -1e9;
+    var current = LAST_RESULT.set[keyLetter];
+    var locksNow = _loadLocks(memLocksMarket(), MOTOR_STATE.product) || {};
+    var chosenStyle = locksNow.estilo && locksNow.estilo[keyLetter] && locksNow.estilo[keyLetter] !== 'Auto'
+      ? locksNow.estilo[keyLetter] : null;
     var fixedIdentity = _isLockedContactSet() ? {
       symbol: LAST_RESULT.set.A.objeto,
       funcionSimbolica: LAST_RESULT.set.A.funcionSimbolica,
       intencionEmocional: LAST_RESULT.set.A.intencionEmocional
     } : null;
+    var best = null, bestScore = -1e9;
+
     for (var i = 0; i < 600; i++) {
       var cand = buildCandidate(auds, fixedIdentity);
-      var v = cand[keyLetter];
-      var clash = others.some(function (o) {
+      var v = cand && cand[keyLetter];
+      if (!v || (chosenStyle && v.estilo !== chosenStyle)) continue;
+
+      // Puntuar conflictos en vez de descartar todos los candidatos:
+      // el dado debe seguir funcionando aunque los pools sean restrictivos.
+      var score = Math.random() * 2;
+      if (v.estilo !== current.estilo) score += 18;
+      if (v.layout !== current.layout) score += 14;
+      if (v.tipografia !== current.tipografia) score += 12;
+      if (v.formaSimbolo !== current.formaSimbolo) score += 10;
+      if (v.integracionTexto !== current.integracionTexto) score += 8;
+      if (v.familiaColor !== current.familiaColor) score += 5;
+      if (v.objeto !== current.objeto && !_isLockedContactSet()) score += 10;
+      if (v.tratamiento !== current.tratamiento) score += 4;
+
+      others.forEach(function (o) {
         var w = LAST_RESULT.set[o];
-        const locksNow = _loadLocks(memLocksMarket(), MOTOR_STATE.product);
-        const explicitlyChosenStyle = !!(locksNow && locksNow.estilo && locksNow.estilo[keyLetter] && locksNow.estilo[keyLetter] !== 'Auto' && locksNow.estilo[keyLetter] === v.estilo);
-        return (w.estilo === v.estilo && !explicitlyChosenStyle) || (!_isLockedContactSet() && w.objeto === v.objeto) || w.layout === v.layout || w.tipografia === v.tipografia || w.integracionTexto === v.integracionTexto || _treatmentKey(w.tratamiento) === _treatmentKey(v.tratamiento);
+        if (w.estilo === v.estilo) score -= 18;
+        if (w.layout === v.layout) score -= 12;
+        if (w.tipografia === v.tipografia) score -= 10;
+        if (w.formaSimbolo === v.formaSimbolo) score -= 8;
+        if (w.integracionTexto === v.integracionTexto) score -= 6;
+        if (w.familiaColor === v.familiaColor) score -= 3;
+        if (_treatmentKey(w.tratamiento) === _treatmentKey(v.tratamiento)) score -= 25;
       });
-      if (clash) continue;
+
       var pat = { estilo: _getStyleBase(v.estilo), formaSimbolo: v.formaSimbolo, tratamiento: String(v.tratamiento).split(':')[0].trim(), layout: String(v.layout).split(':')[0].trim(), familiaColor: v.familiaColor };
       var cf = _findPatternConflicts(pat, memPatternMarket(), MOTOR_STATE.product);
-      var score = (cf.ok ? 100 : 0) - cf.maxMatches * 20 + Math.random() * 5;
-      if (score > bestScore) { bestScore = score; best = v; if (cf.ok) break; }
+      score += (cf.ok ? 8 : 0) - cf.maxMatches * 2;
+
+      var differs = ['estilo','layout','tipografia','formaSimbolo','integracionTexto','familiaColor','objeto'].some(function (field) {
+        return v[field] !== current[field];
+      });
+      if (!differs && !chosenStyle) continue;
+      if (score > bestScore) { bestScore = score; best = v; }
+      if (best && bestScore >= 55) break;
     }
+
     if (!best) {
       var noFitStatus = document.getElementById('status');
-      if (noFitStatus) noFitStatus.innerHTML = '<span class="warn">No encontré otra ficha que respete las diferencias con los selectores actuales. Cambia un bloqueo y vuelve a intentarlo.</span>';
+      if (noFitStatus) noFitStatus.textContent = chosenStyle
+        ? 'El estilo fijado no permite otra ficha distinta con los selectores actuales. Cambia el bloqueo de estilo o ajusta otro selector.'
+        : 'No se encontró una alternativa distinta. Cambia un selector y vuelve a tirar el dado.';
       return;
     }
+
+    // Sustituir únicamente la tarjeta elegida; A/B permanecen intactas al tirar C, etc.
     LAST_RESULT.set[keyLetter] = best;
     try { window.LAST_RESULT = LAST_RESULT; } catch (e) {}
     try { window.V = LAST_RESULT.set; } catch (e) {}
@@ -1590,7 +1629,7 @@ function rerollSingle(keyLetter) {
     var outEl = document.getElementById('out');
     if (outEl) outEl.value = formatPrompt(LAST_RESULT);
     var rerollStatus = document.getElementById('status');
-    if (rerollStatus) rerollStatus.innerHTML = '<span class="good">' + N[K.indexOf(keyLetter)] + ' regenerada. Símbolo, mensaje y función conservados.</span>';
+    if (rerollStatus) rerollStatus.textContent = N[K.indexOf(keyLetter)] + ' regenerada. Las otras dos tarjetas se conservaron.';
   } catch (e) {
     console.warn(e);
     var errorStatus = document.getElementById('status');
