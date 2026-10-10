@@ -1184,14 +1184,40 @@ function getFirstAudienceForRegion(region) {
   return list[0] || "unisex_nacional";
 }
 
-function getAudienceSelectOptions(region) {
-  const options = getAudiencesForRegion(region)
-    .map(function (id) {
-      return '<option value="' + id + '">' + getAudienceLabel(id) + '</option>';
-    })
-    .join("");
+/* Compatibilidad mercado + región + subnicho. Identidad visual y demografía
+   son dimensiones separadas; el motor no deduce una subcultura del género. */
+function getAudiencesForSubniche(subniche, region, marketId) {
+  const market = marketId || (typeof window !== "undefined" && window.MOTOR_STATE ? window.MOTOR_STATE.market : "global_en");
+  const base = getAudiencesForMarketRegion(market, region || "global").filter(function (id) { return !!AUD_PROFILES[id]; });
+  if (!subniche || subniche === "auto" || subniche === "evergreen" || subniche === "temporada") return base;
 
-  return '<option value="Auto">Auto</option>' + options;
+  const id = String(subniche).toLowerCase();
+  const faith = /gospel|faith|fe_popular|semana_santa|easter/.test(id);
+  const kids = /pets|food_drink|gaming_setup|back_to_school|halloween|christmas|easter|infantil|kids/.test(id);
+  const family = /family_milestones|valentines|mothers_day|fathers_day|thanksgiving|christmas|easter|dia_madre_padre|familia_roles_col|navidad_colombia/.test(id);
+  const couple = /valentines|family_milestones|vanlife_nomad|amor_amistad_indep/.test(id);
+  const youth = /skate_culture|gaming_setup|booktok_reader|back_to_school|music_fandom|crypto_web3|ai_tech|streetwear|tattoo_lifestyle|humor_costeno|humor_colombiano|calle_urbano|sonido_ritmo/.test(id);
+  const adult = /professions|coffee_culture|motorcycle_biker|retro_nostalgia|outdoors_nature|travel_adventure|plant_parent|crypto_web3|ai_tech|oficios|emprendimiento|artesania|concreto_ciudad/.test(id);
+  let wanted = null;
+  if (faith) wanted = ["gospel_hombre","gospel_mujer","gospel_infantil","gospel_familia","gospel_pareja","gospel_comunidad","gospel_joven_fe","gospel_adulto_fe","gospel_familia_fe","gospel_youth_faith","gospel_adult_faith","gospel_family_faith"];
+  else if (kids) wanted = ["infantil_col","global_familia_es","global_family_en","gospel_infantil","gospel_familia","gospel_joven_fe","gospel_youth_faith"];
+  else if (family) wanted = ["infantil_col","global_familia_es","global_family_en","gospel_familia","gospel_pareja","gospel_familia_fe","gospel_family_faith","unisex_nacional"];
+  else if (couple) wanted = ["coste_joven_m","coste_joven_f","global_joven_es","global_young_en","gospel_pareja","global_familia_es","global_family_en"];
+  else if (youth) wanted = ["coste_joven_m","coste_joven_f","andino_joven_m","andino_joven_f","global_joven_es","global_young_en","gospel_hombre","gospel_mujer","gospel_joven_fe","gospel_youth_faith","unisex_nacional"];
+  else if (adult) wanted = ["coste_adulto_m","coste_adulta_f","andino_adulto_m","andino_adulta_f","global_adulto_es","global_adult_en","gospel_hombre","gospel_mujer","gospel_adulto_fe","gospel_adult_faith","unisex_nacional"];
+
+  // Subnichos sin restricción demográfica explícita heredan el mercado, no otro mercado.
+  if (!wanted) return base;
+  const compatible = base.filter(function (aud) { return wanted.indexOf(aud) !== -1; });
+  return compatible.length ? compatible : base;
+}
+
+function getAudienceSelectOptions(region, marketId, subniche) {
+  const pool = getAudiencesForSubniche(subniche || "auto", region, marketId);
+  const options = pool.map(function (id) {
+    return '<option value="' + id + '">' + getAudienceLabel(id) + '</option>';
+  }).join("");
+  return '<option value="Auto">Auto — resolver según contexto</option>' + options;
 }
 
 /* Preferencias para las audiencias Gospel canónicas. */
@@ -1232,6 +1258,8 @@ Object.assign(AUD_LAYOUT_PREF, {
 window.AUD_PROFILES = AUD_PROFILES;
 window.getAudiencesForRegion = getAudiencesForRegion;
 window.getAudiencesForMarketRegion = getAudiencesForMarketRegion;
+window.getAudiencesForSubniche = getAudiencesForSubniche;
+window.getAudienceSelectOptions = getAudienceSelectOptions;
 window.AUD_NAMES = AUD_NAMES;
 window.REGION_AUDIENCES = REGION_AUDIENCES;
 window.AUD_HIERARCHY_PREF = AUD_HIERARCHY_PREF;
