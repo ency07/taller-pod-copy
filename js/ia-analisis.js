@@ -100,7 +100,7 @@
   function _subnicheOptions(ids) {
     return ids.map(function (id) {
       const label = (typeof getSubnicheLabel === 'function') ? getSubnicheLabel(id, _marketId()) : id;
-      return '<option value="' + id + '">' + label + '</option>';
+      return '<option value="' + _escapeOptionText(id) + '">' + _escapeOptionText(label) + '</option>';
     }).join('');
   }
 
