@@ -1777,6 +1777,44 @@ window.readStateFromDOM = readStateFromDOM;
 
 /* --- Enlace explícito de controles de la vista Taller --- */
 (function bindTallerControls() {
+  function keepOrDefault(select, preferred, fallback) {
+    if (!select) return fallback;
+    const values = Array.from(select.options).map(function (option) { return option.value; });
+    select.value = values.indexOf(preferred) !== -1 ? preferred : fallback;
+    return select.value;
+  }
+
+  function refreshSubnicheSelector(preserveCurrent) {
+    const marketEl = document.getElementById('market');
+    const regionEl = document.getElementById('region');
+    const subnicheEl = document.getElementById('subniche');
+    if (!marketEl || !regionEl || !subnicheEl) return;
+    if (typeof getSubnicheOptionsHTML !== 'function') return;
+    const market = marketEl.value;
+    const region = regionEl.value;
+    const previous = preserveCurrent ? subnicheEl.value : 'auto';
+    subnicheEl.innerHTML = getSubnicheOptionsHTML(market, 'all', region, previous);
+    keepOrDefault(subnicheEl, previous, 'auto');
+  }
+
+  function refreshContextSelectors(marketChanged) {
+    const marketEl = document.getElementById('market');
+    const regionEl = document.getElementById('region');
+    if (!marketEl || !regionEl) return;
+    const market = marketEl.value;
+
+    if (marketChanged && typeof getRegionOptionsHTML === 'function') {
+      const previousRegion = regionEl.value;
+      regionEl.innerHTML = getRegionOptionsHTML(market, previousRegion);
+      const fallbackRegion = typeof getDefaultRegionForMarket === 'function'
+        ? getDefaultRegionForMarket(market) : 'global';
+      keepOrDefault(regionEl, previousRegion, fallbackRegion);
+    }
+
+    refreshSubnicheSelector(!marketChanged);
+    refreshAudienceSelector();
+  }
+
   function refreshAudienceSelector() {
     const select = document.getElementById('audienceSet');
     if (!select || typeof getAudienceSelectOptions !== 'function') return;
@@ -1798,14 +1836,24 @@ window.readStateFromDOM = readStateFromDOM;
     const director = document.getElementById('btnDirector');
     const build = document.getElementById('btnBuild');
     const clear = document.getElementById('btnNewSet');
-    ['market', 'region', 'subniche'].forEach(function (id) {
-      const control = document.getElementById(id);
-      if (control && !control.__podAudienceRefreshBound) {
-        control.addEventListener('change', refreshAudienceSelector);
-        control.__podAudienceRefreshBound = true;
-      }
-    });
-    refreshAudienceSelector();
+    const market = document.getElementById('market');
+    const region = document.getElementById('region');
+    const subniche = document.getElementById('subniche');
+
+    if (market && !market.__podAudienceRefreshBound) {
+      market.addEventListener('change', function () { refreshContextSelectors(true); });
+      market.__podAudienceRefreshBound = true;
+    }
+    if (region && !region.__podAudienceRefreshBound) {
+      region.addEventListener('change', function () { refreshContextSelectors(false); });
+      region.__podAudienceRefreshBound = true;
+    }
+    if (subniche && !subniche.__podAudienceRefreshBound) {
+      subniche.addEventListener('change', refreshAudienceSelector);
+      subniche.__podAudienceRefreshBound = true;
+    }
+
+    refreshContextSelectors(true);
     if (director && !director.dataset.podBound) {
       director.addEventListener('click', function (event) { event.preventDefault(); crearLos3Disenos(); });
       director.dataset.podBound = '1';
