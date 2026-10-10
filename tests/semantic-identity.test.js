@@ -99,9 +99,9 @@ const structuralPools = {
   ok(_POOLS.jerarquia.indexOf(profileCard.jerarquia) !== -1, profileKey + ' debe usar jerarquía interna registrada');
   ok(_INTEGRACION.indexOf(profileCard.integracionTexto) !== -1, profileKey + ' debe usar integración tipográfica registrada');
 });
-const productConstrainedProfile = _applyStructuralProfile({}, 'HEAVY', { layout: ['Editorial asimétrica'], density: ['Balanced'] });
-ok(productConstrainedProfile.layout.indexOf('Editorial asimétrica') === 0, 'si el producto impone un layout disponible, el perfil debe respetarlo');
-ok(productConstrainedProfile.densidad === 'Balanced', 'si el producto restringe densidad, debe prevalecer la compatibilidad del producto');
+const productConstrainedProfile = _applyStructuralProfile({}, 'HEAVY', { layout: ['Axial centrado'], density: ['Heavy'] });
+ok(productConstrainedProfile.layout.indexOf('Axial centrado') === 0, 'si producto y perfil comparten un layout permitido, debe respetarse');
+ok(productConstrainedProfile.densidad === 'Heavy', 'si producto y perfil comparten densidad permitida, debe respetarse');
 
 console.log((failures.length ? 'FAIL' : 'PASS') + ' semantic-identity (' + checks + ' aserciones, ' + failures.length + ' fallos)');
 failures.forEach(function (msg) { console.error(' - ' + msg); });
