@@ -82,6 +82,27 @@ const autoBrief = _resolveExplorationBrief();
 ok(!autoBrief.familyId || _marketSubnicheIds().indexOf(autoBrief.familyId) !== -1, 'Auto debe resolver solo una familia registrada en el mercado activo');
 MOTOR_STATE.workflowMode = 'new';
 
+const structuralPools = {
+  HEAVY: { layout: _STRUCTURAL_PROFILES.HEAVY.layout, type: _STRUCTURAL_PROFILES.HEAVY.type, density: ['Heavy'], form: _STRUCTURAL_PROFILES.HEAVY.form },
+  SOFT: { layout: _STRUCTURAL_PROFILES.SOFT.layout, type: _STRUCTURAL_PROFILES.SOFT.type, density: ['Minimal', 'Balanced'], form: _STRUCTURAL_PROFILES.SOFT.form },
+  MODERN: { layout: _STRUCTURAL_PROFILES.MODERN.layout, type: _STRUCTURAL_PROFILES.MODERN.type, density: ['Minimal', 'Balanced'], form: _STRUCTURAL_PROFILES.MODERN.form }
+};
+['HEAVY', 'SOFT', 'MODERN'].forEach(function (profileKey) {
+  const profileCard = _applyStructuralProfile({}, profileKey, {});
+  const spec = structuralPools[profileKey];
+  ok(profileCard.perfilEstructural === profileKey, profileKey + ' debe declararse como perfil estructural explícito');
+  ok(spec.layout.some(function (hint) { return profileCard.layout.indexOf(hint) === 0; }), profileKey + ' debe seleccionar un layout permitido por el perfil');
+  ok(spec.type.some(function (hint) { return profileCard.tipografia.indexOf(hint) === 0; }), profileKey + ' debe seleccionar tipografía permitida por el perfil');
+  ok(spec.density.indexOf(profileCard.densidad) !== -1, profileKey + ' debe seleccionar densidad coherente');
+  ok(spec.form.some(function (hint) { return profileCard.formaSimbolo === hint; }), profileKey + ' debe seleccionar una forma compatible');
+  ok(_POOLS.negativeSpace.indexOf(profileCard.negativeSpace) !== -1, profileKey + ' debe usar espacio negativo del pool registrado');
+  ok(_POOLS.jerarquia.indexOf(profileCard.jerarquia) !== -1, profileKey + ' debe usar jerarquía interna registrada');
+  ok(_INTEGRACION.indexOf(profileCard.integracionTexto) !== -1, profileKey + ' debe usar integración tipográfica registrada');
+});
+const productConstrainedProfile = _applyStructuralProfile({}, 'HEAVY', { layout: ['Editorial asimétrica'], density: ['Balanced'] });
+ok(productConstrainedProfile.layout.indexOf('Editorial asimétrica') === 0, 'si el producto impone un layout disponible, el perfil debe respetarlo');
+ok(productConstrainedProfile.densidad === 'Balanced', 'si el producto restringe densidad, debe prevalecer la compatibilidad del producto');
+
 console.log((failures.length ? 'FAIL' : 'PASS') + ' semantic-identity (' + checks + ' aserciones, ' + failures.length + ' fallos)');
 failures.forEach(function (msg) { console.error(' - ' + msg); });
 process.exit(failures.length ? 1 : 0);
