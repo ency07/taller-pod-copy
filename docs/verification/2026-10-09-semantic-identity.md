@@ -39,7 +39,6 @@
 ## Estado de cierre
 No cerrar esta tarea hasta ejecutar las pruebas, revisar el diff de la rama y comprobar la generación con conceptos representativos. No se ha hecho merge a `main`.
 
-
 ## Actualización — selectores de variación (2026-10-09)
 
 Se corrigieron en esta rama dos fallos observados en un prompt real:
@@ -61,7 +60,6 @@ Se corrigieron en esta rama dos fallos observados en un prompt real:
 
 No integrar en main hasta ejecutar los tests y comprobar el Preview.
 
-
 ## Actualización — originalidad visual, contratos de selectores y revisión inicial de DOM (2026-10-09)
 
 ### Cambios en esta iteración
@@ -72,7 +70,7 @@ No integrar en main hasta ejecutar los tests y comprobar el Preview.
 - `js/motor-nucleo.js`: el render de muestras valida el color como hexadecimal antes de insertarlo en CSS; el error de regeneración pasa a `textContent`; `escHtml` escapa también apóstrofos.
 
 ### Verificación disponible
-- [x] Rama aislada; `main` sigue sin cambios.
+- [x] Cambios aislados en `fix/redteam-semantic-identity`.
 - [x] Relectura de `js/motor-nucleo.js` e `index.html` en la rama.
 - [x] Análisis sintáctico del texto completo de `motor-nucleo.js` con compilación JS sin ejecución: PASS. Esto no sustituye `node --check` en el entorno real.
 - [x] Confirmado que PR #1 sigue abierto, en borrador y sin fusionar.
@@ -87,14 +85,12 @@ No integrar en main hasta ejecutar los tests y comprobar el Preview.
 ### Siguiente gate
 Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localizar los módulos de credenciales y Supabase, ejecutar los tests desde un checkout con Node y después probar el Preview de Vercel. No fusionar hasta pasar esos gates.
 
-
 ## Actualización — eliminar bloqueo para conceptos descriptivos (2026-10-09)
 
 - `js/motor-nucleo.js`: si no existe una coincidencia inequívoca en el banco, el concepto completo pasa a ser el ancla semántica. Así se aceptan escenas, lugares, relaciones y conceptos con varios elementos sin seleccionar un objeto arbitrario.
 - El bloqueo queda reservado para el caso en que el campo de concepto está vacío.
 - `tests/semantic-identity.test.js`: actualizados los casos para cubrir conceptos descriptivos, relaciones entre símbolos y concepto ausente.
 - Verificación disponible: compilación sintáctica del contenido de los dos archivos revisados, pendiente ejecutar el test con Node real y probar el Preview.
-
 
 ## Actualización — DEBT-003: perfiles estructurales (2026-10-09)
 
@@ -112,7 +108,6 @@ Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localiza
 - [ ] CI de sintaxis y suite completa tras este commit.
 - [ ] Validación visual real en varios estilos, productos y mercados.
 
-
 ## Actualización — DEBT-004/005: endurecimiento inicial del DOM y claves (2026-10-10)
 
 ### Cambios implementados en la rama
@@ -127,7 +122,6 @@ Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localiza
 - Supabase/RLS, conflictos de sincronización, UX móvil y Vercel Preview siguen pendientes de validar.
 - El CI verde del head anterior (`c26ad53af3f01bc96acbb8dd59f19b86211f3e60`) no valida estos cambios; quedan a la espera de su propio run.
 
-
 ### Actualización de seguridad — claves IA y estados DOM (2026-10-10)
 - Las claves para proveedores IA se guardan únicamente en `sessionStorage` durante la pestaña actual. En `localStorage` se mantiene la configuración de proveedor/modelo, con `key: ""`.
 - Al leer la configuración se limpian claves heredadas que hayan quedado previamente en la configuración persistente.
@@ -135,8 +129,6 @@ Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localiza
 - Los mensajes de estado heredados se convierten a texto plano y solo se conserva una clase visual de una allowlist; no se renderiza HTML dinámico.
 - Las claves Gemini Vision se envían por la cabecera `x-goog-api-key`; el preflight no usa una clave ficticia ni se adjunta la clave a la URL.
 - Se añadió `tests/security-regression.test.js` con contratos estáticos para estas protecciones. Son regresiones de fuente, no sustituyen pruebas en navegador, un análisis completo de todas las inserciones DOM ni una revisión del backend.
-
-
 
 ## Actualización — estado de CI y auditoría incremental de selectores (2026-10-10)
 
@@ -150,7 +142,6 @@ Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localiza
 
 **Límite de cierre:** los tests estáticos y CI verde son necesarios, pero no equivalen a certificar ausencia total de XSS, seguridad de RLS desplegado o calidad visual final. Mantener PR #1 en borrador y no fusionar hasta completar los gates manuales.
 
-
 ## Actualización — segunda pasada de seguridad estática (2026-10-10)
 
 - [x] CI verde para el commit `6c7a3d6b1b4389e8de45e9c0d7a23dec4692b5ec`: push y pull request. [Push](https://github.com/ency07/taller-pod-copy/actions/runs/38019900866) · [PR](https://github.com/ency07/taller-pod-copy/actions/runs/38019904939).
@@ -163,16 +154,12 @@ Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localiza
 
 La suite de CI pasa en el HEAD indicado. No se declara la auditoría completa ni se fusiona el PR.
 
-
 ## Actualización — controles estáticos de sincronización (2026-10-10)
 
 - Se añadieron pruebas para exigir sesión autenticada antes de sincronizar, filtrar lecturas por `user.id`, propagar errores de lectura/escritura y usar `mergeMemoryObjects` cuando esté disponible.
 - CI para el nuevo commit: pendiente en este momento; no marcar esta actualización como verificada hasta que el workflow termine.
 - Revisión de implementación: la fusión lee `updated_at`, pero no usa una condición atómica para evitar que dos dispositivos escriban simultáneamente. Existe riesgo de última escritura gana durante carreras concurrentes; se debe resolver con control de versión/función RPC atómica antes de certificar sincronización multi-dispositivo.
 - RLS revisado en el SQL versionado: tabla con RLS, lectura/inserción/actualización limitadas por `auth.uid() = user_id`, y privilegios revocados a `anon`. Esto solo valida el archivo del repositorio, no el estado real del proyecto Supabase desplegado.
-
-**Bloqueo de validación real:** falta ejecutar pruebas con dos sesiones/dispositivos y comprobar el esquema/policies activos en Supabase. No se inventan resultados de despliegue.
-
 
 ## Actualización — concurrencia de sincronización (2026-10-10)
 
@@ -183,3 +170,14 @@ La suite de CI pasa en el HEAD indicado. No se declara la auditoría completa ni
 - [ ] CI del nuevo HEAD debe pasar antes de considerar esta corrección verificada.
 - [ ] Esto reduce las sobrescrituras concurrentes, pero no es una transacción de fusión en servidor: aún hace falta prueba con dos sesiones reales y revisar que el tipo/precisión de `updated_at` se conserva en el cliente Supabase desplegado.
 - [ ] No se ha validado el estado RLS del proyecto remoto; el SQL del repositorio no demuestra por sí solo lo que está desplegado.
+
+## Actualización — auditoría estática incremental de sinks DOM (2026-10-10)
+
+- [x] CI de regresión en el HEAD previo al cambio documental: **PASS** en commit `f31c27ddf75e0d814664d634e8fc012d9c0ab78d` (workflow `Node regression tests`, run `38021821568`).
+- [x] Se revisaron los usos activos de `innerHTML` en `editor-bancos.html`, `motor-lenguajes-visuales.html`, `js/ia-analisis.js`, `js/ia-revisor.js`, `js/motor-nucleo.js` y `js/sync-supabase.js`, además de los módulos activos de datos/navegación.
+- [x] En los sinks revisados, los valores de usuario/importación mostrados en texto o atributos se escapan o se insertan mediante `textContent`; los colores interpolados usan una validación hexadecimal. Los sinks restantes observados construyen etiquetas de listas/selectores con catálogos fijos o mensajes constantes.
+- [ ] No se ejecutó un ataque XSS real en navegador ni se validaron todas las combinaciones de datos importados; esta pasada no certifica ausencia total de XSS.
+- [ ] Sigue pendiente probar el flujo visual y de importación en un navegador real, y validar Preview Vercel y ES/EN.
+- [ ] La validación desplegada de Supabase y sus pruebas con dos sesiones se mantiene intencionalmente para el último bloque.
+
+**Resultado de esta pasada:** no apareció una nueva interpolación HTML sin escape que justificara otro cambio de código dentro del alcance inspeccionado. Se registra el resultado y se continúa con el siguiente bloque; PR #1 sigue en borrador y `main` permanece intacto.
