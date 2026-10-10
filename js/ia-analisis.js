@@ -446,19 +446,18 @@
     });
   }
 
-  /* Lee el slot Gemini del MISMO almacén que el panel de claves (ia-revisor.js:
-     SLOTS_KEY 'pod2_ai_slots'). Antes leía 'pod_u_ai_slots', llave que ningún
-     código escribe, así que la visión nunca encontraba la clave configurada.
-     (Compatibilidad: el flujo nuevo usa getVisionSlots + pickVisionTarget.) */
+  /* Legacy helper: no se aceptan claves persistidas en localStorage. */
   function getGeminiSlot() {
     try {
       const raw = localStorage.getItem('pod2_ai_slots');
-      if (!raw) return null;
-      const slots = JSON.parse(raw);
-      if (!Array.isArray(slots)) return null;
-      return slots.find(function (s) {
-        return s && s.provider === 'Gemini' && s.key && s.model;
-      }) || null;
+      const slots = JSON.parse(raw || 'null');
+      const sessionKeys = (typeof window.sessionStorage !== 'undefined')
+        ? JSON.parse(window.sessionStorage.getItem('pod2_ai_session_keys') || 'null')
+        : null;
+      if (!Array.isArray(slots) || !Array.isArray(sessionKeys)) return null;
+      const index = slots.findIndex(function (s) { return s && s.provider === 'Gemini' && s.model; });
+      if (index < 0 || !sessionKeys[index]) return null;
+      return Object.assign({}, slots[index], { key: String(sessionKeys[index]) });
     } catch (e) {
       return null;
     }
