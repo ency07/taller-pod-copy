@@ -149,3 +149,16 @@ Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localiza
 - [ ] Preview Vercel, móvil/navegadores reales y prueba de originalidad visual A/B/C siguen pendientes.
 
 **Límite de cierre:** los tests estáticos y CI verde son necesarios, pero no equivalen a certificar ausencia total de XSS, seguridad de RLS desplegado o calidad visual final. Mantener PR #1 en borrador y no fusionar hasta completar los gates manuales.
+
+
+## Actualización — segunda pasada de seguridad estática (2026-10-10)
+
+- [x] CI verde para el commit `6c7a3d6b1b4389e8de45e9c0d7a23dec4692b5ec`: push y pull request. [Push](https://github.com/ency07/taller-pod-copy/actions/runs/38019900866) · [PR](https://github.com/ency07/taller-pod-copy/actions/runs/38019904939).
+- [x] `editor-bancos.html`: escapado de valor/etiqueta al construir el selector de mercados y de valor/etiqueta para subnichos de temporada. Se añadieron contratos estáticos.
+- [x] Revisión de los sinks `innerHTML` encontrados en `js/motor-nucleo.js`, `js/ia-analisis.js`, `js/ia-revisor.js`, `js/sync-supabase.js`, `editor-bancos.html` y `motor-lenguajes-visuales.html`. Los sinks de estado revisados usan mensajes constantes; las tarjetas de motor escapan los campos dinámicos y los colores pasan por validación. Los paneles IA/sync revisados escapan los valores que interpolan en atributos.
+- [x] Búsqueda adicional en módulos de datos y navegación sin encontrar asignaciones directas a `innerHTML`/`outerHTML` en los archivos examinados.
+- [ ] La revisión sigue siendo estática; no equivale a prueba adversarial XSS en navegador. El flujo alternativo de opciones de subnicho que delega en `getSubnicheOptionsHTML` debe mantenerse cubierto si cambia su implementación.
+- [ ] Supabase desplegado/RLS y pruebas de sincronización multiusuario siguen sin verificarse.
+- [ ] Preview de Vercel, pruebas móvil/navegadores y evaluación visual real de A/B/C siguen pendientes.
+
+La suite de CI pasa en el HEAD indicado. No se declara la auditoría completa ni se fusiona el PR.
