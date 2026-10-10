@@ -1222,12 +1222,12 @@ function getAudienceSelectOptions(region, marketId, subniche) {
 
 /* Preferencias para las audiencias Gospel canónicas. */
 Object.assign(AUD_STYLE_PREF, {
-  gospel_hombre: ["Grabado / Linóleo", "Vintage Desgastado", "Minimal Modern", "Brutalist"],
-  gospel_mujer: ["Hand-Drawn", "Grabado / Linóleo", "Minimal Modern", "Folk Popular"],
-  gospel_infantil: ["Kids Storybook", "Hand-Drawn", "Collage Cut-Paper"],
-  gospel_familia: ["Hand-Drawn", "Minimal Modern", "Folk Popular"],
-  gospel_pareja: ["Hand-Drawn", "Minimal Modern", "Vintage Desgastado"],
-  gospel_comunidad: ["Grabado / Linóleo", "Minimal Modern", "Vintage Desgastado"]
+  gospel_hombre: ["Grabado / Linóleo", "Vintage Desgastado", "Minimal Modern", "Brutalist", "Hand-Drawn", "Retro 70s", "Collage Cut-Paper"],
+  gospel_mujer: ["Hand-Drawn", "Grabado / Linóleo", "Minimal Modern", "Folk Popular", "Vintage Desgastado", "Collage Cut-Paper", "Acuarela Suelta"],
+  gospel_infantil: ["Kids Storybook", "Hand-Drawn", "Collage Cut-Paper", "Folk Popular", "Minimal Modern", "Retro 70s"],
+  gospel_familia: ["Hand-Drawn", "Minimal Modern", "Folk Popular", "Kids Storybook", "Collage Cut-Paper", "Vintage Desgastado"],
+  gospel_pareja: ["Hand-Drawn", "Minimal Modern", "Vintage Desgastado", "Folk Popular", "Retro 70s", "Collage Cut-Paper"],
+  gospel_comunidad: ["Grabado / Linóleo", "Minimal Modern", "Vintage Desgastado", "Brutalist", "Hand-Drawn", "Folk Popular"]
 });
 Object.assign(AUD_HIERARCHY_PREF, {
   gospel_hombre: ["OBJETO_DOMINANTE", "BALANCEADO"],
