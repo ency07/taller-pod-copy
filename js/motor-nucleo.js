@@ -972,10 +972,10 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     usedAxes.tratamiento.push(v.tratamiento);
 
     // En contactos y exploración, A/B/C son perfiles estructurales, no solo nombres.
-    const structuralKey = (contactIdentity || MOTOR_STATE.workflowMode === 'explore')
-      ? _CONTACT_TREATMENT_ORDER[k]
-      : _treatmentKey(v.tratamiento);
-    _applyStructuralProfile(v, structuralKey, productBias);
+    if (contactIdentity || MOTOR_STATE.workflowMode === 'explore') {
+      const structuralKey = _CONTACT_TREATMENT_ORDER[k];
+      _applyStructuralProfile(v, structuralKey, productBias);
+    }
 
     v.integracionTexto = _pickFresh(_INTEGRACION, _INTEGRACION, usedAxes.integracionTexto);
     usedAxes.integracionTexto.push(v.integracionTexto);
