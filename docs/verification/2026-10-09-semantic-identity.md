@@ -126,3 +126,13 @@ Revisar el diff completo y el flujo de `buildCandidate`/`formatPrompt`, localiza
 - No se afirma evaluación de similitud de imágenes: requiere artefactos generados y un evaluador/métrica explícitos.
 - Supabase/RLS, conflictos de sincronización, UX móvil y Vercel Preview siguen pendientes de validar.
 - El CI verde del head anterior (`c26ad53af3f01bc96acbb8dd59f19b86211f3e60`) no valida estos cambios; quedan a la espera de su propio run.
+
+
+### Actualización de seguridad — claves IA y estados DOM (2026-10-10)
+- Las claves para proveedores IA se guardan únicamente en `sessionStorage` durante la pestaña actual. En `localStorage` se mantiene la configuración de proveedor/modelo, con `key: ""`.
+- Al leer la configuración se limpian claves heredadas que hayan quedado previamente en la configuración persistente.
+- La UI identifica explícitamente el campo de clave como «solo esta pestaña».
+- Los mensajes de estado heredados se convierten a texto plano y solo se conserva una clase visual de una allowlist; no se renderiza HTML dinámico.
+- Las claves Gemini Vision se envían por la cabecera `x-goog-api-key`; el preflight no usa una clave ficticia ni se adjunta la clave a la URL.
+- Se añadió `tests/security-regression.test.js` con contratos estáticos para estas protecciones. Son regresiones de fuente, no sustituyen pruebas en navegador, un análisis completo de todas las inserciones DOM ni una revisión del backend.
+
