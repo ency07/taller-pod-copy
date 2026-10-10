@@ -117,6 +117,14 @@ ok(motorSource.includes('CONTRATO CREATIVO: conserva concepto, familia, función
 ok(motorSource.includes('el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo.'), 'el tratamiento debe subordinarse al estilo artístico sin reemplazarlo');
 ok(motorSource.includes('const explicitlyChosenStyle = !!(locksNow && locksNow.estilo && locksNow.estilo[keyLetter] && locksNow.estilo[keyLetter] !== \'Auto\' && locksNow.estilo[keyLetter] === v.estilo);'), 'una selección de estilo explícita no debe descartarse solo por coincidir con otra tarjeta');
 ok(motorSource.includes('No añadas paneles explicativos, objetos decorativos, logotipos, firmas ni texto no solicitado.'), 'el prompt debe limitar añadidos no solicitados para reducir alucinaciones visuales');
+const rerollStart = motorSource.indexOf('function rerollSingle(keyLetter) {');
+const rerollEnd = motorSource.indexOf('/* --- Renderizado de gates --- */', rerollStart);
+const rerollSource = motorSource.slice(rerollStart, rerollEnd);
+ok(rerollStart >= 0 && rerollEnd > rerollStart, 'rerollSingle debe existir como función delimitada');
+ok(rerollSource.includes('var score = Math.random() * 2;'), 'el dado individual debe puntuar alternativas en vez de rechazar todos los conflictos');
+ok(rerollSource.includes('LAST_RESULT.set[keyLetter] = best;'), 'el dado individual debe reemplazar solo la tarjeta solicitada');
+ok(rerollSource.includes('Las otras dos tarjetas se conservaron.'), 'el estado debe confirmar que las otras dos tarjetas no se regeneraron');
+
 
 
 console.log((failures.length ? 'FAIL' : 'PASS') + ' semantic-identity (' + checks + ' aserciones, ' + failures.length + ' fallos)');
