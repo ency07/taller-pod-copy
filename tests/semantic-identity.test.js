@@ -130,6 +130,16 @@ ok(rerollSource.includes('Las otras dos tarjetas se conservaron.'), 'el estado d
 
 
 
+// Compatibilidad entre técnica artística y perfil estructural: reglas visibles y sin contradicción.
+const heavyWatercolor = _styleTreatmentDirective('Acuarela Suelta', 'HEAVY');
+const softGrunge = _styleTreatmentDirective('Dark Tattoo / Grunge', 'SOFT');
+const modernNeon = _styleTreatmentDirective('Neon Glitch', 'MODERN');
+ok(heavyWatercolor.includes('masas visuales claras') && heavyWatercolor.includes('efectos de color'), 'HEAVY debe contener la técnica acuarelada sin perder masas y bordes');
+ok(softGrunge.includes('aire, formas abiertas') && softGrunge.includes('textura y la trama son selectivas'), 'SOFT debe limitar textura grunge/tattoo y preservar espacio negativo');
+ok(modernNeon.includes('geometría legible') && modernNeon.includes('efectos de color o atmósfera quedan contenidos'), 'MODERN debe contener efectos neon dentro de una estructura geométrica legible');
+ok(_styleTreatmentDirective('Kids Storybook', 'HEAVY').includes('no lo convierte en otro género visual'), 'HEAVY debe respetar la identidad de un estilo infantil/artesanal');
+ok(motorSource.includes('COMPATIBILIDAD ESTILO × TRATAMIENTO:'), 'cada tarjeta debe incluir la directriz de compatibilidad estilo-tratamiento');
+
 console.log((failures.length ? 'FAIL' : 'PASS') + ' semantic-identity (' + checks + ' aserciones, ' + failures.length + ' fallos)');
 failures.forEach(function (msg) { console.error(' - ' + msg); });
 process.exit(failures.length ? 1 : 0);
