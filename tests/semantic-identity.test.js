@@ -140,6 +140,15 @@ ok(modernNeon.includes('geometría legible') && modernNeon.includes('efectos de 
 ok(_styleTreatmentDirective('Kids Storybook', 'HEAVY').includes('no lo convierte en otro género visual'), 'HEAVY debe respetar la identidad de un estilo infantil/artesanal');
 ok(motorSource.includes('COMPATIBILIDAD ESTILO × TRATAMIENTO:'), 'cada tarjeta debe incluir la directriz de compatibilidad estilo-tratamiento');
 
+// Contratos de idioma del arte final y adaptabilidad de la vista previa móvil.
+ok(getLanguageDirective('global_en', 'en').includes('natural, native English'), 'el selector English debe producir directiva de texto nativo en inglés');
+ok(getLanguageDirective('gospel_es', 'es').includes('español natural'), 'Gospel ES debe producir directiva de texto natural en español');
+ok(getLanguageDirective('diaspora_col', 'spanglish').includes('bilingual Spanish/English diaspora'), 'Spanglish debe respetar el contexto bilingüe de diáspora');
+const cssSource = fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8');
+ok(/@media \(max-width: 900px\)[\s\S]*?\.main-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/.test(cssSource), 'en móvil la vista previa debe pasar a una sola columna');
+ok(/@media \(max-width: 900px\)[\s\S]*?\.card-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/.test(cssSource), 'en móvil las tarjetas A/B/C deben apilarse sin columnas estrechas');
+ok(/@media \(max-width: 1100px\)[\s\S]*?\.card-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/.test(cssSource), 'en tablet la vista previa debe reducirse a dos columnas');
+
 console.log((failures.length ? 'FAIL' : 'PASS') + ' semantic-identity (' + checks + ' aserciones, ' + failures.length + ' fallos)');
 failures.forEach(function (msg) { console.error(' - ' + msg); });
 process.exit(failures.length ? 1 : 0);
