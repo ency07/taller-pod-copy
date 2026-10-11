@@ -802,7 +802,7 @@ function _applyStructuralProfile(v, profileKey, productBias, audienceProfile) {
       return profile.form.some(function (h) { return x === h; }) && audience.formaPref.indexOf(x) !== -1;
     })
     : [];
-  v.formaSimbolo = _pick(audienceForms.length ? audienceForms : _profilePick(_FORMAS, profile.form, _FORMAS));
+  v.formaSimbolo = audienceForms.length ? _pick(audienceForms) : _profilePick(_FORMAS, profile.form, _FORMAS);
   v.integracionTexto = _profilePick(_INTEGRACION, profile.integration, _INTEGRACION);
   v.perfilEstructural = String(profileKey).toUpperCase();
   return v;
