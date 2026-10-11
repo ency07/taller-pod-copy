@@ -130,6 +130,18 @@ const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const products = ['CAMISETA SOFT','CAMISETA APPAREL','HOODIE','GORRA','MUG','MOCHILA','TOTE BAG','FUNDA MÓVIL','ILUSTRACION PREMIUM APPAREL','DISPLATE'];
 products.forEach(function (product) { ok(index.includes('<option>' + product + '</option>') || index.includes('<option selected>' + product + '</option>'), 'selector UI debe conservar el producto ' + product); });
 const productSource = fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8');
+vm.runInThisContext(productSource, { filename: 'data-productos.js' });
+const printProducts = ['CAMISETA SOFT','CAMISETA APPAREL','HOODIE','GORRA','MUG','MOCHILA','TOTE BAG','FUNDA MÓVIL','ILUSTRACION PREMIUM APPAREL','DISPLATE'];
+printProducts.forEach(function (product) {
+  const methods = getPrintMethods(product);
+  ok(Array.isArray(methods), product + ': debe declarar métodos de impresión como lista');
+});
+ok(JSON.stringify(getPrintMethods('MUG')) === JSON.stringify(['auto','sublimacion']), 'MUG solo debe ofrecer auto y sublimación');
+ok(JSON.stringify(getPrintMethods('FUNDA MÓVIL')) === JSON.stringify(['auto','impresion']), 'FUNDA MÓVIL solo debe ofrecer auto e impresión');
+ok(JSON.stringify(getPrintMethods('DISPLATE')) === JSON.stringify(['auto','impresion']), 'DISPLATE solo debe ofrecer auto e impresión mural');
+ok(getPrintMethods('GORRA').length === 0, 'GORRA debe usar el selector de acabado específico, no el selector general');
+ok(getPrintPrepRule('GORRA', 'bordado').includes('GORRA'), 'el acabado de gorra debe resolver su regla técnica específica');
+
 products.forEach(function (product) {
   ok(productSource.includes('"' + product + '"'), 'datos de producto deben contemplar ' + product);
 });
