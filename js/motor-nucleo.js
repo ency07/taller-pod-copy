@@ -212,7 +212,18 @@ function resolveAudiences() {
     const requested = base !== 'Auto' && pool.indexOf(base) !== -1 ? base : '';
     const lockSet = _loadLocks(market, MOTOR_STATE.product);
     const lockedA = lockSet && lockSet.audiencia && lockSet.audiencia.A;
-    const shared = requested || (lockedA && lockedA !== 'Auto' && pool.indexOf(lockedA) !== -1 ? lockedA : '') || _pick(pool) || pool[0] || '';
+    // En Auto, la audiencia no debe cambiar aleatoriamente cada vez que se pulsa
+    // "Crear" o "Validar". Elegirla determinísticamente para el mismo contexto.
+    const stableContext = [
+      market, region, MOTOR_STATE.subniche, MOTOR_STATE.product,
+      MOTOR_STATE.concept, MOTOR_STATE.message
+    ].map(function (value) { return String(value || '').trim().toLowerCase(); }).join('|');
+    let stableHash = 0;
+    for (let i = 0; i < stableContext.length; i++) {
+      stableHash = ((stableHash << 5) - stableHash + stableContext.charCodeAt(i)) | 0;
+    }
+    const stableAuto = pool.length ? pool[Math.abs(stableHash) % pool.length] : '';
+    const shared = requested || (lockedA && lockedA !== 'Auto' && pool.indexOf(lockedA) !== -1 ? lockedA : '') || stableAuto || pool[0] || '';
     return { A: shared, B: shared, C: shared };
   }
 
@@ -1623,6 +1634,45 @@ function renderCards(result) {
   });
 }
 
+/* --- Matriz comparativa: reconstruirla siempre a partir de las fichas visibles --- */
+function renderMatrix(result) {
+  const root = document.getElementById('matrix');
+  if (!root) return;
+  if (!result || !result.set) {
+    root.innerHTML = '<div class="empty-state">La matriz aparecerá después de crear los diseños.</div>';
+    return;
+  }
+
+  const set = result.set;
+  const columns = [
+    ['Dirección', function (v, k) { return N[K.indexOf(k)] + ' · ' + _treatmentKey(v.tratamiento); }],
+    ['Audiencia', function (v) { return v.audiencia; }],
+    ['Estilo', function (v) { return v.estilo; }],
+    ['Jerarquía', function (v) { return v.jerarquiaVisual; }],
+    ['Objeto / símbolo', function (v) { return v.objeto; }],
+    ['Layout', function (v) { return String(v.layout || '').split(':')[0]; }],
+    ['Tipografía', function (v) { return v.tipografia; }],
+    ['Tratamiento', function (v) { return v.tratamiento; }],
+    ['Forma del símbolo', function (v) { return v.formaSimbolo; }],
+    ['Integración texto-imagen', function (v) { return v.integracionTexto; }],
+    ['Color', function (v) { return v.familiaColor; }]
+  ];
+
+  let html = '<table class="comparison-matrix"><thead><tr><th scope="col">Atributo</th>';
+  K.forEach(function (k, i) { html += '<th scope="col">' + escHtml(N[i]) + '</th>'; });
+  html += '</tr></thead><tbody>';
+  columns.forEach(function (column) {
+    html += '<tr><th scope="row">' + escHtml(column[0]) + '</th>';
+    K.forEach(function (k) {
+      const value = column[1](set[k] || {}, k);
+      html += '<td>' + escHtml(value == null || value === '' ? '—' : String(value)) + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  root.innerHTML = html;
+}
+
 function setCardLock(sel) {
   try {
     var k = sel.getAttribute('data-card');
@@ -1709,6 +1759,7 @@ function rerollSingle(keyLetter) {
     _recordPattern(best, memPatternMarket(), MOTOR_STATE.product, { serie: MOTOR_STATE.serie, reroll: keyLetter });
     renderCards(LAST_RESULT);
     renderGates({ score: scoreSet(LAST_RESULT.set) });
+    renderMatrix(LAST_RESULT);
     var outEl = document.getElementById('out');
     if (outEl) outEl.value = formatPrompt(LAST_RESULT);
     var rerollStatus = document.getElementById('status');
@@ -1751,6 +1802,7 @@ function crearLos3Disenos() {
 
     renderCards(result);
     renderGates(result);
+    renderMatrix(result);
 
     const prompt = formatPrompt(result);
     if (outEl) outEl.value = prompt;
@@ -1793,6 +1845,7 @@ function limpiarFichas() {
   const status = document.getElementById('status');
   if (cards) cards.innerHTML = '<div class="empty-state">Genera los 3 diseños para ver las fichas aquí.</div>';
   if (gate) gate.innerHTML = '<span class="badge">Aún no hay diseños</span>';
+  renderMatrix(null);
   if (out) out.value = '';
   if (status) status.textContent = 'Fichas limpias. La memoria de patrones sigue activa.';
 }
