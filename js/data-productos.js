@@ -212,6 +212,10 @@ function getPrintPrepRule(product, method) {
   }
   if (chosen === "sublimacion" && product === "MUG") rule += " Aplicar solo a taza con recubrimiento apto para sublimacion; confirmarlo con el proveedor.";
   else if (chosen === "sublimacion" && isTextile(product)) rule += " En textil, aplicar solo si la fibra es poliester compatible; no asumir que una camiseta de algodon admite sublimacion.";
+  if (product === "GORRA") {
+    const capLabels = { auto: "AUTO", bordado: "BORDADO", parche: "PARCHE", impresion: "IMPRESION DIRECTA" };
+    rule = "GORRA · " + capLabels[chosen] + ": " + rule;
+  }
   return "ESTILO VISUAL y PREPARACION TECNICA son decisiones separadas. " + rule;
 }
 
