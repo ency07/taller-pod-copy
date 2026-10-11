@@ -120,6 +120,13 @@ ok(/getSubnicheOptionsHTML\(market, 'all', region, previous\)/.test(motor), 'sel
 ok(/select\.value = allowed \? previous : 'Auto'/.test(motor), 'cambio de contexto reinicia a Auto una audiencia incompatible');
 ok(/getAudiencesForSubniche\(subniche, region, market\)/.test(motor), 'motor consulta compatibilidad por mercado y subnicho');
 
+// Regresión: Explorar no debe forzar una audiencia compartida ni ignorar los locks por tarjeta.
+ok(/const multi = MOTOR_STATE\.audienceMulti === 'si';/.test(motor), 'Explorar 3 audiencias debe respetar el selector multi-audiencia');
+ok(/const audienceLocks = locks\.audiencia \|\| \{\}/.test(motor), 'resolverAudiences lee los locks individuales de audiencia');
+ok(/if \(locked && locked !== 'Auto' && pool\.indexOf\(locked\) !== -1\)/.test(motor), 'audiencias manuales compatibles prevalecen por tarjeta también en Exploración');
+ok(/if \(multi\) \{[\s\S]{0,500}const used = new Set/.test(motor), 'audiencias Auto se asignan evitando repetir perfiles cuando el pool lo permite');
+ok(!/const multi = MOTOR_STATE\.audienceMulti === 'si' && MOTOR_STATE\.workflowMode !== 'explore'/.test(motor), 'Explorar no desactiva el modo de audiencias distintas');
+
 // El selector de técnica de impresión debe inicializarse y seguir el producto.
 ok(/function refreshPrintMethodSelector\(\)/.test(motor), 'motor inicializa el selector de técnica de impresión');
 ok(/product\.addEventListener\('change', refreshPrintMethodSelector\)/.test(motor), 'cambiar producto actualiza las técnicas disponibles');
