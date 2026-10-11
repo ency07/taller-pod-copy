@@ -338,9 +338,33 @@ function _pickWeighted(pool, weights) {
   return pool[pool.length - 1];
 }
 
+function _stableHash(value) {
+  const text = String(value == null ? '' : value);
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+function _stableUnit(value) {
+  return _stableHash(value) / 4294967296;
+}
+function _pickWeightedStable(pool, weights, seed) {
+  if (!pool || !pool.length) return null;
+  const total = pool.reduce(function (sum, _, i) { return sum + (weights[i] || 1); }, 0);
+  let r = _stableUnit(seed) * total;
+  for (let i = 0; i < pool.length; i++) {
+    r -= (weights[i] || 1);
+    if (r < 0) return pool[i];
+  }
+  return pool[pool.length - 1];
+}
+
 function resolveEstilos(audsPerKey) {
   const locks = _loadLocks(memLocksMarket(), MOTOR_STATE.product);
   const candidates = _styleCandidatesForContext();
+  const stableBase = [MOTOR_STATE.market, MOTOR_STATE.product, MOTOR_STATE.concept, MOTOR_STATE.message, MOTOR_STATE.groupMode].join('|');
   const fixed = {};
   const auto = [];
 
@@ -360,7 +384,7 @@ function resolveEstilos(audsPerKey) {
     const preferred = candidates.filter(function (e) { return basePref.indexOf(_getStyleBase(e)) !== -1; });
     const pool = preferred.length ? preferred : candidates;
     const weights = pool.map(function (e) { return basePref.indexOf(_getStyleBase(e)) !== -1 ? 3 : 1; });
-    const base = Object.values(fixed)[0] || _pickWeighted(pool, weights);
+    const base = Object.values(fixed)[0] || _pickWeightedStable(pool, weights, stableBase + '|same-group|' + baseAud);
     auto.forEach(function (k) { fixed[k] = base; });
     return fixed;
   }
@@ -378,7 +402,7 @@ function resolveEstilos(audsPerKey) {
     const top3 = pref.slice(0, 3);
     
     const isLast = idx === autoKeys.length - 1;
-    const mustExplore = (quotaUsed < quotaNeeded) && (isLast || Math.random() < 0.4);
+    const mustExplore = (quotaUsed < quotaNeeded) && (isLast || _stableUnit(stableBase + '|explore|' + k + '|' + aud) < 0.4);
     
     // Nivel 1: bias fuerte (pref - used) - peso 3
     const biasPool = candidates.filter(function (e) {
@@ -395,12 +419,12 @@ function resolveEstilos(audsPerKey) {
     if (mustExplore && explorePool.length) {
       // Forzar exploración: elegir de explorePool con peso por score de uso
       const weights = explorePool.map(function (e) { return 2 + _getStyleUsageScore(e) / 25; });
-      pick = _pickWeighted(explorePool, weights);
+      pick = _pickWeightedStable(explorePool, weights, stableBase + '|explore-pick|' + k + '|' + aud);
       quotaUsed++;
-    } else if (biasPool.length && Math.random() < 0.7) {
+    } else if (biasPool.length && _stableUnit(stableBase + '|bias|' + k + '|' + aud) < 0.7) {
       // 70% bias hacia pref de audiencia
       const weights = biasPool.map(function (e) { return 3; });
-      pick = _pickWeighted(biasPool, weights);
+      pick = _pickWeightedStable(biasPool, weights, stableBase + '|bias-pick|' + k + '|' + aud);
     } else if (explorePool.length) {
       // Exploración normal
       const weights = explorePool.map(function (e) { return 2 + _getStyleUsageScore(e) / 50; });
@@ -409,10 +433,10 @@ function resolveEstilos(audsPerKey) {
     } else if (fallbackPool.length) {
       // Garantía cola larga
       const weights = fallbackPool.map(function (e) { return 1 + _getStyleUsageScore(e) / 100; });
-      pick = _pickWeighted(fallbackPool, weights);
+      pick = _pickWeightedStable(fallbackPool, weights, stableBase + '|fallback|' + k + '|' + aud);
     } else {
       // Fallback total (no debería pasar)
-      pick = _pick(candidates);
+      pick = candidates[_stableHash(stableBase + '|last-resort|' + k) % candidates.length];
     }
 
     fixed[k] = pick;
@@ -1436,9 +1460,11 @@ function formatPrompt(result) {
     if (MOTOR_STATE.variationOptions.textos === 'conservar_palabras') {
       o += 'TEXTOS: conservar literalmente cada frase visible de la referencia, respetando palabras y cifras detectadas. No sustituir ni inventar texto. Si el análisis no detecta una frase con confianza, indicar al modelo que lea la imagen directamente y no invente texto ilegible.\n';
     } else if (MOTOR_STATE.variationOptions.textos === 'mismo_mensaje') {
-      o += 'TEXTOS: REESCRITURA OBLIGATORIA. Primero interpreta la idea, después redacta tres frases finales concretas en inglés nativo: una exclusiva para 01A, otra para 01B y otra para 01C. Cambia vocabulario y estructura, conserva significado/intención/audiencia y evita calcos sintácticos. No uses la frase original como título. Las tres frases deben ser diferentes entre sí y adecuadas a la jerarquía de cada ficha. No inventes datos; conserva cifras/fechas/nombres propios solo si son datos confirmados. Especifica el texto exacto que debe aparecer, sin placeholders ni instrucciones genéricas como “reformular”.\n';
+      const copyLanguage = /español natural/i.test(langDir) ? 'español natural' : (/bilingual Spanish\\/English/i.test(langDir) ? 'español e inglés según el mercado bilingüe' : 'inglés nativo');
+      o += 'TEXTOS: REESCRITURA OBLIGATORIA en ' + copyLanguage + '. Interpreta el mensaje y redacta una frase final concreta para cada dirección 01A, 01B y 01C. Conserva el significado, la intención y la audiencia; cambia vocabulario y estructura. No añadas una frase secundaria, cita, versículo, dato ni afirmación que el usuario no haya proporcionado. No inventes datos ni cambies el sentido teológico. Especifica solo el texto exacto autorizado para cada diseño, sin placeholders ni instrucciones genéricas.\\n'; conserva cifras/fechas/nombres propios solo si son datos confirmados. Especifica el texto exacto que debe aparecer, sin placeholders ni instrucciones genéricas como “reformular”.\n';
     } else {
-      o += 'TEXTOS: crear copy original desde el concepto, función y nicho, no desde la disposición de la referencia. Propón frases concretas y distintas para 01A/01B/01C, en inglés nativo, con una intención comunicativa común y enfoques expresivos diferentes. No inventes datos ni introduzcas marcas registradas. Indica el texto exacto que debe aparecer; evita placeholders y microtexto.\n';
+      const copyLanguage = /español natural/i.test(langDir) ? 'español natural' : (/bilingual Spanish\\/English/i.test(langDir) ? 'español e inglés según el mercado bilingüe' : 'inglés nativo');
+      o += 'TEXTOS: crear copy original en ' + copyLanguage + ' desde el concepto, función y nicho. Propón una frase concreta por dirección; conserva el sentido y no añadas frases secundarias, citas, versículos, datos ni afirmaciones no proporcionadas. No inventes datos ni introduzcas marcas registradas. Indica el texto exacto que debe aparecer; evita placeholders y microtexto.\\n'; evita placeholders y microtexto.\n';
     }
     o += 'ESQUEMAS: aplica las decisiones particulares de cada ficha.\n\n';
   } else if (isPatron) {
