@@ -1439,7 +1439,7 @@ function formatPrompt(result) {
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + '\n';
     o += 'CONCEPTO: ' + (conceptAnchor || 'propón una idea concreta dentro de la familia seleccionada') + ' | MENSAJE EXACTO: ' + (String(MOTOR_STATE.message || '').trim() || 'propón copy breve') + '\n';
     o += 'FAMILIA: ' + familyLabel + '. Si es orientativa, no la conviertas en tema; manda el concepto.\n';
-    o += 'A/B/C comparten concepto, símbolo y copy. No añadas objetos ni texto no pedidos; omite datos ausentes. HEAVY: masas/contraste; SOFT: aire/formas abiertas; MODERN: geometría/síntesis. Diferencia composición y jerarquía, no solo color. Respeta el estilo seleccionado.\n\n';
+    o += 'CONTRATO CREATIVO: conserva concepto, familia, función y mensaje; no inventes objetos, datos ni texto. HEAVY: masas/contraste; SOFT: aire/formas abiertas; MODERN: geometría/síntesis. Cambia composición, silueta, jerarquía y relación texto-imagen; no basta recolorear. Respeta el estilo seleccionado.\n\n';
   } else {
     o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
