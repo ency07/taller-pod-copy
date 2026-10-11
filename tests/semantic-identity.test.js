@@ -116,6 +116,8 @@ const motorSourceForAudience = fs.readFileSync(path.join(JS, 'motor-nucleo.js'),
 ok(/_applyStructuralProfile\(v, _CONTACT_TREATMENT_ORDER\[k\], productBias, audProfile\)/.test(motorSourceForAudience), 'la generación debe pasar las preferencias de audiencia al perfil estructural');
 
 // Regresiones de matriz y de audiencia automática.
+ok(/HEAVY:\s*\{[\s\S]*?type: \[[^\]]*'Rounded amable'/.test(motorSourceForAudience), 'HEAVY debe permitir una tipografía redondeada cuando la audiencia la prefiere, sin perder la dirección estructural');
+
 ok(motorSourceForAudience.includes('function renderMatrix(result)'), 'debe existir una función para mostrar la matriz comparativa');
 ok(motorSourceForAudience.includes('renderMatrix(result)'), 'la generación debe dibujar la matriz comparativa');
 ok(motorSourceForAudience.includes('renderMatrix(LAST_RESULT)'), 'la regeneración individual debe refrescar la matriz');
