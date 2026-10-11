@@ -1457,15 +1457,13 @@ function formatPrompt(result) {
     }
     o += 'ORIGINALIDAD VISUAL: la referencia sirve para entender la idea, no como plantilla de trazado. No hagas una versión recoloreada, un simple cambio de técnica ni una réplica con texto reemplazado. Replantea la pose/representación, el encuadre, la estructura compositiva y la integración tipográfica. Mantén el ADN conceptual, pero toma decisiones visuales independientes y diferentes entre A/B/C.\n';
     if (MOTOR_STATE.variationOptions.paleta === 'conservar' && !hasAnalysis) o += 'Si se adjunta referencia, conserva sus colores; sin imagen usa la paleta explicita de cada ficha y no afirmes que replica la original.\n';
+    const copyLanguage = /español natural/i.test(langDir) ? 'español natural' : (/bilingual Spanish\\/English/i.test(langDir) ? 'español e inglés según el mercado bilingüe' : 'inglés nativo');
     if (MOTOR_STATE.variationOptions.textos === 'conservar_palabras') {
-      o += 'TEXTOS: conservar literalmente cada frase visible de la referencia, respetando palabras y cifras detectadas. No sustituir ni inventar texto. Si el análisis no detecta una frase con confianza, indicar al modelo que lea la imagen directamente y no invente texto ilegible.\n';
+      o += 'TEXTOS: conservar literalmente las frases visibles de la referencia cuando se detecten con confianza. No sustituir, completar ni inventar texto; si una frase no se lee con seguridad, omitirla.\\n';
     } else if (MOTOR_STATE.variationOptions.textos === 'mismo_mensaje') {
-      const copyLanguage = /español natural/i.test(langDir) ? 'español natural' : (/bilingual Spanish\\/English/i.test(langDir) ? 'español e inglés según el mercado bilingüe' : 'inglés nativo');
-      o += 'TEXTOS: REESCRITURA OBLIGATORIA en ' + copyLanguage + '. Interpreta el mensaje y redacta una frase final concreta para cada dirección 01A, 01B y 01C. Conserva el significado, la intención y la audiencia; cambia vocabulario y estructura. No añadas una frase secundaria, cita, versículo, dato ni afirmación que el usuario no haya proporcionado. No inventes datos ni cambies el sentido teológico. Especifica solo el texto exacto autorizado para cada diseño, sin placeholders ni instrucciones genéricas.\\n';
+      o += 'TEXTOS: reescribir el mensaje en ' + copyLanguage + ' con una frase concreta y natural para cada dirección 01A, 01B y 01C. Mantener significado, intención y audiencia. Las frases pueden variar en redacción, pero no añadir mensajes secundarios, citas, versículos, datos ni afirmaciones no proporcionadas.\\n';
     } else {
-      const copyLanguage = /español natural/i.test(langDir) ? 'español natural' : (/bilingual Spanish\\/English/i.test(langDir) ? 'español e inglés según el mercado bilingüe' : 'inglés nativo');
-      const copyLanguage = /español natural/i.test(langDir) ? 'español natural' : (/bilingual Spanish\\/English/i.test(langDir) ? 'español e inglés según el mercado bilingüe' : 'inglés nativo');
-      o += 'TEXTOS: crear copy original en ' + copyLanguage + ' desde el concepto, función y nicho. Propón una frase concreta por dirección; conserva el sentido y no añadas frases secundarias, citas, versículos, datos ni afirmaciones no proporcionadas. No inventes datos ni introduzcas marcas registradas. Indica el texto exacto que debe aparecer; evita placeholders y microtexto.\\n'; conserva el sentido y no añadas frases secundarias, citas, versículos, datos ni afirmaciones no proporcionadas. No inventes datos ni introduzcas marcas registradas. Indica el texto exacto que debe aparecer; evita placeholders y microtexto.\\n'; evita placeholders y microtexto.\n';
+      o += 'TEXTOS: crear copy original en ' + copyLanguage + ' desde concepto, función y nicho. Una frase concreta por dirección. No añadir citas, versículos, datos ni afirmaciones no proporcionadas.\\n';
     }
     o += 'ESQUEMAS: aplica las decisiones particulares de cada ficha.\n\n';
   } else if (isPatron) {
