@@ -763,31 +763,46 @@ function _styleTreatmentDirective(styleValue, profileKey) {
     + ' Estilo artístico activo: «' + _getStyleBase(styleValue) + '». ' + techniqueRules.join(' ');
 }
 
-function _applyStructuralProfile(v, profileKey, productBias) {
+function _applyStructuralProfile(v, profileKey, productBias, audienceProfile) {
   const profile = _STRUCTURAL_PROFILES[String(profileKey || '').toUpperCase()];
   if (!profile) return v;
   const bias = productBias || {};
-  // Prioridad: compatibilidad con el producto; el perfil selecciona dentro de ella
-  // siempre que exista intersección. Nunca inventar opciones fuera de los pools.
+  const audience = audienceProfile || {};
+  // El perfil fija la dirección; producto y audiencia conservan sus preferencias
+  // cuando existe una opción compatible. No añadir opciones fuera de los pools.
   const layouts = (_LAYOUTS || []).filter(function (x) { return profile.layout.some(function (h) { return x.indexOf(h) === 0; }); });
   const productLayouts = (bias.layout || []).length
     ? layouts.filter(function (x) { return bias.layout.some(function (h) { return x.indexOf(h) === 0; }); })
-    : layouts;
-  v.layout = _pick(productLayouts.length ? productLayouts : (layouts.length ? layouts : _LAYOUTS));
+    : [];
+  const audienceLayouts = (audience.layoutPref || []).length
+    ? layouts.filter(function (x) { return audience.layoutPref.some(function (h) { return x.indexOf(h) === 0; }); })
+    : [];
+  v.layout = _pick(productLayouts.length ? productLayouts : (audienceLayouts.length ? audienceLayouts : (layouts.length ? layouts : _LAYOUTS)));
 
   const typeHints = profile.type || [];
   const types = (_TIPOS || []).filter(function (x) { return typeHints.some(function (h) { return x.indexOf(h) === 0; }); });
-  v.tipografia = _pick(types.length ? types : _TIPOS);
+  const audienceTypes = (audience.tipoPref || []).length
+    ? types.filter(function (x) { return audience.tipoPref.some(function (h) { return x.indexOf(h) === 0; }); })
+    : [];
+  v.tipografia = _pick(audienceTypes.length ? audienceTypes : (types.length ? types : _TIPOS));
 
   const density = (_POOLS.densidad || []).filter(function (x) { return profile.density.indexOf(x) !== -1; });
   const productDensity = (bias.density || []).length
     ? density.filter(function (x) { return bias.density.indexOf(x) !== -1; })
-    : density;
-  v.densidad = _pick(productDensity.length ? productDensity : (density.length ? density : (_POOLS.densidad || [])));
+    : [];
+  const audienceDensity = (audience.densityPref || []).length
+    ? density.filter(function (x) { return audience.densityPref.indexOf(x) !== -1; })
+    : [];
+  v.densidad = _pick(productDensity.length ? productDensity : (audienceDensity.length ? audienceDensity : (density.length ? density : (_POOLS.densidad || []))));
 
   v.negativeSpace = _profilePick(_POOLS.negativeSpace, profile.negative, ['Aire alrededor del motivo principal']);
   v.jerarquia = _profilePick(_POOLS.jerarquia, profile.hierarchy, ['Jerarquía en capas de lectura']);
-  v.formaSimbolo = _profilePick(_FORMAS, profile.form, _FORMAS);
+  const audienceForms = (audience.formaPref || []).length
+    ? (_FORMAS || []).filter(function (x) {
+      return profile.form.some(function (h) { return x === h; }) && audience.formaPref.indexOf(x) !== -1;
+    })
+    : [];
+  v.formaSimbolo = _pick(audienceForms.length ? audienceForms : _profilePick(_FORMAS, profile.form, _FORMAS));
   v.integracionTexto = _profilePick(_INTEGRACION, profile.integration, _INTEGRACION);
   v.perfilEstructural = String(profileKey).toUpperCase();
   return v;
@@ -1020,7 +1035,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     // Aplicar al final: A/B/C conservan perfiles estructurales fijos también en variación guiada.
     // Evita contradicciones entre el nombre del tratamiento y el perfil que llega al generador de imágenes.
     if (contactIdentity || MOTOR_STATE.workflowMode === 'explore' || MOTOR_STATE.workflowMode === 'variation') {
-      _applyStructuralProfile(v, _CONTACT_TREATMENT_ORDER[k], productBias);
+      _applyStructuralProfile(v, _CONTACT_TREATMENT_ORDER[k], productBias, audProfile);
     }
     v.funcionSimbolica = contactIdentity
       ? contactIdentity.funcionSimbolica
