@@ -995,6 +995,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
       formaPref: _rawAud.formaPref || [],
       tratPref: _rawAud.tratPref || [],
       layoutPref: _rawAud.layoutPref || _LP,
+      densityPref: (typeof AUD_DENSITY_PREF !== 'undefined' ? AUD_DENSITY_PREF[v.audiencia] : []) || [],
       modoCol: _rawAud.modoCol || [],
       stylePref: _SP
     };
