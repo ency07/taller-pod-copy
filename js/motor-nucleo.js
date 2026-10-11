@@ -1861,6 +1861,29 @@ window.readStateFromDOM = readStateFromDOM;
     if (typeof MOTOR_STATE !== 'undefined') MOTOR_STATE.audienceSet = select.value;
   }
 
+  function refreshPrintMethodSelector() {
+    const productEl = document.getElementById('product');
+    const methodEl = document.getElementById('printMethod');
+    const capField = document.getElementById('capApplicationField');
+    if (!productEl) return;
+
+    const product = productEl.value;
+    if (capField) capField.style.display = product === 'GORRA' ? '' : 'none';
+    if (!methodEl || typeof getPrintMethods !== 'function') return;
+
+    const labels = typeof PRINT_METHOD_LABELS !== 'undefined' ? PRINT_METHOD_LABELS : {};
+    const methods = getPrintMethods(product);
+    const allowed = methods.length ? methods : ['auto'];
+    const previous = methodEl.value || 'auto';
+    methodEl.innerHTML = allowed.map(function (id) {
+      const label = labels[id] || id;
+      return '<option value="' + id + '">' + label + '</option>';
+    }).join('');
+    const valid = allowed.indexOf(previous) !== -1;
+    methodEl.value = valid ? previous : 'auto';
+    if (methodEl.value !== 'auto' && allowed.indexOf(methodEl.value) === -1) methodEl.value = allowed[0] || 'auto';
+  }
+
   function bind() {
     const director = document.getElementById('btnDirector');
     const build = document.getElementById('btnBuild');
@@ -1868,6 +1891,13 @@ window.readStateFromDOM = readStateFromDOM;
     const market = document.getElementById('market');
     const region = document.getElementById('region');
     const subniche = document.getElementById('subniche');
+    const product = document.getElementById('product');
+
+    if (product && !product.__podPrintMethodBound) {
+      product.addEventListener('change', refreshPrintMethodSelector);
+      product.__podPrintMethodBound = true;
+    }
+    refreshPrintMethodSelector();
 
     if (market && !market.__podAudienceRefreshBound) {
       market.addEventListener('change', function () { refreshContextSelectors(true); });
