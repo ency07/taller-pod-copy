@@ -26,10 +26,18 @@ ok(/conserva concepto, familia, función y mensaje/i.test(motor), 'la diversidad
 ok(/HEAVY\/SOFT\/MODERN modifican composición y jerarquía sin borrar ese estilo/i.test(motor), 'los tratamientos no deben sustituir el estilo artístico');
 ok(/function formatPrompt\(result\)/.test(motor), 'debe existir el punto central que construye el prompt final');
 
+// El prompt debe limitar elementos inventados, exigir diversidad estructural y hacer visible la audiencia.
+ok(/Elementos autorizados: solo los nombrados en el concepto/.test(motor), 'exploración limita los elementos a los autorizados por el concepto');
+ok(/no añadas sol, flores, aves, montañas, marcos ornamentales ni motivos secundarios/.test(motor), 'el prompt prohíbe adornos frecuentes no solicitados');
+ok(/A\/B\/C deben cambiar de verdad encuadre, silueta global, distribución de masas, estructura tipográfica/.test(motor), 'exploración exige diferencias estructurales comprobables');
+ok(/cada perfil debe modificar al menos dos decisiones visibles/.test(motor), 'la audiencia debe gobernar decisiones visibles en cada ficha');
+ok(/CONTROL DE ELEMENTOS: no añadir elementos narrativos o decorativos fuera de este objeto\/concepto/.test(motor), 'cada tarjeta reitera el límite de elementos del concepto');
+
 // Debe existir una capa de adaptación por producto y preparación técnica.
 ok(/_PRODUCT_RULES\[MOTOR_STATE\.product\]/.test(motor), 'el prompt debe consultar reglas del producto seleccionado');
 ok(/getPrintPrepRule\(MOTOR_STATE\.product, selectedPrintMethod\)/.test(motor), 'el prompt debe incorporar preparación técnica del producto/método');
 ok(/getMockupRule\(MOTOR_STATE\.product\)/.test(motor), 'el prompt debe incorporar reglas de presentación específicas del producto');
+ok(/cuatro vistas de mockup: camiseta clara frontal, camiseta clara a tres cuartos, camiseta oscura frontal y camiseta oscura a tres cuartos/.test(productSource), 'CAMISETA SOFT exige camiseta clara y oscura en ambas vistas');
 
 // La variación desde imagen debe prohibir explícitamente el calco estructural.
 ok(/VARIACIÓN VISUAL REAL: crea una nueva solución gráfica/i.test(motor), 'la variación debe exigir una solución gráfica nueva');
