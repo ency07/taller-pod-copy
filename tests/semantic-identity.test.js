@@ -120,6 +120,7 @@ ok(/HEAVY:\s*\{[\s\S]*?type: \[[^\]]*'Rounded amable'/.test(motorSourceForAudien
 
 ok(motorSourceForAudience.includes("const visibleStyle = String(v.estilo || '').trim().toLowerCase()"), 'la puntuación de audiencia debe comparar la etiqueta visible del estilo además de la clave interna');
 ok(motorSourceForAudience.includes("MOTOR_STATE.workflowMode !== 'explore'"), 'la puntuación no debe penalizar la preferencia de tratamiento cuando HEAVY/SOFT/MODERN son obligatorios en exploración');
+ok(motorSourceForAudience.includes('function matchesPreference(actual, preferences)'), 'la puntuación debe admitir descripciones extendidas que contengan una preferencia de tipografía o forma');
 
 
 ok(motorSourceForAudience.includes('function renderMatrix(result)'), 'debe existir una función para mostrar la matriz comparativa');
