@@ -418,7 +418,7 @@ function resolveEstilos(audsPerKey) {
     let pick;
     if (mustExplore && explorePool.length) {
       // Forzar exploración: elegir de explorePool con peso por score de uso
-      const weights = explorePool.map(function (e) { return 2 + _getStyleUsageScore(e) / 25; });
+      const weights = explorePool.map(function () { return 2; });
       pick = _pickWeightedStable(explorePool, weights, stableBase + '|explore-pick|' + k + '|' + aud);
       quotaUsed++;
     } else if (biasPool.length && _stableUnit(stableBase + '|bias|' + k + '|' + aud) < 0.7) {
