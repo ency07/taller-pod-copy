@@ -220,7 +220,7 @@ function getPrintPrepRule(product, method) {
 }
 
 const PRODUCT_MOCKUP_RULES = {
-  "CAMISETA SOFT": "dos mockups de camiseta (uno oscuro y otro claro); vista frontal y tres cuartos",
+  "CAMISETA SOFT": "cuatro vistas de mockup: camiseta clara frontal, camiseta clara a tres cuartos, camiseta oscura frontal y camiseta oscura a tres cuartos; mostrar las dos tonalidades de prenda de forma inequívoca, mantener el mismo arte y no sustituir la prenda oscura por otra clara",
   "CAMISETA APPAREL": "dos mockups de prenda fashion (plana o modelo); vista frontal y detalle",
   "HOODIE": "dos mockups de hoodie (uno oscuro y otro claro); vista frontal y espalda",
   "GORRA": "dos mockups de gorra (vista frontal y tres cuartos) y acercamiento del panel con el acabado elegido",
