@@ -735,6 +735,34 @@ function _profilePick(pool, hints, fallback) {
   return _pick(matched.length ? matched : (source.length ? source : (fallback || [])));
 }
 
+/* Compatibilidad explícita entre el lenguaje artístico y el tratamiento estructural.
+   La técnica define la superficie; HEAVY/SOFT/MODERN define la arquitectura.
+   Esta directriz resuelve aparentes conflictos sin sustituir el estilo elegido. */
+function _styleTreatmentDirective(styleValue, profileKey) {
+  const style = _getStyleBase(styleValue).toLowerCase();
+  const key = String(profileKey || '').toUpperCase();
+  const profileRules = {
+    HEAVY: 'Prioriza masas visuales claras, contornos firmes y contraste alto. Evita que líneas finas, textura o detalles delicados debiliten la silueta. Mantén el carácter del estilo mediante su técnica aplicada en áreas amplias.',
+    SOFT: 'Prioriza aire, formas abiertas y jerarquía amable. Evita que el estilo convierta toda la superficie en una masa densa. Conserva su técnica en detalles selectivos y deja espacio negativo visible.',
+    MODERN: 'Prioriza geometría legible, bordes definidos y síntesis. Conserva los rasgos reconocibles del estilo como acentos controlados; no permitas que ornamento, textura, efectos o detalle secundario rompan la estructura limpia.'
+  };
+  const techniqueRules = [];
+  if (/acuarela|watercolor|airbrush|glow|neon|neón|gradient|degrad/.test(style)) {
+    techniqueRules.push('Los efectos de color o atmósfera quedan contenidos en áreas definidas; no deben borrar los bordes, la jerarquía ni la lectura del símbolo.');
+  }
+  if (/grunge|distress|tattoo|tatuaje|engraving|grabado|linocut|linóleo|risograph|risografía|halftone|trama/.test(style)) {
+    techniqueRules.push('La textura y la trama son selectivas, nunca una capa uniforme que cierre el espacio negativo o destruya la legibilidad.');
+  }
+  if (/minimal|geometric|geométr|papercraft|paper-cut|cut-paper|vector|stencil|pixel/.test(style)) {
+    techniqueRules.push('Conserva la síntesis propia de este lenguaje; no añadas adornos para simular el tratamiento estructural.');
+  }
+  if (/kids|storybook|infantil|folk|hand-drawn|manuscrita|bordado|embroidery/.test(style)) {
+    techniqueRules.push('Conserva el carácter expresivo o artesanal del estilo; el tratamiento cambia la arquitectura, no lo convierte en otro género visual.');
+  }
+  return (profileRules[key] || 'Respeta el lenguaje artístico elegido y evita instrucciones visuales contradictorias.')
+    + ' Estilo artístico activo: «' + _getStyleBase(styleValue) + '». ' + techniqueRules.join(' ');
+}
+
 function _applyStructuralProfile(v, profileKey, productBias) {
   const profile = _STRUCTURAL_PROFILES[String(profileKey || '').toUpperCase()];
   if (!profile) return v;
@@ -1464,6 +1492,7 @@ function formatPrompt(result) {
     o += '### ' + N[i] + ' · ' + v.estilo + ' · ' + v.audiencia + '\n';
     o += 'JERARQUÍA: ' + v.jerarquiaVisual + '\n';
     o += 'PERFIL ESTRUCTURAL: ' + (v.perfilEstructural || _treatmentKey(v.tratamiento)) + ' · densidad ' + v.densidad + ' · espacio negativo ' + v.negativeSpace + ' · jerarquía interna ' + v.jerarquia + '\\n';
+    o += 'COMPATIBILIDAD ESTILO × TRATAMIENTO: ' + _styleTreatmentDirective(v.estilo, v.perfilEstructural || _treatmentKey(v.tratamiento)) + '\\n';
     o += 'OBJETO: ' + v.objeto + '\n';
     if (contactDNA) o += 'FUNCIÓN CONSTANTE: ' + v.funcionSimbolica + ' · intención ' + v.intencionEmocional + '\n';
     const textLine = contactDNA
