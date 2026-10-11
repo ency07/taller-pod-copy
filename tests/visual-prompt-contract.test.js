@@ -37,7 +37,7 @@ ok(/CONTROL DE ELEMENTOS: no añadir elementos narrativos o decorativos fuera de
 ok(/_PRODUCT_RULES\[MOTOR_STATE\.product\]/.test(motor), 'el prompt debe consultar reglas del producto seleccionado');
 ok(/getPrintPrepRule\(MOTOR_STATE\.product, selectedPrintMethod\)/.test(motor), 'el prompt debe incorporar preparación técnica del producto/método');
 ok(/getMockupRule\(MOTOR_STATE\.product\)/.test(motor), 'el prompt debe incorporar reglas de presentación específicas del producto');
-ok(/POR CADA DISEÑO A\\/B\\/C, generar cuatro mockups separados \\(12 vistas en total\\)/.test(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8')), 'CAMISETA SOFT exige cuatro vistas separadas por diseño');
+ok(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8').includes('POR CADA DISEÑO A/B/C, generar cuatro mockups separados (12 vistas en total)'), 'CAMISETA SOFT exige cuatro vistas separadas por diseño');
 
 // La variación desde imagen debe prohibir explícitamente el calco estructural.
 ok(/VARIACIÓN VISUAL REAL: crea una nueva solución gráfica/i.test(motor), 'la variación debe exigir una solución gráfica nueva');
@@ -49,7 +49,7 @@ ok(/function _stableHash\(value\)/.test(motor) && /function _pickWeightedStable\
 ok(/stableBase.*bias-pick/.test(motor) && /stableBase.*explore-pick/.test(motor), 'las fichas Auto deben conservar sus estilos al regenerar el mismo contexto');
 ok(/const copyLanguage = \(MOTOR_STATE\.market === 'gospel_es'/.test(motor), 'la variación debe resolver el idioma desde el mercado, sin forzar inglés');
 ok(/no añadir mensajes secundarios, citas, versículos, datos ni afirmaciones no proporcionadas/.test(motor), 'la variación debe bloquear copy secundario inventado');
-ok(/POR CADA DISEÑO A\/B\/C, generar cuatro mockups separados \(12 vistas en total\)/.test(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8')), 'CAMISETA SOFT exige 4 vistas separadas por diseño, 12 en total');
+ok(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8').includes('POR CADA DISEÑO A/B/C, generar cuatro mockups separados (12 vistas en total)'), 'CAMISETA SOFT exige 4 vistas separadas por diseño, 12 en total');
 
 if (failures.length) {
   console.error('FALLOS visual-prompt-contract:');
