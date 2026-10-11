@@ -1094,8 +1094,17 @@ function buildCandidate(audsPerKey, fixedIdentity) {
         return pref === visibleStyle || pref === normalizedStyle;
       }));
     }
-    if (audProfile.tipoPref.length) audChecks.push(audProfile.tipoPref.indexOf(v.tipografia) !== -1);
-    if (audProfile.formaPref.length) audChecks.push(audProfile.formaPref.indexOf(v.formaSimbolo) !== -1);
+    // Las fichas contienen descripciones extendidas; evaluar coincidencia textual
+    // normalizada evita que una preferencia válida falle por incluir atributos extra.
+    const matchesPreference = function (actual, preferences) {
+      const value = String(actual || '').trim().toLowerCase();
+      return preferences.some(function (preference) {
+        const preferred = String(preference || '').trim().toLowerCase();
+        return !!preferred && (value === preferred || value.indexOf(preferred) !== -1 || preferred.indexOf(value) !== -1);
+      });
+    };
+    if (audProfile.tipoPref.length) audChecks.push(matchesPreference(v.tipografia, audProfile.tipoPref));
+    if (audProfile.formaPref.length) audChecks.push(matchesPreference(v.formaSimbolo, audProfile.formaPref));
     // En exploración, HEAVY/SOFT/MODERN son una restricción del producto creativo.
     // No penalizar la audiencia por no preferir las tres direcciones obligatorias.
     if (audProfile.tratPref.length && MOTOR_STATE.workflowMode !== 'explore') {
