@@ -1853,6 +1853,7 @@ function renderGates(result) {
   html += '<span class="badge ' + (m.symbolStable ? 'good' : 'bad') + '" title="Comprueba que A/B/C conservan el mismo símbolo indicado en el prompt.">Símbolo constante</span>';
   html += '<span class="badge ' + (m.treatmentsComplete ? 'good' : 'bad') + '" title="Comprueba que el prompt asigna HEAVY, SOFT y MODERN una vez cada uno; no inspecciona la imagen generada.">HEAVY · SOFT · MODERN</span>';
   html += '<span class="badge ' + (m.familias.length >= 3 ? 'good' : 'warn') + '">Colores distintos</span>';
+  html += '<span class="badge warn" title="Estos indicadores validan fichas y prompt; no inspeccionan el archivo de imagen generado.">QA visual pendiente</span>';
 
   gateEl.innerHTML = html;
 }
