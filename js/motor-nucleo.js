@@ -1457,7 +1457,7 @@ function formatPrompt(result) {
     }
     o += 'ORIGINALIDAD VISUAL: la referencia sirve para entender la idea, no como plantilla de trazado. No hagas una versión recoloreada, un simple cambio de técnica ni una réplica con texto reemplazado. Replantea la pose/representación, el encuadre, la estructura compositiva y la integración tipográfica. Mantén el ADN conceptual, pero toma decisiones visuales independientes y diferentes entre A/B/C.\n';
     if (MOTOR_STATE.variationOptions.paleta === 'conservar' && !hasAnalysis) o += 'Si se adjunta referencia, conserva sus colores; sin imagen usa la paleta explicita de cada ficha y no afirmes que replica la original.\n';
-    const copyLanguage = /español natural/i.test(langDir) ? 'español natural' : (/bilingual Spanish\\/English/i.test(langDir) ? 'español e inglés según el mercado bilingüe' : 'inglés nativo');
+    const copyLanguage = (MOTOR_STATE.market === 'gospel_es' || /español natural/i.test(langDir)) ? 'español natural' : 'inglés nativo';
     if (MOTOR_STATE.variationOptions.textos === 'conservar_palabras') {
       o += 'TEXTOS: conservar literalmente las frases visibles de la referencia cuando se detecten con confianza. No sustituir, completar ni inventar texto; si una frase no se lee con seguridad, omitirla.\\n';
     } else if (MOTOR_STATE.variationOptions.textos === 'mismo_mensaje') {
