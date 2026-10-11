@@ -102,6 +102,18 @@ const structuralPools = {
 const productConstrainedProfile = _applyStructuralProfile({}, 'HEAVY', { layout: ['Axial centrado'], density: ['Heavy'] });
 ok(productConstrainedProfile.layout.indexOf('Axial centrado') === 0, 'si producto y perfil comparten un layout permitido, debe respetarse');
 ok(productConstrainedProfile.densidad === 'Heavy', 'si producto y perfil comparten densidad permitida, debe respetarse');
+const audienceConstrainedProfile = _applyStructuralProfile({}, 'SOFT', {}, {
+  layoutPref: ['Editorial asimétrica'],
+  tipoPref: ['Sans humanista limpia'],
+  densityPref: ['Minimal'],
+  formaPref: ['contorno lineal calibrado']
+});
+ok(audienceConstrainedProfile.layout.indexOf('Editorial asimétrica') === 0, 'el perfil estructural debe conservar el layout preferido por la audiencia cuando es compatible');
+ok(audienceConstrainedProfile.tipografia.indexOf('Sans humanista limpia') === 0, 'el perfil estructural debe conservar la tipografía preferida por la audiencia cuando es compatible');
+ok(audienceConstrainedProfile.densidad === 'Minimal', 'el perfil estructural debe conservar la densidad preferida por la audiencia cuando es compatible');
+ok(audienceConstrainedProfile.formaSimbolo === 'contorno lineal calibrado', 'el perfil estructural debe conservar la forma simbólica preferida por la audiencia cuando es compatible');
+const motorSourceForAudience = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
+ok(/_applyStructuralProfile\(v, _CONTACT_TREATMENT_ORDER\[k\], productBias, audProfile\)/.test(motorSourceForAudience), 'la generación debe pasar las preferencias de audiencia al perfil estructural');
 
 // Contratos de originalidad del prompt CONTACTSHEET.
 // Son pruebas estáticas de instrucciones; no prueban similitud de imágenes generadas.
