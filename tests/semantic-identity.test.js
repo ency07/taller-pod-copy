@@ -137,7 +137,9 @@ ok(motorSource.includes('DIFERENCIA DURA: layout, tipografía, tratamiento, form
 ok(motorSource.includes('No hagas una versión recoloreada, un simple cambio de técnica ni una réplica con texto reemplazado.'), 'variación guiada debe prohibir recoloreado o cambios superficiales como única variación');
 ok(motorSource.includes('toma decisiones visuales independientes y diferentes entre A/B/C.'), 'variación guiada debe pedir decisiones visuales independientes');
 ok(motorSource.includes('Cada tratamiento gobierna composición, jerarquía, tipografía, contraste, densidad y formas; el estilo artístico lo ejecuta sin contradecirlo.'), 'el tratamiento debe afectar estructura y no solo color/textura');
-ok(motorSource.includes('A/HEAVY = masas y contraste; B/SOFT = aire y formas abiertas; C/MODERN = geometría y síntesis.'), 'exploración debe definir diferencias funcionales en una instrucción compacta');
+ok(motorSource.includes('HEAVY: masas/contraste; SOFT: aire/formas abiertas; MODERN: geometría/síntesis.'), 'exploración debe definir diferencias funcionales en una instrucción compacta');
+ok(motorSource.includes("prevalece el concepto del usuario"), 'una familia detectada automáticamente no debe imponerse sobre un concepto explícito del usuario');
+ok(motorSource.includes("Si es orientativa, no la conviertas en tema; manda el concepto."), 'el prompt debe marcar la familia automática como orientativa cuando hay concepto explícito');
 ok(motorSource.includes('Cambia composición, silueta, jerarquía y relación texto-imagen; no basta recolorear.'), 'exploración debe prohibir diferencias cosméticas como única variación');
 ok(motorSource.includes('CONTRATO CREATIVO: conserva concepto, familia, función y mensaje; no inventes objetos, datos ni texto.'), 'el prompt debe usar un contrato creativo compacto y concreto');
 ok(motorSource.includes('el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo.'), 'el tratamiento debe subordinarse al estilo artístico sin reemplazarlo');
