@@ -104,6 +104,7 @@ let noRepeatViolations = 0;
 let quotaViolations = 0;
 const GENS = 300;
 for (let g = 0; g < GENS; g++) {
+  MOTOR_STATE.concept = 'style-coverage-generation-' + g;
   const aud = testAuds[g % testAuds.length];
   const audsPerKey = { A: aud, B: aud, C: aud };
   const out = resolveEstilos(audsPerKey);
@@ -126,6 +127,7 @@ const reachSeen = {};
 testAuds.forEach(function (aud, ai) {
   Math.random = mulberry32(9000 + ai);
   for (let g = 0; g < 60; g++) {
+    MOTOR_STATE.concept = 'style-reachability-' + ai + '-' + g;
     const out = resolveEstilos({ A: aud, B: aud, C: aud });
     [out.A, out.B, out.C].forEach(function (s) { reachSeen[s] = true; });
   }
