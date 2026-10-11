@@ -427,12 +427,12 @@ function resolveEstilos(audsPerKey) {
       pick = _pickWeightedStable(biasPool, weights, stableBase + '|bias-pick|' + k + '|' + aud);
     } else if (explorePool.length) {
       // Exploración normal
-      const weights = explorePool.map(function (e) { return 2 + _getStyleUsageScore(e) / 50; });
-      pick = _pickWeighted(explorePool, weights);
+      const weights = explorePool.map(function () { return 2; });
+      pick = _pickWeightedStable(explorePool, weights, stableBase + '|explore-normal|' + k + '|' + aud);
       if (!biasPool.length) quotaUsed++;
     } else if (fallbackPool.length) {
       // Garantía cola larga
-      const weights = fallbackPool.map(function (e) { return 1 + _getStyleUsageScore(e) / 100; });
+      const weights = fallbackPool.map(function () { return 1; });
       pick = _pickWeightedStable(fallbackPool, weights, stableBase + '|fallback|' + k + '|' + aud);
     } else {
       // Fallback total (no debería pasar)
