@@ -1429,15 +1429,11 @@ function formatPrompt(result) {
     const brief = explorationBrief || _resolveExplorationBrief();
     const familyLabel = brief.familyLabel || promptFamily;
     const conceptAnchor = String(brief.concept || '').trim();
-    o += '/EXPLORACIÓN CREATIVA — 3 DIRECCIONES · CONCEPTO ÚNICO · NADA CLONADO\n';
-    o += 'MERCADO: ' + MOTOR_STATE.market + ' | REGIÓN: ' + MOTOR_STATE.region + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | FAMILIA/SUBNICHO BLOQUEADO: ' + familyLabel + ' (' + (brief.familyId || 'auto') + ') | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
-    o += 'ESTADO DEL CONCEPTO: ' + (conceptAnchor ? 'ANCLA RESUELTA: «' + conceptAnchor + '»' : 'SIN ANCLA DE BANCO: debes proponer un único concepto original, concreto y comercial ANTES de describir el arte') + '\n';
-    o += 'CONTRATO DE FAMILIA: respeta exactamente la familia/subnicho seleccionado por el usuario. Fuente del candidato: ' + brief.selectedFrom + '. Banco compatible disponible: ' + (brief.bankFound ? 'sí' : 'no') + '. Si no hay banco compatible, NO sustituyas la familia, NO recurras al banco común ni importes mascotas/objetos de otro nicho por defecto; construye una idea directamente pertinente a la familia seleccionada.\n';
-    o += 'BLOQUEO SEMÁNTICO: antes de describir A/B/C, declara una ficha compartida con (1) concepto comercial concreto, (2) función/intención, (3) objeto/escena/símbolo principal, (4) audiencia, (5) copy exacto principal, (6) copy secundario exacto solo si aporta y (7) tercer nivel solo si existe un dato real. Después reutiliza ESA ficha sin cambios semánticos en A/B/C. No declares un concepto distinto por dirección.\n';
-    o += 'DIRECCIONES: 01A HEAVY = impacto, masas y contraste; 01B SOFT = aire, formas abiertas y lectura amable; 01C MODERN = geometría, síntesis y lenguaje contemporáneo. Son tratamientos subordinados al estilo artístico seleccionado: no reemplazan ni contradicen el estilo principal. Diferencia composición, silueta, jerarquía y relación texto-imagen, no solo color o textura.\n';
-    o += 'COPY: idioma natural del mercado; si el usuario escribió mensaje, conservarlo como restricción literal. Si no escribió copy, crea una frase principal original exacta, breve y comercial; el mismo copy y significado deben mantenerse en A/B/C. Añade apoyo solo si mejora la idea. No inventes fechas, cifras, nombres, series, referencias, citas ni afirmaciones doctrinales/factuales. Nunca uses placeholders ni microtexto decorativo.\n';
-    o += 'JERARQUÍA TEXTUAL: nivel 1 = copy principal legible y dominante; nivel 2 = frase de apoyo concreta o se omite; nivel 3 = solo dato real confirmado o se omite. Posición, escala relativa y tratamiento tipográfico pueden variar entre A/B/C; el orden semántico no. Indica palabras exactas, no solo dónde colocarlas.\n';
-    o += 'RESTRICCIONES DEL USUARIO: concepto «' + (String(MOTOR_STATE.concept || '').trim() || 'no definido; descubrir dentro de la familia bloqueada') + '» | mensaje «' + (String(MOTOR_STATE.message || '').trim() || 'sin mensaje fijado; proponer copy original') + '» | apoyo «' + (String(MOTOR_STATE.support || '').trim() || 'sin apoyo fijado') + '».\n\n';
+    o += '/EXPLORACIÓN — 3 DIRECCIONES DEL MISMO CONCEPTO\n';
+    o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | FAMILIA: ' + familyLabel + '\n';
+    o += 'CONCEPTO: ' + (conceptAnchor || 'propón una idea concreta dentro de la familia seleccionada') + ' | MENSAJE: ' + (String(MOTOR_STATE.message || '').trim() || 'crea un copy breve y exacto') + '\n';
+    o += 'BLOQUEO: conserva concepto, símbolo principal, audiencia y copy en A/B/C. No inventes objetos, datos ni texto adicional. Si falta información, omítela.\n';
+    o += 'DIRECCIONES: A/HEAVY = masas y contraste; B/SOFT = aire y formas abiertas; C/MODERN = geometría y síntesis. Cambia composición, silueta, jerarquía y relación texto-imagen; no basta recolorear. El estilo elegido sigue siendo la referencia visual principal.\n\n';
   } else {
     o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
@@ -1451,13 +1447,15 @@ function formatPrompt(result) {
     }
   }
 
-  o += 'NICHO/FAMILIA: ' + promptFamily + '\n';
-  o += contactDNA
-    ? 'ANCLA: misma ' + (contactSymbol ? '«' + contactSymbol + '»' : 'idea central') + ', mensaje y función en A/B/C; variar su tratamiento visual, tipografía, composición y jerarquía.\n'
-    : 'ANCLA: mismo nicho/concepto en A/B/C; variar expresión. SOLO_TEXTO: nombrar el nicho en el texto.\n';
-  o += 'CONTRATO CREATIVO: conserva concepto, familia, función y mensaje; no inventes objetos, datos ni texto. Si falta un dato, omítelo.\\n';
-  o += 'DIRECCIÓN: el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo. No mezcles instrucciones incompatibles.\\n';
-  o += 'A/B/C: misma identidad semántica, soluciones distintas en composición, silueta, tipografía y relación texto-imagen; no basta recolorear o cambiar textura.\\n';
+  if (!isExplore) {
+    o += 'NICHO/FAMILIA: ' + promptFamily + '\n';
+    o += contactDNA
+      ? 'ANCLA: misma ' + (contactSymbol ? '«' + contactSymbol + '»' : 'idea central') + ', mensaje y función en A/B/C; variar su tratamiento visual, tipografía, composición y jerarquía.\n'
+      : 'ANCLA: mismo nicho/concepto en A/B/C; variar expresión. SOLO_TEXTO: nombrar el nicho en el texto.\n';
+    o += 'CONTRATO CREATIVO: conserva concepto, familia, función y mensaje; no inventes objetos, datos ni texto. Si falta un dato, omítelo.\\n';
+    o += 'DIRECCIÓN: el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo. No mezcles instrucciones incompatibles.\\n';
+    o += 'A/B/C: misma identidad semántica, soluciones distintas en composición, silueta, tipografía y relación texto-imagen; no basta recolorear o cambiar textura.\\n';
+  }
   if (isVar) o += 'VARIACIÓN: usa la referencia solo para concepto y datos visibles; no copies su composición, silueta, encuadre ni jerarquía. No añadas objetos ni datos. A/HEAVY: masas compactas, contorno grueso, contraste alto. B/SOFT: formas abiertas, aire y transiciones suaves. C/MODERN: geometría limpia, retícula y asimetría controlada. Cambia layout, silueta y arquitectura tipográfica en cada dirección; el estilo elegido se conserva sin anular el perfil. El copy solo sigue el selector de texto. Si dos diseños parecen la misma imagen recoloreada, replantea su estructura.\\n';
   if (isVar && MOTOR_STATE.imageReference) {
     const symbolMode = String(MOTOR_STATE.variationOptions.simbolo || 'sustituir');
