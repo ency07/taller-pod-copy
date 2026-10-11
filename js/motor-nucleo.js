@@ -712,7 +712,7 @@ const _STRUCTURAL_PROFILES = {
   HEAVY: {
     density: ['Heavy'],
     layout: ['Axial centrado', 'Emblema circular', 'Banda horizontal', 'Sangrado total', 'Arco y cúpula', 'Escalinata'],
-    type: ['Grotesca black condensada', 'Slab pesada de oficio', 'Stencil de plantilla', 'Gótica blackletter'],
+    type: ['Grotesca black condensada', 'Slab pesada de oficio', 'Stencil de plantilla', 'Gótica blackletter', 'Rounded amable'],
     negative: ['Campo de tinta con margen vivo', 'Perímetro simétrico controlado', 'Cortes diagonales de aire'],
     hierarchy: ['Símbolo 70% / Texto 30%', 'Símbolo dominante + texto descubrible', 'Texto dominante + símbolo descubrible'],
     form: ['silueta sólida a una tinta', 'tallado en bloque', 'fragmentado en planos'],
