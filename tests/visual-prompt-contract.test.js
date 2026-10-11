@@ -37,7 +37,7 @@ ok(/CONTROL DE ELEMENTOS: no añadir elementos narrativos o decorativos fuera de
 ok(/_PRODUCT_RULES\[MOTOR_STATE\.product\]/.test(motor), 'el prompt debe consultar reglas del producto seleccionado');
 ok(/getPrintPrepRule\(MOTOR_STATE\.product, selectedPrintMethod\)/.test(motor), 'el prompt debe incorporar preparación técnica del producto/método');
 ok(/getMockupRule\(MOTOR_STATE\.product\)/.test(motor), 'el prompt debe incorporar reglas de presentación específicas del producto');
-ok(/cuatro vistas de mockup: camiseta clara frontal, camiseta clara a tres cuartos, camiseta oscura frontal y camiseta oscura a tres cuartos/.test(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8')), 'CAMISETA SOFT exige camiseta clara y oscura en ambas vistas');
+ok(/POR CADA DISEÑO A\\/B\\/C, generar cuatro mockups separados \\(12 vistas en total\\)/.test(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8')), 'CAMISETA SOFT exige cuatro vistas separadas por diseño');
 
 // La variación desde imagen debe prohibir explícitamente el calco estructural.
 ok(/VARIACIÓN VISUAL REAL: crea una nueva solución gráfica/i.test(motor), 'la variación debe exigir una solución gráfica nueva');
