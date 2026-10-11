@@ -1083,10 +1083,24 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     const audHierarchy = (typeof AUD_HIERARCHY_PREF !== 'undefined' ? AUD_HIERARCHY_PREF[v.audiencia] : []) || [];
     const audDensity = (typeof AUD_DENSITY_PREF !== 'undefined' ? AUD_DENSITY_PREF[v.audiencia] : []) || [];
     const audChecks = [];
-    if (audStylePref.length) audChecks.push(audStylePref.indexOf(styleBase) !== -1);
+    // AUD_STYLE_PREF contiene etiquetas visibles (p. ej. "Y2K / Cyber"), mientras
+    // styleBase es una clave interna normalizada. Comparar ambos contra la etiqueta
+    // visible evita penalizar una dirección que sí pertenece al perfil.
+    if (audStylePref.length) {
+      const visibleStyle = String(v.estilo || '').trim().toLowerCase();
+      const normalizedStyle = String(styleBase || '').trim().toLowerCase();
+      audChecks.push(audStylePref.some(function (x) {
+        const pref = String(x || '').trim().toLowerCase();
+        return pref === visibleStyle || pref === normalizedStyle;
+      }));
+    }
     if (audProfile.tipoPref.length) audChecks.push(audProfile.tipoPref.indexOf(v.tipografia) !== -1);
     if (audProfile.formaPref.length) audChecks.push(audProfile.formaPref.indexOf(v.formaSimbolo) !== -1);
-    if (audProfile.tratPref.length) audChecks.push(audProfile.tratPref.some(function (x) { return String(v.tratamiento).startsWith(x); }));
+    // En exploración, HEAVY/SOFT/MODERN son una restricción del producto creativo.
+    // No penalizar la audiencia por no preferir las tres direcciones obligatorias.
+    if (audProfile.tratPref.length && MOTOR_STATE.workflowMode !== 'explore') {
+      audChecks.push(audProfile.tratPref.some(function (x) { return String(v.tratamiento).startsWith(x); }));
+    }
     if (audProfile.layoutPref.length) audChecks.push(audProfile.layoutPref.some(function (x) { return String(v.layout).startsWith(x); }));
     if (audHierarchy.length) audChecks.push(audHierarchy.indexOf(v.jerarquiaVisual) !== -1);
     if (audDensity.length) audChecks.push(audDensity.indexOf(v.densidad) !== -1);
