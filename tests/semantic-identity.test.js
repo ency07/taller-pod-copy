@@ -115,6 +115,13 @@ ok(audienceConstrainedProfile.formaSimbolo === 'contorno lineal calibrado', 'el 
 const motorSourceForAudience = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
 ok(/_applyStructuralProfile\(v, _CONTACT_TREATMENT_ORDER\[k\], productBias, audProfile\)/.test(motorSourceForAudience), 'la generación debe pasar las preferencias de audiencia al perfil estructural');
 
+// Regresiones de matriz y de audiencia automática.
+ok(/function renderMatrix\\(result\\)/.test(motorSourceForAudience), 'debe existir una función para mostrar la matriz comparativa');
+ok(/renderMatrix\\(result\\)/.test(motorSourceForAudience), 'la generación debe dibujar la matriz comparativa');
+ok(/renderMatrix\\(LAST_RESULT\\)/.test(motorSourceForAudience), 'la regeneración individual debe refrescar la matriz');
+ok(/const stableContext = \\[/.test(motorSourceForAudience), 'la audiencia Auto en exploración debe derivarse del contexto');
+ok(/stableAuto \\|\\| pool\\[0\\]/.test(motorSourceForAudience), 'la audiencia Auto debe tener una elección estable aun si el hash resuelve índice cero');
+
 // Contratos de originalidad del prompt CONTACTSHEET.
 // Son pruebas estáticas de instrucciones; no prueban similitud de imágenes generadas.
 const motorSource = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
