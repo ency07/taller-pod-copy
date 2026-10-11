@@ -652,9 +652,15 @@ function _resolveExplorationBrief() {
     }
   }
   const concept = explicitConcept || (candidates.length ? String(_pick(candidates) || '').trim() : '');
-  const familyLabel = familyId && typeof getSubnicheLabel === 'function'
+  const detectedFamilyLabel = familyId && typeof getSubnicheLabel === 'function'
     ? (getSubnicheLabel(familyId, MOTOR_STATE.market) || familyId)
-    : (familyId || 'Auto — seleccionar una familia compatible del mercado activo');
+    : (familyId || 'sin familia confirmada');
+  // Si el concepto fue escrito por el usuario, una detección automática no debe
+  // imponerse como clasificación segura ni desviar al generador del concepto.
+  const manualFamily = !!explicitSub || !!(MOTOR_STATE.dominio && MOTOR_STATE.dominio !== 'auto');
+  const familyLabel = explicitConcept && !manualFamily
+    ? 'orientativa (' + detectedFamilyLabel + '); prevalece el concepto del usuario'
+    : detectedFamilyLabel;
   return {
     concept: concept, familyId: familyId, familyLabel: familyLabel,
     bankFound: candidates.length > 0,
@@ -1430,10 +1436,10 @@ function formatPrompt(result) {
     const familyLabel = brief.familyLabel || promptFamily;
     const conceptAnchor = String(brief.concept || '').trim();
     o += '/EXPLORACIÓN — 3 DIRECCIONES DEL MISMO CONCEPTO\n';
-    o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | FAMILIA: ' + familyLabel + '\n';
-    o += 'CONCEPTO: ' + (conceptAnchor || 'propón una idea concreta dentro de la familia seleccionada') + ' | MENSAJE: ' + (String(MOTOR_STATE.message || '').trim() || 'crea un copy breve y exacto') + '\n';
-    o += 'BLOQUEO: conserva concepto, símbolo principal, audiencia y copy en A/B/C. No inventes objetos, datos ni texto adicional. Si falta información, omítela.\n';
-    o += 'DIRECCIONES: A/HEAVY = masas y contraste; B/SOFT = aire y formas abiertas; C/MODERN = geometría y síntesis. Cambia composición, silueta, jerarquía y relación texto-imagen; no basta recolorear. El estilo elegido sigue siendo la referencia visual principal.\n\n';
+    o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + '\n';
+    o += 'CONCEPTO: ' + (conceptAnchor || 'propón una idea concreta dentro de la familia seleccionada') + ' | MENSAJE EXACTO: ' + (String(MOTOR_STATE.message || '').trim() || 'propón copy breve') + '\n';
+    o += 'FAMILIA: ' + familyLabel + '. Si es orientativa, no la conviertas en tema; manda el concepto.\n';
+    o += 'A/B/C comparten concepto, símbolo y copy. No añadas objetos ni texto no pedidos; omite datos ausentes. HEAVY: masas/contraste; SOFT: aire/formas abiertas; MODERN: geometría/síntesis. Diferencia composición y jerarquía, no solo color. Respeta el estilo seleccionado.\n\n';
   } else {
     o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
