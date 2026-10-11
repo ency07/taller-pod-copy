@@ -118,6 +118,10 @@ ok(/_applyStructuralProfile\(v, _CONTACT_TREATMENT_ORDER\[k\], productBias, audP
 // Regresiones de matriz y de audiencia automática.
 ok(/HEAVY:\s*\{[\s\S]*?type: \[[^\]]*'Rounded amable'/.test(motorSourceForAudience), 'HEAVY debe permitir una tipografía redondeada cuando la audiencia la prefiere, sin perder la dirección estructural');
 
+ok(motorSourceForAudience.includes("const visibleStyle = String(v.estilo || '').trim().toLowerCase()"), 'la puntuación de audiencia debe comparar la etiqueta visible del estilo además de la clave interna');
+ok(motorSourceForAudience.includes("MOTOR_STATE.workflowMode !== 'explore'"), 'la puntuación no debe penalizar la preferencia de tratamiento cuando HEAVY/SOFT/MODERN son obligatorios en exploración');
+
+
 ok(motorSourceForAudience.includes('function renderMatrix(result)'), 'debe existir una función para mostrar la matriz comparativa');
 ok(motorSourceForAudience.includes('renderMatrix(result)'), 'la generación debe dibujar la matriz comparativa');
 ok(motorSourceForAudience.includes('renderMatrix(LAST_RESULT)'), 'la regeneración individual debe refrescar la matriz');
