@@ -43,6 +43,14 @@ ok(/cuatro vistas de mockup: camiseta clara frontal, camiseta clara a tres cuart
 ok(/VARIACIÓN VISUAL REAL: crea una nueva solución gráfica/i.test(motor), 'la variación debe exigir una solución gráfica nueva');
 ok(/Cambia obligatoriamente composición, silueta global, encuadre, distribución de masas y jerarquía tipográfica/i.test(motor), 'la variación debe exigir cambios estructurales verificables');
 
+
+/* Regresiones de pruebas manuales 1 y 2: no certifican imágenes generadas. */
+ok(/function _stableHash\(value\)/.test(motor) && /function _pickWeightedStable\(pool, weights, seed\)/.test(motor), 'la resolución automática de estilos debe ser determinista por contexto');
+ok(/stableBase \+ '\\|bias\\|'/i.test(motor) && /stableBase \+ '\\|explore-pick\\|'/i.test(motor), 'las fichas Auto deben conservar sus estilos al regenerar el mismo contexto');
+ok(/const copyLanguage = \(MOTOR_STATE\.market === 'gospel_es'/.test(motor), 'la variación debe resolver el idioma desde el mercado, sin forzar inglés');
+ok(/no añadir mensajes secundarios, citas, versículos, datos ni afirmaciones no proporcionadas/.test(motor), 'la variación debe bloquear copy secundario inventado');
+ok(/POR CADA DISEÑO A\/B\/C, generar cuatro mockups separados \(12 vistas en total\)/.test(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8')), 'CAMISETA SOFT exige 4 vistas separadas por diseño, 12 en total');
+
 if (failures.length) {
   console.error('FALLOS visual-prompt-contract:');
   failures.forEach(function (failure) { console.error(' - ' + failure); });
