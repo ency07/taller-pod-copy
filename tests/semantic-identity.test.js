@@ -73,7 +73,7 @@ ok(!tattooBrief.bankFound, 'si la familia no tiene banco compatible, debe recono
 const tattooPool = getObjectPool();
 ok(!tattooPool.some(function (item) { return _OBJECT_BANK_COMMON_EN.indexOf(item) !== -1; }), 'una familia manual sin banco no debe caer en el banco común de mercado (evita mascotas por defecto)');
 const explorationAudiences = resolveAudiences();
-ok(explorationAudiences.A === explorationAudiences.B && explorationAudiences.B === explorationAudiences.C, 'exploración debe mantener la misma audiencia en A/B/C aunque la opción multi esté activa');
+ok(new Set(Object.values(explorationAudiences)).size === 3, 'explorar 3 audiencias debe asignar perfiles distintos a A/B/C cuando no hay locks manuales');
 MOTOR_STATE.subniche = 'auto';
 MOTOR_STATE.workflowMode = 'explore';
 MOTOR_STATE.concept = '';
@@ -127,7 +127,7 @@ ok(motorSourceForAudience.includes('function renderMatrix(result)'), 'debe exist
 ok(motorSourceForAudience.includes('renderMatrix(result)'), 'la generación debe dibujar la matriz comparativa');
 ok(motorSourceForAudience.includes('renderMatrix(LAST_RESULT)'), 'la regeneración individual debe refrescar la matriz');
 ok(motorSourceForAudience.includes('const stableContext = ['), 'la audiencia Auto en exploración debe derivarse del contexto');
-ok(motorSourceForAudience.includes('stableAuto || pool[0]'), 'la audiencia Auto debe tener una elección estable aun si el hash resuelve índice cero');
+ok(motorSourceForAudience.includes('const stableContext = ['), 'la audiencia Auto debe resolverse de forma estable a partir del contexto');
 
 // Contratos de originalidad del prompt CONTACTSHEET.
 // Son pruebas estáticas de instrucciones; no prueban similitud de imágenes generadas.
@@ -140,7 +140,7 @@ ok(motorSource.includes('Cada tratamiento gobierna composición, jerarquía, tip
 ok(motorSource.includes('HEAVY: masas/contraste; SOFT: aire/formas abiertas; MODERN: geometría/síntesis.'), 'exploración debe definir diferencias funcionales en una instrucción compacta');
 ok(motorSource.includes("prevalece el concepto del usuario"), 'una familia detectada automáticamente no debe imponerse sobre un concepto explícito del usuario');
 ok(motorSource.includes("Si es orientativa, no la conviertas en tema; manda el concepto."), 'el prompt debe marcar la familia automática como orientativa cuando hay concepto explícito');
-ok(motorSource.includes('Cambia composición, silueta, jerarquía y relación texto-imagen; no basta recolorear.'), 'exploración debe prohibir diferencias cosméticas como única variación');
+ok(motorSource.includes('A/B/C deben cambiar de verdad encuadre, silueta global, distribución de masas, estructura tipográfica y relación texto-imagen; no basta recolorear ni cambiar técnica.'), 'exploración debe prohibir diferencias cosméticas como única variación');
 ok(motorSource.includes('CONTRATO CREATIVO: conserva concepto, familia, función y mensaje; no inventes objetos, datos ni texto.'), 'el prompt debe usar un contrato creativo compacto y concreto');
 ok(motorSource.includes('el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo.'), 'el tratamiento debe subordinarse al estilo artístico sin reemplazarlo');
 ok(motorSource.includes("var chosenStyle = locksNow.estilo && locksNow.estilo[keyLetter] && locksNow.estilo[keyLetter] !== 'Auto'"), 'el dado individual debe respetar el estilo fijado explícitamente en esa tarjeta');
