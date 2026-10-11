@@ -120,6 +120,12 @@ ok(/getSubnicheOptionsHTML\(market, 'all', region, previous\)/.test(motor), 'sel
 ok(/select\.value = allowed \? previous : 'Auto'/.test(motor), 'cambio de contexto reinicia a Auto una audiencia incompatible');
 ok(/getAudiencesForSubniche\(subniche, region, market\)/.test(motor), 'motor consulta compatibilidad por mercado y subnicho');
 
+// El selector de técnica de impresión debe inicializarse y seguir el producto.
+ok(/function refreshPrintMethodSelector\(\)/.test(motor), 'motor inicializa el selector de técnica de impresión');
+ok(/product\.addEventListener\('change', refreshPrintMethodSelector\)/.test(motor), 'cambiar producto actualiza las técnicas disponibles');
+ok(/methodEl\.innerHTML = allowed\.map/.test(motor), 'las opciones de impresión se reconstruyen desde la matriz de compatibilidad');
+ok(/capField\.style\.display = product === 'GORRA' \? '' : 'none'/.test(motor), 'acabado específico de gorra solo aparece para GORRA');
+
 const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const products = ['CAMISETA SOFT','CAMISETA APPAREL','HOODIE','GORRA','MUG','MOCHILA','TOTE BAG','FUNDA MÓVIL','ILUSTRACION PREMIUM APPAREL','DISPLATE'];
 products.forEach(function (product) { ok(index.includes('<option>' + product + '</option>') || index.includes('<option selected>' + product + '</option>'), 'selector UI debe conservar el producto ' + product); });
