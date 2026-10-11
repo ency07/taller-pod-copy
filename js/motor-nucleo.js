@@ -202,38 +202,21 @@ function getCurrentAudiencePool() {
 
 function resolveAudiences() {
   const base = MOTOR_STATE.audienceSet;
-  const multi = MOTOR_STATE.audienceMulti === 'si' && MOTOR_STATE.workflowMode !== 'explore';
+  const multi = MOTOR_STATE.audienceMulti === 'si';
   const market = MOTOR_STATE.market;
   const region = MOTOR_STATE.region;
-
   const pool = getCurrentAudiencePool();
-
-  if (MOTOR_STATE.workflowMode === 'explore') {
-    const requested = base !== 'Auto' && pool.indexOf(base) !== -1 ? base : '';
-    const lockSet = _loadLocks(market, MOTOR_STATE.product);
-    const lockedA = lockSet && lockSet.audiencia && lockSet.audiencia.A;
-    // En Auto, la audiencia no debe cambiar aleatoriamente cada vez que se pulsa
-    // "Crear" o "Validar". Elegirla determinísticamente para el mismo contexto.
-    const stableContext = [
-      market, region, MOTOR_STATE.subniche, MOTOR_STATE.product,
-      MOTOR_STATE.concept, MOTOR_STATE.message
-    ].map(function (value) { return String(value || '').trim().toLowerCase(); }).join('|');
-    let stableHash = 0;
-    for (let i = 0; i < stableContext.length; i++) {
-      stableHash = ((stableHash << 5) - stableHash + stableContext.charCodeAt(i)) | 0;
-    }
-    const stableAuto = pool.length ? pool[Math.abs(stableHash) % pool.length] : '';
-    const shared = requested || (lockedA && lockedA !== 'Auto' && pool.indexOf(lockedA) !== -1 ? lockedA : '') || stableAuto || pool[0] || '';
-    return { A: shared, B: shared, C: shared };
-  }
-
-  const locks = _loadLocks(market, MOTOR_STATE.product);
+  const locks = _loadLocks(memLocksMarket(), MOTOR_STATE.product) || {};
+  const audienceLocks = locks.audiencia || {};
   const result = {};
   const autos = [];
 
+  // Las elecciones manuales por tarjeta prevalecen también en Exploración.
+  // No se deben sustituir al pulsar "Crear los 3 diseños".
   K.forEach(function (k) {
-    if (locks.audiencia[k] && locks.audiencia[k] !== 'Auto' && pool.indexOf(locks.audiencia[k]) !== -1) {
-      result[k] = locks.audiencia[k];
+    const locked = audienceLocks[k];
+    if (locked && locked !== 'Auto' && pool.indexOf(locked) !== -1) {
+      result[k] = locked;
     } else {
       autos.push(k);
     }
@@ -242,18 +225,50 @@ function resolveAudiences() {
   if (!autos.length) return result;
 
   if (multi) {
-    const picks = _pickDistinct(autos, pool);
-    autos.forEach(function (k) { result[k] = picks[k]; });
-  } else {
-    let pick;
-    if (base !== 'Auto' && pool.indexOf(base) !== -1) {
-      pick = base;
-    } else {
-      pick = _pick(pool);
-    }
-    autos.forEach(function (k) { result[k] = pick; });
+    // "Explorar 3 audiencias": cada tarjeta Auto recibe un perfil propio
+    // cuando el pool lo permite; las audiencias fijadas manualmente quedan intactas.
+    const used = new Set(K.filter(function (k) { return !!result[k]; }).map(function (k) { return result[k]; }));
+    autos.forEach(function (k) {
+      const available = pool.filter(function (aud) { return !used.has(aud); });
+      let pick = '';
+      if (available.length) {
+        if (MOTOR_STATE.workflowMode === 'explore') {
+          const stableContext = [
+            market, region, MOTOR_STATE.subniche, MOTOR_STATE.product,
+            MOTOR_STATE.concept, MOTOR_STATE.message, k
+          ].map(function (value) { return String(value || '').trim().toLowerCase(); }).join('|');
+          let stableHash = 0;
+          for (let i = 0; i < stableContext.length; i++) {
+            stableHash = ((stableHash << 5) - stableHash + stableContext.charCodeAt(i)) | 0;
+          }
+          pick = available[Math.abs(stableHash) % available.length];
+        } else {
+          pick = _pick(available);
+        }
+      } else {
+        pick = pool.length ? pool[0] : '';
+      }
+      result[k] = pick;
+      if (pick) used.add(pick);
+    });
+    return result;
   }
 
+  // Sin audiencia distinta por tarjeta, Auto comparte una audiencia estable.
+  // Los locks manuales de B/C nunca se sobrescriben con el valor de A.
+  let shared = base !== 'Auto' && pool.indexOf(base) !== -1 ? base : '';
+  if (!shared) {
+    const stableContext = [
+      market, region, MOTOR_STATE.subniche, MOTOR_STATE.product,
+      MOTOR_STATE.concept, MOTOR_STATE.message
+    ].map(function (value) { return String(value || '').trim().toLowerCase(); }).join('|');
+    let stableHash = 0;
+    for (let i = 0; i < stableContext.length; i++) {
+      stableHash = ((stableHash << 5) - stableHash + stableContext.charCodeAt(i)) | 0;
+    }
+    shared = pool.length ? pool[Math.abs(stableHash) % pool.length] : '';
+  }
+  autos.forEach(function (k) { result[k] = shared; });
   return result;
 }
 
