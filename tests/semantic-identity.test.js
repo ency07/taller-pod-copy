@@ -154,6 +154,8 @@ const rerollSource = motorSource.slice(rerollStart, rerollEnd);
 ok(rerollStart >= 0 && rerollEnd > rerollStart, 'rerollSingle debe existir como función delimitada');
 ok(rerollSource.includes('var score = Math.random() * 2;'), 'el dado individual debe puntuar alternativas en vez de rechazar todos los conflictos');
 ok(rerollSource.includes('LAST_RESULT.set[keyLetter] = best;'), 'el dado individual debe reemplazar solo la tarjeta solicitada');
+ok(rerollSource.includes("MOTOR_STATE.market === 'global_en' && keyLetter === 'A'"), 'la variación adicional de semilla debe limitarse a 01A en Global EN');
+ok(rerollSource.includes('finally { MOTOR_STATE._rerollNonce = nonceBeforeAttempt; }'), 'el dado de 01A debe restaurar el nonce para no afectar generaciones posteriores');
 ok(rerollSource.includes('Las otras dos tarjetas se conservaron.'), 'el estado debe confirmar que las otras dos tarjetas no se regeneraron');
 
 

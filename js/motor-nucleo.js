@@ -1770,8 +1770,19 @@ function rerollSingle(keyLetter) {
     } : null;
     var best = null, bestScore = -1e9;
 
+    var rerollNonceBase = Number(MOTOR_STATE._rerollNonce) || 0;
     for (var i = 0; i < 600; i++) {
-      var cand = buildCandidate(auds, fixedIdentity);
+      var cand;
+      if (MOTOR_STATE.market === 'global_en' && keyLetter === 'A') {
+        // En Global EN, A necesita variar la semilla de selección entre intentos;
+        // restaurar el nonce evita afectar el estado de la siguiente generación.
+        var nonceBeforeAttempt = MOTOR_STATE._rerollNonce;
+        MOTOR_STATE._rerollNonce = rerollNonceBase + i;
+        try { cand = buildCandidate(auds, fixedIdentity); }
+        finally { MOTOR_STATE._rerollNonce = nonceBeforeAttempt; }
+      } else {
+        cand = buildCandidate(auds, fixedIdentity);
+      }
       var v = cand && cand[keyLetter];
       if (!v || (chosenStyle && v.estilo !== chosenStyle)) continue;
 
