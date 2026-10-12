@@ -244,7 +244,7 @@ function resolveAudiences() {
         if (MOTOR_STATE.workflowMode === 'explore') {
           const stableContext = [
             market, region, MOTOR_STATE.subniche, MOTOR_STATE.product,
-            MOTOR_STATE.concept, MOTOR_STATE.message, k
+            MOTOR_STATE.concept, MOTOR_STATE.message, MOTOR_STATE._rerollNonce || 0, k
           ].map(function (value) { return String(value || '').trim().toLowerCase(); }).join('|');
           let stableHash = 0;
           for (let i = 0; i < stableContext.length; i++) {
@@ -269,7 +269,7 @@ function resolveAudiences() {
   if (!shared) {
     const stableContext = [
       market, region, MOTOR_STATE.subniche, MOTOR_STATE.product,
-      MOTOR_STATE.concept, MOTOR_STATE.message
+      MOTOR_STATE.concept, MOTOR_STATE.message, MOTOR_STATE._rerollNonce || 0
     ].map(function (value) { return String(value || '').trim().toLowerCase(); }).join('|');
     let stableHash = 0;
     for (let i = 0; i < stableContext.length; i++) {
@@ -359,7 +359,7 @@ function _pickWeightedStable(pool, weights, seed) {
 function resolveEstilos(audsPerKey) {
   const locks = _loadLocks(memLocksMarket(), MOTOR_STATE.product);
   const candidates = _styleCandidatesForContext();
-  const stableBase = [MOTOR_STATE.market, MOTOR_STATE.product, MOTOR_STATE.concept, MOTOR_STATE.message, MOTOR_STATE.groupMode].join('|');
+  const stableBase = [MOTOR_STATE.market, MOTOR_STATE.product, MOTOR_STATE.concept, MOTOR_STATE.message, MOTOR_STATE.groupMode, MOTOR_STATE._rerollNonce || 0].join('|');
   const fixed = {};
   const auto = [];
 
@@ -1656,12 +1656,12 @@ function renderCards(result) {
       + '</select></span></div>';
 
     html += '<div class="vrow"><span class="vk">Audiencia</span><span class="vv"><select data-card="' + k + '" data-lock="audiencia" onchange="setCardLock(this)">'
-      + '<option value="Auto">Auto (' + escHtml(v.audiencia) + ')</option>'
-      + audPool.map(function (a) { return '<option value="' + escHtml(a) + '"' + (a === v.audiencia ? ' selected' : '') + '>' + escHtml(a) + '</option>'; }).join('')
+      + '<option value="Auto"' + ((!_loadLocks(memLocksMarket(), MOTOR_STATE.product).audiencia[k] || _loadLocks(memLocksMarket(), MOTOR_STATE.product).audiencia[k] === 'Auto') ? ' selected' : '') + '>Auto (' + escHtml(v.audiencia) + ')</option>'
+      + audPool.map(function (a) { return '<option value="' + escHtml(a) + '"' + (_loadLocks(memLocksMarket(), MOTOR_STATE.product).audiencia[k] === a ? ' selected' : '') + '>' + escHtml(a) + '</option>'; }).join('')
       + '</select></span></div>';
     html += '<div class="vrow"><span class="vk">Jerarquia</span><span class="vv"><select data-card="' + k + '" data-lock="jerarquia" onchange="setCardLock(this)">'
-      + '<option value="Auto">Auto (' + escHtml(v.jerarquiaVisual) + ')</option>'
-      + modes.map(function (m) { return '<option value="' + m + '"' + (m === v.jerarquiaVisual ? ' selected' : '') + '>' + m + '</option>'; }).join('')
+      + '<option value="Auto"' + ((!_loadLocks(memLocksMarket(), MOTOR_STATE.product).jerarquia[k] || _loadLocks(memLocksMarket(), MOTOR_STATE.product).jerarquia[k] === 'Auto') ? ' selected' : '') + '>Auto (' + escHtml(v.jerarquiaVisual) + ')</option>'
+      + modes.map(function (m) { return '<option value="' + m + '"' + (_loadLocks(memLocksMarket(), MOTOR_STATE.product).jerarquia[k] === m ? ' selected' : '') + '>' + m + '</option>'; }).join('')
       + '</select></span></div>';
 
     const rows = [
@@ -1757,6 +1757,7 @@ function rerollSingle(keyLetter) {
     }
 
     readStateFromDOM();
+    MOTOR_STATE._rerollNonce = (Number(MOTOR_STATE._rerollNonce) || 0) + 1;
     var auds = resolveAudiences();
     var others = K.filter(function (x) { return x !== keyLetter; });
     var current = LAST_RESULT.set[keyLetter];

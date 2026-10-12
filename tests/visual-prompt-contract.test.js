@@ -53,6 +53,13 @@ ok(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8').includes('PO
 
 ok(/QA visual pendiente/.test(motor) && /no inspeccionan el archivo de imagen generado/.test(motor), 'la interfaz no debe presentar el score del prompt como aprobación visual');
 
+
+// Los selectores muestran el bloqueo guardado, no confunden la ficha generada
+// con una elección manual que luego impediría volver a Auto.
+ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.audiencia\[k\] === a/.test(motor), 'la audiencia seleccionada debe reflejar el lock manual');
+ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === m/.test(motor), 'la jerarquía seleccionada debe reflejar el lock manual');
+ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === 'Auto'/.test(motor), 'Auto debe quedar seleccionado si no existe jerarquía fijada');
+
 if (failures.length) {
   console.error('FALLOS visual-prompt-contract:');
   failures.forEach(function (failure) { console.error(' - ' + failure); });
