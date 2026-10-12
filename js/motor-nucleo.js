@@ -1757,7 +1757,6 @@ function setCardLock(sel) {
     var k = sel.getAttribute('data-card');
     var field = sel.getAttribute('data-lock');
     var lockMarket = memLocksMarket();
-    console.log('[setCardLock] DOM market=', MOTOR_STATE.market, 'DOM region=', MOTOR_STATE.region, 'DOM product=', MOTOR_STATE.product, 'clave final=', lockMarket);
     _setLockValue(lockMarket, MOTOR_STATE.product, field, k, sel.value);
     if (typeof rerollSingle === 'function') rerollSingle(k);
   } catch (e) { console.warn(e); }

@@ -129,7 +129,7 @@ ok(!/const multi = MOTOR_STATE\.audienceMulti === 'si' && MOTOR_STATE\.workflowM
 
 // El selector de técnica de impresión debe inicializarse y seguir el producto.
 ok(/function refreshPrintMethodSelector\(\)/.test(motor), 'motor inicializa el selector de técnica de impresión');
-ok(/product\.addEventListener\('change', refreshPrintMethodSelector\)/.test(motor), 'cambiar producto actualiza las técnicas disponibles');
+ok(/product\.addEventListener\('change', function \(\) \{[\s\S]{0,100}refreshPrintMethodSelector\(\)/.test(motor), 'cambiar producto actualiza las técnicas disponibles');
 ok(/methodEl\.innerHTML = allowed\.map/.test(motor), 'las opciones de impresión se reconstruyen desde la matriz de compatibilidad');
 ok(/capField\.style\.display = product === 'GORRA' \? '' : 'none'/.test(motor), 'acabado específico de gorra solo aparece para GORRA');
 
