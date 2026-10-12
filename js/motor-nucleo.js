@@ -777,12 +777,30 @@ const _STRUCTURAL_PROFILES = {
   }
 };
 
-function _profilePick(pool, hints, fallback) {
+function _profileCandidates(pool, hints, fallback) {
   const source = Array.isArray(pool) ? pool : [];
   const matched = source.filter(function (item) {
     return (hints || []).some(function (hint) { return String(item).indexOf(hint) !== -1; });
   });
-  return _pick(matched.length ? matched : (source.length ? source : (fallback || [])));
+  return matched.length ? matched : (source.length ? source : (fallback || []));
+}
+
+function _profilePick(pool, hints, fallback) {
+  return _pick(_profileCandidates(pool, hints, fallback));
+}
+
+/* Prioriza preferencias compatibles, pero evita repetir ejes estructurales
+   ya asignados a las tarjetas anteriores del mismo conjunto. */
+function _pickProfileDistinct(preferredPools, fallbackPool, used) {
+  const pools = (preferredPools || []).filter(function (pool) { return Array.isArray(pool) && pool.length; });
+  const usedValues = Array.isArray(used) ? used : [];
+  for (let i = 0; i < pools.length; i++) {
+    const available = pools[i].filter(function (item) { return usedValues.indexOf(item) === -1; });
+    if (available.length) return _pick(available);
+  }
+  const fallback = Array.isArray(fallbackPool) ? fallbackPool : [];
+  const availableFallback = fallback.filter(function (item) { return usedValues.indexOf(item) === -1; });
+  return _pick(availableFallback.length ? availableFallback : (pools[0] || fallback));
 }
 
 /* Compatibilidad explícita entre el lenguaje artístico y el tratamiento estructural.
@@ -813,7 +831,8 @@ function _styleTreatmentDirective(styleValue, profileKey) {
     + ' Estilo artístico activo: «' + _getStyleBase(styleValue) + '». ' + techniqueRules.join(' ');
 }
 
-function _applyStructuralProfile(v, profileKey, productBias, audienceProfile) {
+function _applyStructuralProfile(v, profileKey, productBias, audienceProfile, usedAxes) {
+  const used = usedAxes || {};
   const profile = _STRUCTURAL_PROFILES[String(profileKey || '').toUpperCase()];
   if (!profile) return v;
   const bias = productBias || {};
@@ -827,14 +846,14 @@ function _applyStructuralProfile(v, profileKey, productBias, audienceProfile) {
   const audienceLayouts = (audience.layoutPref || []).length
     ? layouts.filter(function (x) { return audience.layoutPref.some(function (h) { return x.indexOf(h) === 0; }); })
     : [];
-  v.layout = _pick(productLayouts.length ? productLayouts : (audienceLayouts.length ? audienceLayouts : (layouts.length ? layouts : _LAYOUTS)));
+  v.layout = _pickProfileDistinct([productLayouts, audienceLayouts], layouts.length ? layouts : _LAYOUTS, used.layout);
 
   const typeHints = profile.type || [];
   const types = (_TIPOS || []).filter(function (x) { return typeHints.some(function (h) { return x.indexOf(h) === 0; }); });
   const audienceTypes = (audience.tipoPref || []).length
     ? types.filter(function (x) { return audience.tipoPref.some(function (h) { return x.indexOf(h) === 0; }); })
     : [];
-  v.tipografia = _pick(audienceTypes.length ? audienceTypes : (types.length ? types : _TIPOS));
+  v.tipografia = _pickProfileDistinct([audienceTypes], types.length ? types : _TIPOS, used.tipografia);
 
   const density = (_POOLS.densidad || []).filter(function (x) { return profile.density.indexOf(x) !== -1; });
   const productDensity = (bias.density || []).length
@@ -843,17 +862,19 @@ function _applyStructuralProfile(v, profileKey, productBias, audienceProfile) {
   const audienceDensity = (audience.densityPref || []).length
     ? density.filter(function (x) { return audience.densityPref.indexOf(x) !== -1; })
     : [];
-  v.densidad = _pick(productDensity.length ? productDensity : (audienceDensity.length ? audienceDensity : (density.length ? density : (_POOLS.densidad || []))));
+  v.densidad = _pickProfileDistinct([productDensity, audienceDensity], density.length ? density : (_POOLS.densidad || []), used.densidad);
 
-  v.negativeSpace = _profilePick(_POOLS.negativeSpace, profile.negative, ['Aire alrededor del motivo principal']);
-  v.jerarquia = _profilePick(_POOLS.jerarquia, profile.hierarchy, ['Jerarquía en capas de lectura']);
+  const negativeCandidates = _profileCandidates(_POOLS.negativeSpace, profile.negative, ['Aire alrededor del motivo principal']);
+  const hierarchyCandidates = _profileCandidates(_POOLS.jerarquia, profile.hierarchy, ['Jerarquía en capas de lectura']);
+  const profileForms = _profileCandidates(_FORMAS, profile.form, _FORMAS);
+  v.negativeSpace = _pickProfileDistinct([negativeCandidates], _POOLS.negativeSpace, used.negativeSpace);
+  v.jerarquia = _pickProfileDistinct([hierarchyCandidates], _POOLS.jerarquia, used.jerarquia);
   const audienceForms = (audience.formaPref || []).length
-    ? (_FORMAS || []).filter(function (x) {
-      return profile.form.some(function (h) { return x === h; }) && audience.formaPref.indexOf(x) !== -1;
-    })
+    ? profileForms.filter(function (x) { return audience.formaPref.indexOf(x) !== -1; })
     : [];
-  v.formaSimbolo = audienceForms.length ? _pick(audienceForms) : _profilePick(_FORMAS, profile.form, _FORMAS);
-  v.integracionTexto = _profilePick(_INTEGRACION, profile.integration, _INTEGRACION);
+  v.formaSimbolo = _pickProfileDistinct([audienceForms], profileForms, used.formaSimbolo);
+  const integrationCandidates = _profileCandidates(_INTEGRACION, profile.integration, _INTEGRACION);
+  v.integracionTexto = _pickProfileDistinct([integrationCandidates], _INTEGRACION, used.integracionTexto);
   v.perfilEstructural = String(profileKey).toUpperCase();
   return v;
 }
@@ -956,7 +977,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
 
   const set = {};
   const usedThisSet = new Set();
-  const usedAxes = { layout: [], tipografia: [], formaSimbolo: [], tratamiento: [], integracionTexto: [] };
+  const usedAxes = { layout: [], tipografia: [], formaSimbolo: [], tratamiento: [], integracionTexto: [], densidad: [], negativeSpace: [], jerarquia: [] };
   const contactIdentity = _isLockedContactSet()
     ? (fixedIdentity || _resolveContactIdentity(objectPool))
     : null;
@@ -1086,7 +1107,24 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     // Aplicar al final: A/B/C conservan perfiles estructurales fijos también en variación guiada.
     // Evita contradicciones entre el nombre del tratamiento y el perfil que llega al generador de imágenes.
     if (contactIdentity || MOTOR_STATE.workflowMode === 'explore' || MOTOR_STATE.workflowMode === 'variation') {
-      _applyStructuralProfile(v, _CONTACT_TREATMENT_ORDER[k], productBias, audProfile);
+      // Excluir los valores provisionales de esta tarjeta: solo cuentan las tarjetas previas.
+      const priorProfileAxes = {
+        layout: usedAxes.layout.slice(0, -1),
+        tipografia: usedAxes.tipografia.slice(0, -1),
+        formaSimbolo: usedAxes.formaSimbolo.slice(0, -1),
+        integracionTexto: usedAxes.integracionTexto.slice(0, -1),
+        densidad: usedAxes.densidad,
+        negativeSpace: usedAxes.negativeSpace,
+        jerarquia: usedAxes.jerarquia
+      };
+      _applyStructuralProfile(v, _CONTACT_TREATMENT_ORDER[k], productBias, audProfile, priorProfileAxes);
+      usedAxes.layout[usedAxes.layout.length - 1] = v.layout;
+      usedAxes.tipografia[usedAxes.tipografia.length - 1] = v.tipografia;
+      usedAxes.formaSimbolo[usedAxes.formaSimbolo.length - 1] = v.formaSimbolo;
+      usedAxes.integracionTexto[usedAxes.integracionTexto.length - 1] = v.integracionTexto;
+      usedAxes.densidad.push(v.densidad);
+      usedAxes.negativeSpace.push(v.negativeSpace);
+      usedAxes.jerarquia.push(v.jerarquia);
     }
     v.funcionSimbolica = contactIdentity
       ? contactIdentity.funcionSimbolica

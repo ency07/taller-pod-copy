@@ -99,6 +99,18 @@ const structuralPools = {
   ok(_POOLS.jerarquia.indexOf(profileCard.jerarquia) !== -1, profileKey + ' debe usar jerarquía interna registrada');
   ok(_INTEGRACION.indexOf(profileCard.integracionTexto) !== -1, profileKey + ' debe usar integración tipográfica registrada');
 });
+// Las diferencias se comprueban entre tarjetas, no solo contra el perfil individual.
+const distinctProfileAxes = { layout: [], tipografia: [], formaSimbolo: [], integracionTexto: [], densidad: [], negativeSpace: [], jerarquia: [] };
+const distinctProfileCards = ['HEAVY', 'SOFT', 'MODERN'].map(function (profileKey) {
+  const card = _applyStructuralProfile({}, profileKey, {}, {}, distinctProfileAxes);
+  Object.keys(distinctProfileAxes).forEach(function (axis) { distinctProfileAxes[axis].push(card[axis === 'tipografia' ? 'tipografia' : axis]); });
+  return card;
+});
+['layout', 'tipografia', 'formaSimbolo', 'integracionTexto', 'densidad', 'negativeSpace', 'jerarquia'].forEach(function (axis) {
+  const values = distinctProfileCards.map(function (card) { return card[axis]; });
+  ok(new Set(values).size === values.length, 'HEAVY/SOFT/MODERN deben evitar repetir ' + axis + ' cuando hay opciones compatibles');
+});
+
 const productConstrainedProfile = _applyStructuralProfile({}, 'HEAVY', { layout: ['Axial centrado'], density: ['Heavy'] });
 ok(productConstrainedProfile.layout.indexOf('Axial centrado') === 0, 'si producto y perfil comparten un layout permitido, debe respetarse');
 ok(productConstrainedProfile.densidad === 'Heavy', 'si producto y perfil comparten densidad permitida, debe respetarse');
