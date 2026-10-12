@@ -1745,7 +1745,10 @@ function setCardLock(sel) {
   try {
     var k = sel.getAttribute('data-card');
     var field = sel.getAttribute('data-lock');
-    _setLockValue(memLocksMarket(), MOTOR_STATE.product, field, k, sel.value);
+    var marketEl = document.getElementById('market');
+    var regionEl = document.getElementById('region');
+    var lockMarket = marketEl ? marketEl.value + '|' + (regionEl ? regionEl.value : MOTOR_STATE.region) : memLocksMarket();
+    _setLockValue(lockMarket, MOTOR_STATE.product, field, k, sel.value);
     if (typeof rerollSingle === 'function') rerollSingle(k);
   } catch (e) { console.warn(e); }
 }
