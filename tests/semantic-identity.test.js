@@ -125,7 +125,7 @@ ok(audienceConstrainedProfile.tipografia.indexOf('Sans humanista limpia') === 0,
 ok(audienceConstrainedProfile.densidad === 'Minimal', 'el perfil estructural debe conservar la densidad preferida por la audiencia cuando es compatible');
 ok(audienceConstrainedProfile.formaSimbolo === 'contorno lineal calibrado', 'el perfil estructural debe conservar la forma simbólica preferida por la audiencia cuando es compatible');
 const motorSourceForAudience = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
-ok(/_applyStructuralProfile\(v, _CONTACT_TREATMENT_ORDER\[k\], productBias, audProfile\)/.test(motorSourceForAudience), 'la generación debe pasar las preferencias de audiencia al perfil estructural');
+ok(/_applyStructuralProfile\(v, _CONTACT_TREATMENT_ORDER\[k\], productBias, audProfile, priorProfileAxes\)/.test(motorSourceForAudience), 'la generación debe pasar las preferencias de audiencia y los ejes previos al perfil estructural');
 
 // Regresiones de matriz y de audiencia automática.
 ok(/HEAVY:\s*\{[\s\S]*?type: \[[^\]]*'Rounded amable'/.test(motorSourceForAudience), 'HEAVY debe permitir una tipografía redondeada cuando la audiencia la prefiere, sin perder la dirección estructural');
@@ -156,7 +156,7 @@ ok(motorSource.includes('A/B/C deben cambiar de verdad encuadre, silueta global,
 ok(motorSource.includes('CONTRATO CREATIVO: conserva concepto, familia, función y mensaje; no inventes objetos, datos ni texto.'), 'el prompt debe usar un contrato creativo compacto y concreto');
 ok(motorSource.includes('el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo.'), 'el tratamiento debe subordinarse al estilo artístico sin reemplazarlo');
 ok(motorSource.includes("var chosenStyle = locksNow.estilo && locksNow.estilo[keyLetter] && locksNow.estilo[keyLetter] !== 'Auto'"), 'el dado individual debe respetar el estilo fijado explícitamente en esa tarjeta');
-ok(motorSource.includes("MOTOR_STATE.workflowMode === 'variation') {\n      _applyStructuralProfile(v, _CONTACT_TREATMENT_ORDER[k], productBias, audProfile);"), 'la variación guiada debe aplicar perfiles estructurales fijos HEAVY/SOFT/MODERN y preferencias compatibles de audiencia');
+ok(/if \(contactIdentity \|\| MOTOR_STATE\.workflowMode === 'explore' \|\| MOTOR_STATE\.workflowMode === 'variation'\) \{[\s\S]*?_applyStructuralProfile\(v, _CONTACT_TREATMENT_ORDER\[k\], productBias, audProfile, priorProfileAxes\);/.test(motorSource), 'CONTACTSHEET, exploración y variación deben aplicar perfiles fijos y evitar repetir ejes compatibles');
 ok(motorSource.includes('VARIACIÓN: usa la referencia solo para concepto y datos visibles; no copies su composición, silueta, encuadre ni jerarquía.'), 'variación guiada debe separar identidad semántica de la composición de referencia');
 ok(motorSource.includes('Si dos diseños parecen la misma imagen recoloreada, replantea su estructura.'), 'variación guiada debe rechazar imágenes que solo cambian de color');
 ok(motorSource.includes('No añadas paneles explicativos, objetos decorativos, logotipos, firmas ni texto no solicitado.'), 'el prompt debe limitar añadidos no solicitados para reducir alucinaciones visuales');
