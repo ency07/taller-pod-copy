@@ -2027,9 +2027,6 @@ window.readStateFromDOM = readStateFromDOM;
   }
 
   function bind() {
-    const director = document.getElementById('btnDirector');
-    const build = document.getElementById('btnBuild');
-    const clear = document.getElementById('btnNewSet');
     const market = document.getElementById('market');
     const region = document.getElementById('region');
     const subniche = document.getElementById('subniche');
@@ -2055,18 +2052,6 @@ window.readStateFromDOM = readStateFromDOM;
     }
 
     refreshContextSelectors(true);
-    if (director && !director.dataset.podBound) {
-      director.addEventListener('click', function (event) { event.preventDefault(); crearLos3Disenos(); });
-      director.dataset.podBound = '1';
-    }
-    if (build && !build.dataset.podBound) {
-      build.addEventListener('click', function (event) { event.preventDefault(); crearLos3Disenos(); });
-      build.dataset.podBound = '1';
-    }
-    if (clear && !clear.dataset.podBound) {
-      clear.addEventListener('click', function (event) { event.preventDefault(); limpiarFichas(); });
-      clear.dataset.podBound = '1';
-    }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
   else bind();
