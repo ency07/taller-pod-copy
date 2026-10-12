@@ -89,6 +89,17 @@ function mulberry32(seed) {
 Math.random = mulberry32(20261008);
 
 // Configurar estado del motor sin DOM
+const marketsForStyleCoverage = ['colombia','global_en','global_es','gospel_es','gospel_en','anglo','latam','spain','diaspora_col','custom'];
+const gospelAllowed = ["Folk Popular", "Vitral / Mosaico", "Barroco Ornamental", "Grabado / Linóleo", "Hand-Drawn", "Acuarela Suelta", "Sumi-e / Tinta Lavada", "Minimal Modern", "Bordado / Puntada", "Ukiyo-e / Woodblock", "Retro 70s", "Kids Storybook", "Collage Cut-Paper", "Papercraft 3D", "Airbrush Smooth", "Foil Stamp / Metallic", "Vintage Desgastado", "Bohemian"];
+marketsForStyleCoverage.forEach(function (market) {
+  MOTOR_STATE.market = market;
+  const pool = _styleCandidatesForContext();
+  if (market === 'gospel_es' || market === 'gospel_en') {
+    ok(pool.length === 18 && pool.every(function (s) { return gospelAllowed.indexOf(s) !== -1; }), market + ': debe usar solo los 18 estilos aprobados');
+  } else {
+    ok(pool.length === ESTILOS_LIST.length && ESTILOS_LIST.every(function (s) { return pool.indexOf(s) !== -1; }), market + ': debe permitir los 49 estilos registrados');
+  }
+});
 MOTOR_STATE.market = 'global_es';
 MOTOR_STATE.region = 'global';
 MOTOR_STATE.subniche = 'auto';
@@ -134,6 +145,32 @@ testAuds.forEach(function (aud, ai) {
 });
 const unreachable = ESTILOS_LIST.filter(function (s) { return !reachSeen[s]; });
 ok(unreachable.length === 0, 'estilos inalcanzables en Auto: ' + unreachable.join(' | '));
+
+// STYLE_CANDIDATES y AUD_STYLE_PREF no deben excluir estilos en mercados no Gospel.
+MOTOR_STATE.market = 'global_en';
+MOTOR_STATE.subniche = 'skate_culture';
+const candidatesWithSubniche = _styleCandidatesForContext();
+ok(candidatesWithSubniche.length === ESTILOS_LIST.length, 'STYLE_CANDIDATES no debe filtrar estilos en mercados no Gospel');
+ok(ESTILOS_LIST.every(function (s) { return candidatesWithSubniche.indexOf(s) !== -1; }), 'todos los estilos deben seguir disponibles');
+MOTOR_STATE.market = 'global_es';
+MOTOR_STATE.subniche = 'auto';
+
+// Cobertura de uso: al menos 20 estilos distintos en 10 generaciones por mercado.
+['global_en', 'colombia'].forEach(function (market) {
+  MOTOR_STATE.market = market;
+  MOTOR_STATE.region = market === 'colombia' ? 'colombia' : 'global';
+  MOTOR_STATE.groupMode = 'distintos';
+  MOTOR_STATE.subniche = 'auto';
+  const seenInTenSets = {};
+  for (let g = 0; g < 10; g++) {
+    MOTOR_STATE.concept = 'ten-set-style-coverage-' + market + '-' + g;
+    const out = resolveEstilos({ A: 'unisex_nacional', B: 'unisex_nacional', C: 'unisex_nacional' });
+    [out.A, out.B, out.C].forEach(function (style) { seenInTenSets[style] = true; });
+  }
+  ok(Object.keys(seenInTenSets).length >= 20, market + ': en 10 generaciones deben aparecer al menos 20 estilos distintos; aparecieron ' + Object.keys(seenInTenSets).length);
+});
+MOTOR_STATE.market = 'global_es';
+MOTOR_STATE.region = 'global';
 
 /* ---------- 4. groupMode mismo: 1 solo estilo ---------- */
 Math.random = mulberry32(777);
