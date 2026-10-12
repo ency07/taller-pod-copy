@@ -34,9 +34,11 @@ ORDER.forEach(function (f) {
   vm.runInThisContext(fs.readFileSync(path.join(JS, f), 'utf8'), { filename: f });
 });
 
-/* ---------- 1. Datos completos: 49 estilos en las 5 estructuras ---------- */
+/* ---------- 1. Catálogo: 37 estilos visuales + 12 tratamientos separados ---------- */
 ok(typeof ESTILOS_LIST !== 'undefined', 'ESTILOS_LIST no cargado');
-ok(ESTILOS_LIST.length === 49, 'ESTILOS_LIST debe tener 49 (37 + 12 DTF), tiene ' + (ESTILOS_LIST && ESTILOS_LIST.length));
+ok(ESTILOS_LIST.length === 49, 'el catálogo debe conservar 49 elementos (37 visuales + 12 tratamientos), tiene ' + (ESTILOS_LIST && ESTILOS_LIST.length));
+const VISUAL_STYLES = ESTILOS_LIST.filter(function (s) { return DTF.indexOf(s) === -1; });
+ok(VISUAL_STYLES.length === 37, 'deben existir 37 lenguajes visuales separados de los tratamientos');
 
 const DTF = [
   'Indexed Palette / Paleta indizada',
@@ -90,15 +92,10 @@ Math.random = mulberry32(20261008);
 
 // Configurar estado del motor sin DOM
 const marketsForStyleCoverage = ['colombia','global_en','global_es','gospel_es','gospel_en','anglo','latam','spain','diaspora_col','custom'];
-const gospelAllowed = ["Folk Popular", "Vitral / Mosaico", "Barroco Ornamental", "Grabado / Linóleo", "Hand-Drawn", "Acuarela Suelta", "Sumi-e / Tinta Lavada", "Minimal Modern", "Bordado / Puntada", "Ukiyo-e / Woodblock", "Retro 70s", "Kids Storybook", "Collage Cut-Paper", "Papercraft 3D", "Airbrush Smooth", "Foil Stamp / Metallic", "Vintage Desgastado", "Bohemian"];
 marketsForStyleCoverage.forEach(function (market) {
   MOTOR_STATE.market = market;
   const pool = _styleCandidatesForContext();
-  if (market === 'gospel_es' || market === 'gospel_en') {
-    ok(pool.length === 18 && pool.every(function (s) { return gospelAllowed.indexOf(s) !== -1; }), market + ': debe usar solo los 18 estilos aprobados');
-  } else {
-    ok(pool.length === ESTILOS_LIST.length && ESTILOS_LIST.every(function (s) { return pool.indexOf(s) !== -1; }), market + ': debe permitir los 49 estilos registrados');
-  }
+  ok(pool.length === 37 && VISUAL_STYLES.every(function (s) { return pool.indexOf(s) !== -1; }) && pool.every(function (s) { return DTF.indexOf(s) === -1; }), market + ': debe permitir los 37 estilos visuales y excluir los 12 tratamientos');
 });
 MOTOR_STATE.market = 'global_es';
 MOTOR_STATE.region = 'global';
@@ -131,7 +128,7 @@ for (let g = 0; g < GENS; g++) {
 const seenList = Object.keys(seen);
 ok(noRepeatViolations === 0, 'repetidos intra-set en ' + noRepeatViolations + '/' + GENS + ' generaciones (modo distintos)');
 ok(quotaViolations === 0, 'cuota de exploración falló en ' + quotaViolations + '/' + GENS + ' generaciones');
-ok(seenList.length >= 42, 'cobertura pobre: solo ' + seenList.length + '/49 estilos en ' + GENS + ' gens (mín 42). Vistos: ' + seenList.join(' | '));
+ok(seenList.length >= 32, 'cobertura pobre: solo ' + seenList.length + '/37 estilos visuales en ' + GENS + ' gens (mín 32). Vistos: ' + seenList.join(' | '));
 
 // Todos los 49 alcanzables: barrido exhaustivo por audiencia × semilla
 const reachSeen = {};
@@ -143,15 +140,15 @@ testAuds.forEach(function (aud, ai) {
     [out.A, out.B, out.C].forEach(function (s) { reachSeen[s] = true; });
   }
 });
-const unreachable = ESTILOS_LIST.filter(function (s) { return !reachSeen[s]; });
-ok(unreachable.length === 0, 'estilos inalcanzables en Auto: ' + unreachable.join(' | '));
+const unreachable = VISUAL_STYLES.filter(function (s) { return !reachSeen[s]; });
+ok(unreachable.length === 0, 'estilos visuales inalcanzables en Auto: ' + unreachable.join(' | '));
 
 // STYLE_CANDIDATES y AUD_STYLE_PREF no deben excluir estilos en mercados no Gospel.
 MOTOR_STATE.market = 'global_en';
 MOTOR_STATE.subniche = 'skate_culture';
 const candidatesWithSubniche = _styleCandidatesForContext();
-ok(candidatesWithSubniche.length === ESTILOS_LIST.length, 'STYLE_CANDIDATES no debe filtrar estilos en mercados no Gospel');
-ok(ESTILOS_LIST.every(function (s) { return candidatesWithSubniche.indexOf(s) !== -1; }), 'todos los estilos deben seguir disponibles');
+ok(candidatesWithSubniche.length === 37, 'STYLE_CANDIDATES no debe filtrar los 37 estilos visuales en mercados no Gospel');
+ok(VISUAL_STYLES.every(function (s) { return candidatesWithSubniche.indexOf(s) !== -1; }), 'todos los estilos visuales deben seguir disponibles');
 MOTOR_STATE.market = 'global_es';
 MOTOR_STATE.subniche = 'auto';
 
