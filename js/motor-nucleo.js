@@ -1748,6 +1748,7 @@ function setCardLock(sel) {
     var marketEl = document.getElementById('market');
     var regionEl = document.getElementById('region');
     var lockMarket = marketEl ? marketEl.value + '|' + (regionEl ? regionEl.value : MOTOR_STATE.region) : memLocksMarket();
+    console.log('[setCardLock] DOM market=', marketEl ? marketEl.value : null, 'DOM region=', regionEl ? regionEl.value : null, 'MOTOR_STATE.market=', MOTOR_STATE.market, 'clave final=', lockMarket);
     _setLockValue(lockMarket, MOTOR_STATE.product, field, k, sel.value);
     if (typeof rerollSingle === 'function') rerollSingle(k);
   } catch (e) { console.warn(e); }
