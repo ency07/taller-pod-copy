@@ -388,7 +388,7 @@ function resolveEstilos(audsPerKey) {
   const autoKeys = auto.slice();
   
   // Cuota: al menos 1 de cada 3 fichas fuera del top-3 de su audiencia
-  const quotaNeeded = Math.max(1, Math.ceil(autoKeys.length / 3));
+  const quotaNeeded = Math.min(autoKeys.length, Math.max(2, Math.ceil(autoKeys.length * 2 / 3)));
   let quotaUsed = 0;
 
   autoKeys.forEach(function (k, idx) {
@@ -397,7 +397,7 @@ function resolveEstilos(audsPerKey) {
     const top3 = pref.slice(0, 3);
     
     const isLast = idx === autoKeys.length - 1;
-    const mustExplore = (quotaUsed < quotaNeeded) && (isLast || _stableUnit(stableBase + '|explore|' + k + '|' + aud) < 0.4);
+    const mustExplore = (quotaUsed < quotaNeeded) && (isLast || _stableUnit(stableBase + '|explore|' + k + '|' + aud) < 0.8);
     
     // Nivel 1: bias fuerte (pref - used) - peso 3
     const biasPool = candidates.filter(function (e) {
