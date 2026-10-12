@@ -362,6 +362,10 @@ function resolveEstilos(audsPerKey) {
   const stableBase = [MOTOR_STATE.market, MOTOR_STATE.product, MOTOR_STATE.concept, MOTOR_STATE.message, MOTOR_STATE.groupMode, MOTOR_STATE._rerollNonce || 0].join('|');
   const fixed = {};
   const auto = [];
+  const memKeyFn = typeof memKey === 'function' ? memKey : _memKey;
+  const recentKey = memKeyFn(['styleRecentSets', MOTOR_STATE.market, MOTOR_STATE.region || 'global', MOTOR_STATE.product]);
+  const recentSets = (typeof getJSON === 'function' ? getJSON(recentKey, []) : _memGetJSON(recentKey, [])) || [];
+  const recentStyles = new Set([].concat.apply([], recentSets.slice(-3)));
 
   K.forEach(function (k) {
     if (locks.estilo[k] && locks.estilo[k] !== 'Auto' && candidates.indexOf(locks.estilo[k]) !== -1) {
@@ -376,61 +380,53 @@ function resolveEstilos(audsPerKey) {
   if (MOTOR_STATE.groupMode === 'mismo') {
     const baseAud = audsPerKey[K[0]] || 'unisex_nacional';
     const basePref = (typeof AUD_STYLE_PREF !== 'undefined' ? AUD_STYLE_PREF[baseAud] : []) || [];
-    const preferred = candidates.filter(function (e) { return basePref.indexOf(_getStyleBase(e)) !== -1; });
-    const pool = preferred.length ? preferred : candidates;
-    const weights = pool.map(function (e) { return basePref.indexOf(_getStyleBase(e)) !== -1 ? 3 : 1; });
-    const base = Object.values(fixed)[0] || _pickWeightedStable(pool, weights, stableBase + '|same-group|' + baseAud);
+    const weights = candidates.map(function (style) {
+      let weight = basePref.indexOf(_getStyleBase(style)) !== -1 ? 3 : 1;
+      if (recentStyles.has(style)) weight *= 0.35;
+      return weight;
+    });
+    const base = Object.values(fixed)[0] || _pickWeightedStable(candidates, weights, stableBase + '|same-group|' + baseAud);
     auto.forEach(function (k) { fixed[k] = base; });
+    const usedStyles = Array.from(new Set(Object.values(fixed)));
+    if (typeof setJSON === 'function') setJSON(recentKey, recentSets.concat([usedStyles]).slice(-3));
+    else _memSetJSON(recentKey, recentSets.concat([usedStyles]).slice(-3));
+    usedStyles.forEach(_recordStyleUse);
     return fixed;
   }
 
   const used = new Set(Object.values(fixed));
   const autoKeys = auto.slice();
-  
-  // Cuota: al menos 1 de cada 3 fichas fuera del top-3 de su audiencia
   const quotaNeeded = Math.min(autoKeys.length, Math.max(2, Math.ceil(autoKeys.length * 2 / 3)));
   let quotaUsed = 0;
 
   autoKeys.forEach(function (k, idx) {
     const aud = audsPerKey[k] || 'unisex_nacional';
     const pref = (typeof AUD_STYLE_PREF !== 'undefined' ? AUD_STYLE_PREF[aud] : []) || [];
-    const top3 = pref.slice(0, 3);
-    
     const isLast = idx === autoKeys.length - 1;
     const mustExplore = (quotaUsed < quotaNeeded) && (isLast || _stableUnit(stableBase + '|explore|' + k + '|' + aud) < 0.8);
-    
-    // Nivel 1: bias fuerte (pref - used) - peso 3
     const biasPool = candidates.filter(function (e) {
       return pref.indexOf(_getStyleBase(e)) !== -1 && !used.has(e);
     });
-    // Nivel 2: exploración (candidates - used - bias) - peso 2
     const explorePool = candidates.filter(function (e) {
       return !used.has(e) && biasPool.indexOf(e) === -1;
     });
-    // Nivel 3: garantía cola larga (candidates - used) - peso 1 + score uso
     const fallbackPool = candidates.filter(function (e) { return !used.has(e); });
-
     let pick;
     if (mustExplore && explorePool.length) {
-      // Forzar exploración: elegir de explorePool con peso por score de uso
-      const weights = explorePool.map(function () { return 2; });
+      const weights = explorePool.map(function (style) { return recentStyles.has(style) ? 0.7 : 2; });
       pick = _pickWeightedStable(explorePool, weights, stableBase + '|explore-pick|' + k + '|' + aud);
       quotaUsed++;
     } else if (biasPool.length && _stableUnit(stableBase + '|bias|' + k + '|' + aud) < 0.7) {
-      // 70% bias hacia pref de audiencia
-      const weights = biasPool.map(function (e) { return 3; });
+      const weights = biasPool.map(function (style) { return recentStyles.has(style) ? 1.05 : 3; });
       pick = _pickWeightedStable(biasPool, weights, stableBase + '|bias-pick|' + k + '|' + aud);
     } else if (explorePool.length) {
-      // Exploración normal
-      const weights = explorePool.map(function () { return 2; });
+      const weights = explorePool.map(function (style) { return recentStyles.has(style) ? 0.7 : 2; });
       pick = _pickWeightedStable(explorePool, weights, stableBase + '|explore-normal|' + k + '|' + aud);
       if (!biasPool.length) quotaUsed++;
     } else if (fallbackPool.length) {
-      // Garantía cola larga
-      const weights = fallbackPool.map(function () { return 1; });
+      const weights = fallbackPool.map(function (style) { return recentStyles.has(style) ? 0.35 : 1; });
       pick = _pickWeightedStable(fallbackPool, weights, stableBase + '|fallback|' + k + '|' + aud);
     } else {
-      // Fallback total (no debería pasar)
       pick = candidates[_stableHash(stableBase + '|last-resort|' + k) % candidates.length];
     }
 
@@ -438,6 +434,9 @@ function resolveEstilos(audsPerKey) {
     used.add(pick);
     _recordStyleUse(pick);
   });
+  const usedStyles = Array.from(new Set(Object.values(fixed)));
+  if (typeof setJSON === 'function') setJSON(recentKey, recentSets.concat([usedStyles]).slice(-3));
+  else _memSetJSON(recentKey, recentSets.concat([usedStyles]).slice(-3));
   return fixed;
 }
 function resolveTextImageModes(estilos, audsPerKey) {

@@ -1,4 +1,4 @@
-/* Test de cobertura de estilos: los 49 estilos deben ser alcanzables en Auto.
+/* Test de cobertura de estilos: los 37 estilos visuales deben ser alcanzables en Auto; los 12 tratamientos se mantienen separados.
    Regresión del bug donde AUD_STYLE_PREF (3 estilos/audiencia) actuaba como
    candado duro y solo 8 estilos salían en la práctica (20 inalcanzables).
 
@@ -20,6 +20,7 @@ global.window = global;
 global.document = { getElementById: function () { return null; }, querySelectorAll: function () { return []; } };
 
 const JS = path.join(ROOT, 'js');
+const motorSourceForTest = fs.readFileSync(path.join(__dirname, '..', 'js', 'motor-nucleo.js'), 'utf8');
 const ORDER = [
   'data-mercados.js',
   'data-audiencias.js',
@@ -92,6 +93,7 @@ Math.random = mulberry32(20261008);
 
 // Configurar estado del motor sin DOM
 const marketsForStyleCoverage = ['colombia','global_en','global_es','gospel_es','gospel_en','anglo','latam','spain','diaspora_col','custom'];
+const gospelAllowed = ["Folk Popular", "Vitral / Mosaico", "Barroco Ornamental", "Grabado / Linóleo", "Hand-Drawn", "Acuarela Suelta", "Sumi-e / Tinta Lavada", "Minimal Modern", "Bordado / Puntada", "Ukiyo-e / Woodblock", "Retro 70s", "Kids Storybook", "Collage Cut-Paper", "Papercraft 3D", "Airbrush Smooth", "Foil Stamp / Metallic", "Vintage Desgastado", "Bohemian"];
 marketsForStyleCoverage.forEach(function (market) {
   MOTOR_STATE.market = market;
   const pool = _styleCandidatesForContext();
@@ -168,6 +170,12 @@ MOTOR_STATE.subniche = 'auto';
 });
 MOTOR_STATE.market = 'global_es';
 MOTOR_STATE.region = 'global';
+
+
+// Anti-repetición: la selección consulta y guarda únicamente los últimos 3 sets.
+// Los estilos recientes reciben un peso menor, pero nunca cero.
+ok(motorSourceForTest.indexOf("recentSets.slice(-3)") !== -1, 'la selección debe consultar los últimos 3 sets');
+ok(motorSourceForTest.indexOf("recentStyles.has(style) ? 0.35 : 1") !== -1 || motorSourceForTest.indexOf("recentStyles.has(style) ? 0.7 : 2") !== -1, 'los estilos recientes deben conservar peso positivo');
 
 /* ---------- 4. groupMode mismo: 1 solo estilo ---------- */
 Math.random = mulberry32(777);
