@@ -37,8 +37,6 @@ ORDER.forEach(function (f) {
 /* ---------- 1. Catálogo: 37 estilos visuales + 12 tratamientos separados ---------- */
 ok(typeof ESTILOS_LIST !== 'undefined', 'ESTILOS_LIST no cargado');
 ok(ESTILOS_LIST.length === 49, 'el catálogo debe conservar 49 elementos (37 visuales + 12 tratamientos), tiene ' + (ESTILOS_LIST && ESTILOS_LIST.length));
-const VISUAL_STYLES = ESTILOS_LIST.filter(function (s) { return DTF.indexOf(s) === -1; });
-ok(VISUAL_STYLES.length === 37, 'deben existir 37 lenguajes visuales separados de los tratamientos');
 
 const DTF = [
   'Indexed Palette / Paleta indizada',
@@ -54,6 +52,8 @@ const DTF = [
   'Glitter Zone / Zona glitter',
   'Glow Zone / Zona fosforescente'
 ];
+const VISUAL_STYLES = ESTILOS_LIST.filter(function (s) { return DTF.indexOf(s) === -1; });
+ok(VISUAL_STYLES.length === 37, 'deben existir 37 lenguajes visuales separados de los tratamientos');
 DTF.forEach(function (s) {
   ok(ESTILOS_LIST.indexOf(s) !== -1, 'falta estilo DTF en ESTILO_INFO: ' + s);
   ok(STYLE_POOLS[s] && STYLE_POOLS[s].arquitectura && STYLE_POOLS[s].arquitectura.length >= 4, 'STYLE_POOLS incompleto: ' + s);
