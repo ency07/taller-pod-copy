@@ -126,17 +126,26 @@ let MOTOR_STATE = {
 const K = ['A', 'B', 'C'];
 const N = ['01A', '01B', '01C'];
 
+/* --- Sincronización mínima del contexto de locks --- */
+function syncContext() {
+  const marketEl = document.getElementById('market');
+  const regionEl = document.getElementById('region');
+  const productEl = document.getElementById('product');
+  MOTOR_STATE.market = marketEl ? marketEl.value : 'global_en';
+  MOTOR_STATE.region = regionEl ? regionEl.value : 'global';
+  MOTOR_STATE.product = productEl ? productEl.value : 'CAMISETA SOFT';
+  return { market: MOTOR_STATE.market, region: MOTOR_STATE.region, product: MOTOR_STATE.product };
+}
+
 /* --- Lectura de estado desde el DOM --- */
 function readStateFromDOM() {
   const g = function (id) { return document.getElementById(id); };
   const v = function (id, fallback) { const el = g(id); return el ? el.value : fallback; };
 
-  MOTOR_STATE.market = v('market', 'global_en');
+  syncContext();
   MOTOR_STATE.language = v('language', 'auto');
   MOTOR_STATE.marketplace = v('marketplace', 'generic');
-  MOTOR_STATE.region = v('region', 'global');
   MOTOR_STATE.subniche = v('subniche', 'auto');
-  MOTOR_STATE.product = v('product', 'CAMISETA SOFT');
   MOTOR_STATE.serie = v('serie', '');
   MOTOR_STATE.concept = v('concept', '');
   MOTOR_STATE.message = v('message', '');
@@ -1636,6 +1645,7 @@ function renderCards(result) {
   const root = document.getElementById('cards');
   if (!root || !result || !result.set) return;
 
+  syncContext();
   root.innerHTML = '';
   const set = result.set;
   var audPool = [];
@@ -1743,12 +1753,11 @@ function renderMatrix(result) {
 
 function setCardLock(sel) {
   try {
+    syncContext();
     var k = sel.getAttribute('data-card');
     var field = sel.getAttribute('data-lock');
-    var marketEl = document.getElementById('market');
-    var regionEl = document.getElementById('region');
-    var lockMarket = marketEl ? marketEl.value + '|' + (regionEl ? regionEl.value : MOTOR_STATE.region) : memLocksMarket();
-    console.log('[setCardLock] DOM market=', marketEl ? marketEl.value : null, 'DOM region=', regionEl ? regionEl.value : null, 'MOTOR_STATE.market=', MOTOR_STATE.market, 'clave final=', lockMarket);
+    var lockMarket = memLocksMarket();
+    console.log('[setCardLock] DOM market=', MOTOR_STATE.market, 'DOM region=', MOTOR_STATE.region, 'DOM product=', MOTOR_STATE.product, 'clave final=', lockMarket);
     _setLockValue(lockMarket, MOTOR_STATE.product, field, k, sel.value);
     if (typeof rerollSingle === 'function') rerollSingle(k);
   } catch (e) { console.warn(e); }
@@ -1925,6 +1934,7 @@ function limpiarFichas() {
 
 /* --- Borrar memoria (con doble confirmación) --- */
 function borrarMemoria() {
+  syncContext();
   if (!_confirmDestructive('¿Borrar toda la memoria de patrones, locks e historial de este mercado/producto?', 'BORRAR')) return;
   if (typeof clearPatternMemory === 'function') clearPatternMemory(memPatternMarket(), MOTOR_STATE.product);
   if (typeof clearLocks === 'function') clearLocks(memLocksMarket(), MOTOR_STATE.product);
@@ -2033,17 +2043,26 @@ window.readStateFromDOM = readStateFromDOM;
     const product = document.getElementById('product');
 
     if (product && !product.__podPrintMethodBound) {
-      product.addEventListener('change', refreshPrintMethodSelector);
+      product.addEventListener('change', function () {
+        syncContext();
+        refreshPrintMethodSelector();
+      });
       product.__podPrintMethodBound = true;
     }
     refreshPrintMethodSelector();
 
     if (market && !market.__podAudienceRefreshBound) {
-      market.addEventListener('change', function () { refreshContextSelectors(true); });
+      market.addEventListener('change', function () {
+        syncContext();
+        refreshContextSelectors(true);
+      });
       market.__podAudienceRefreshBound = true;
     }
     if (region && !region.__podAudienceRefreshBound) {
-      region.addEventListener('change', function () { refreshContextSelectors(false); });
+      region.addEventListener('change', function () {
+        syncContext();
+        refreshContextSelectors(false);
+      });
       region.__podAudienceRefreshBound = true;
     }
     if (subniche && !subniche.__podAudienceRefreshBound) {
