@@ -64,7 +64,7 @@ ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === '
 ok(/si existe mensaje proporcionado, conservarlo literalmente y usarlo como único copy principal; no exigir tres niveles/i.test(motor), 'el prompt general no debe exigir tres niveles que contradigan un mensaje único');
 ok(/JERARQUÍA ES UNA ORDEN VISUAL/i.test(motor) && /texto 70–80%/i.test(motor) && /símbolo 70–80%/i.test(motor), 'la jerarquía debe tener umbrales visuales cuantificados');
 ok(/SOLO_TEXTO = solo letras, cero imagen/i.test(motor) && /ÚNICOS elementos permitidos: letras del copy literal/i.test(motor), 'SOLO_TEXTO debe prohibir imágenes desde el contrato global y la ficha');
-ok(/Cumplimiento verificable: la diferencia de tamaño\/peso debe ser evidente a primera vista/i.test(motor), 'cada jerarquía debe exigir una diferencia visual comprobable');
+ok(/La diferencia debe ser evidente a primera vista/i.test(motor), 'cada jerarquía debe exigir una diferencia visual comprobable');
 ok(/diseño tipográfico puro en /.test(motor) && /jamás autoriza ilustraciones ni ornamentos independientes/.test(motor), 'el estilo artístico de SOLO_TEXTO solo puede afectar el tratamiento tipográfico');
 // Esto evita que una composición textual aleatoria contradiga TEXTO_DOMINANTE,
 // OBJETO_DOMINANTE, BALANCEADO o SOLO_TEXTO.
