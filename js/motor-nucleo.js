@@ -1029,6 +1029,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     // Variación desde imagen conserva su propia lógica y sus selectores.
     if (contactIdentity) {
       v.objeto = contactIdentity.symbol;
+    o += 'ARQUITECTURA TEXTUAL EXCLUSIVA DE ESTA TARJETA: ' + v.distribucionTexto + '. La asignación es variable y no pertenece a HEAVY, SOFT ni MODERN. No repetir entre A/B/C la ubicación principal, la alineación ni la relación texto-imagen, salvo excepción justificada por legibilidad, concepto o producto.\\n';
     } else if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       v.objeto = 'SIN OBJETO — composición tipográfica pura';
     } else if (conservarSimb) {
@@ -1667,6 +1668,7 @@ function formatPrompt(result) {
           ? 'COPY PRINCIPAL LITERAL: «' + String(MOTOR_STATE.message).trim() + '»; no modificar palabras. APOYO: ' + (String(MOTOR_STATE.support || '').trim() ? '«' + String(MOTOR_STATE.support).trim() + '»' : 'omitir si no aporta') + '; tercer nivel solo con dato real; tipografía ' + v.tipografia
           : 'COPY COMPARTIDO A/B/C: define palabras exactas de una frase principal original; conserva el mismo texto en las tres direcciones. Apoyo literal solo si aporta y también compartido; tercer nivel solo con dato real o se omite. Prohibidos placeholders y microtexto. Tipografía: ' + v.tipografia)
         : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia);
+    o += 'ARQUITECTURA TEXTUAL EXCLUSIVA DE ESTA TARJETA: ' + v.distribucionTexto + '. La asignación es variable y no pertenece a HEAVY, SOFT ni MODERN. No repetir entre A/B/C la ubicación principal, la alineación ni la relación texto-imagen, salvo excepción justificada por legibilidad, concepto o producto.\\n';
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += contactDNA
         ? 'DIRECCIÓN: representar el mismo símbolo mediante la forma de las letras; sin añadir otros objetos ni ilustraciones.\n'
@@ -1680,7 +1682,7 @@ function formatPrompt(result) {
       o += 'ESTILO PRINCIPAL (prioridad): ' + v.estilo + '. Gobierna el lenguaje visual; forma, técnica y tratamiento son secundarios y no pueden introducir estéticas incompatibles.\n';
       o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
       o += 'TEXTO: ' + textLine + '\n';
-      o += 'ARQUITECTURA TEXTUAL EXCLUSIVA DE ESTA TARJETA: ' + v.distribucionTexto + '. La asignación es variable y no pertenece a HEAVY, SOFT ni MODERN. No repetir entre A/B/C la ubicación principal, la alineación ni la relación texto-imagen, salvo excepción justificada por legibilidad, concepto o producto.\\n';
+
       o += 'TEXTO/IMAGEN: ' + v.distribucionTexto + '; ' + v.integracionTexto + '; ' + v.relacion + '\n';
     }
     o += 'PALETA: ' + v.paleta + '\n';
