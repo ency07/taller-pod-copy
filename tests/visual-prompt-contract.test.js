@@ -60,6 +60,14 @@ ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.audiencia\[k\] === a
 ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === m/.test(motor), 'la jerarquía seleccionada debe reflejar el lock manual');
 ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === 'Auto'/.test(motor), 'Auto debe quedar seleccionado si no existe jerarquía fijada');
 
+
+// La exploración debe devolver tres conceptos antes de generar mockups de producto.
+ok(/workflowMode === 'explore'[\s\S]{0,260}NO generar mockups de producto en esta fase/i.test(motor), 'exploración no debe gastar la salida en mockups de un solo diseño');
+ok(/genera EXACTAMENTE TRES ARTES CONCEPTUALES INDEPENDIENTES[\s\S]{0,200}01A HEAVY, 01B SOFT y 01C MODERN/i.test(motor), 'exploración debe exigir tres artes separados y rotulados HEAVY/SOFT/MODERN');
+ok(/no son tres mockups, ángulos ni camisetas del mismo diseño/i.test(motor), 'el contrato debe distinguir tres diseños de varias vistas de una sola propuesta');
+ok(/entrega siempre las tres direcciones 01A HEAVY, 01B SOFT y 01C MODERN como tres diseños distintos/i.test(motor), 'la salida de cualquier modo debe preservar los tres diseños');
+ok(/en EXPLORACIÓN, entrega solo los tres artes comparativos sin mockups/i.test(motor), 'la regla global debe reservar los mockups para después de elegir una dirección');
+
 if (failures.length) {
   console.error('FALLOS visual-prompt-contract:');
   failures.forEach(function (failure) { console.error(' - ' + failure); });
