@@ -75,7 +75,7 @@ ok(/DIRECCIÓN ARTÍSTICA: '\s*\+ v\.formaSimbolo \+ '; ' \+ v\.tecnica \+ '; ' 
 ok(!/o \+= 'DIRECCIÓN: ' \+ v\.arquitectura \+ '; ' \+ v\.composicion \+ '; ' \+ v\.layout/.test(motor), 'no debe quedar la antigua instrucción de dirección que contradecía la composición textual');
 ok(!/espacio negativo ' \+ v\.negativeSpace \+ ' · jerarquía interna ' \+ v\.jerarquia/.test(motor), 'la jerarquía interna aleatoria no debe contradecir el selector de jerarquía visible');
 ok(!/RELACIÓN TEXTO-IMAGEN: aplica la arquitectura textual obligatoria anterior/.test(motor), 'no debe quedar una instrucción secundaria redundante que vuelva a describir la arquitectura');
-ok((motor.match(/  '(?:TEXTO|COLUMNA|ARCO|BLOQUE|DIAGONAL|BANDA|PALABRA|CINTA|DOS|FRANJA|SÍMBOLO|PILA|ESQUINA)[^\n]*',/g) || []).length >= 20, 'el banco debe conservar al menos 20 arquitecturas compositivas');
+ok((motor.match(/  '(?:TEXTO|COLUMNA|ARCO|BLOQUE|BLOQUES|DIAGONAL|BANDA|PALABRA|CINTA|DOS|FRANJA|SÍMBOLO|PILA|ESQUINA)[^\n]*',/g) || []).length >= 20, 'el banco debe conservar al menos 20 arquitecturas compositivas');
 
 
 if (failures.length) {
