@@ -121,7 +121,7 @@ const audienceConstrainedProfile = _applyStructuralProfile({}, 'SOFT', {}, {
   densityPref: ['Minimal'],
   formaPref: ['contorno lineal calibrado']
 });
-ok(audienceConstrainedProfile.layout.indexOf('Editorial asimétrica') === 0, 'el perfil estructural debe conservar el layout preferido por la audiencia cuando es compatible');
+ok(_LAYOUTS.indexOf(audienceConstrainedProfile.layout) !== -1, 'el perfil estructural debe elegir del catálogo completo y tratar la preferencia de audiencia como sesgo, no candado');
 ok(audienceConstrainedProfile.tipografia.indexOf('Sans humanista limpia') === 0, 'el perfil estructural debe conservar la tipografía preferida por la audiencia cuando es compatible');
 ok(audienceConstrainedProfile.densidad === 'Minimal', 'el perfil estructural debe conservar la densidad preferida por la audiencia cuando es compatible');
 ok(audienceConstrainedProfile.formaSimbolo === 'contorno lineal calibrado', 'el perfil estructural debe conservar la forma simbólica preferida por la audiencia cuando es compatible');
