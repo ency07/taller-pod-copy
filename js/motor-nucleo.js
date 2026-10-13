@@ -1653,7 +1653,7 @@ function formatPrompt(result) {
     const v = set[k];
     o += '### ' + N[i] + ' · ' + v.estilo + ' · ' + v.audiencia + '\n';
     o += 'JERARQUÍA: ' + v.jerarquiaVisual + '\n';
-    o += 'PERFIL ESTRUCTURAL: ' + (v.perfilEstructural || _treatmentKey(v.tratamiento)) + ' · densidad ' + v.densidad + ' · espacio negativo ' + v.negativeSpace + ' · jerarquía interna ' + v.jerarquia + '\\n';
+    o += 'PERFIL ESTRUCTURAL: ' + (v.perfilEstructural || _treatmentKey(v.tratamiento)) + ' · densidad ' + v.densidad + ' · espacio negativo ' + v.negativeSpace + '\\n';
     o += 'COMPATIBILIDAD ESTILO × TRATAMIENTO: ' + _styleTreatmentDirective(v.estilo, v.perfilEstructural || _treatmentKey(v.tratamiento)) + '\\n';
     o += 'OBJETO: ' + v.objeto + '\n';
     o += 'CONTROL DE ELEMENTOS: no añadir elementos narrativos o decorativos fuera de este objeto/concepto; si un detalle no está nombrado ni es imprescindible para mostrar la acción, omitirlo.\n';
@@ -1677,7 +1677,7 @@ function formatPrompt(result) {
       o += 'ARTE: tipografía como único elemento visual; ' + v.tratamiento + '\n';
       o += 'TEXTO: ' + textLine + '\n';
     } else {
-      o += 'DIRECCIÓN: ' + v.arquitectura + '; ' + v.composicion + '; ' + v.layout + '\n';
+      o += 'DIRECCIÓN ARTÍSTICA: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '. Ejecuta el estilo sin cambiar la ubicación, dirección ni estructura textual definidas en COMPOSICIÓN TEXTUAL.\\n';
       o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
       o += 'ESTILO PRINCIPAL (prioridad): ' + v.estilo + '. Gobierna el lenguaje visual; forma, técnica y tratamiento son secundarios y no pueden introducir estéticas incompatibles.\n';
       o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
