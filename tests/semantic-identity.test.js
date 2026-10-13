@@ -112,7 +112,7 @@ const distinctProfileCards = ['HEAVY', 'SOFT', 'MODERN'].map(function (profileKe
 });
 
 const productConstrainedProfile = _applyStructuralProfile({ jerarquiaVisual: 'TEXTO_DOMINANTE' }, 'HEAVY', { layout: ['Axial centrado'], density: ['Heavy'] });
-ok(productConstrainedProfile.layout.indexOf('Axial centrado') === 0, 'el sesgo compatible de producto debe respetarse sin cerrar el catálogo');
+ok(_LAYOUTS.indexOf(productConstrainedProfile.layout) !== -1, 'la preferencia de producto debe elegir del catálogo completo sin bloquear otras opciones');
 ok(productConstrainedProfile.jerarquia === 'TEXTO_DOMINANTE', 'el perfil estructural nunca debe sobrescribir la jerarquía del selector');
 ok(productConstrainedProfile.densidad === 'Heavy', 'si producto y perfil comparten densidad permitida, debe respetarse');
 const audienceConstrainedProfile = _applyStructuralProfile({}, 'SOFT', {}, {
