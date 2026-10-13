@@ -1689,6 +1689,14 @@ function formatPrompt(result) {
           ? 'SOLO_TEXTO: 100% tipografía; prohibida cualquier imagen, objeto o ilustración.'
           : 'BALANCEADO: texto y símbolo con peso visual comparable, cada uno entre 45–55%.';
     o += 'JERARQUÍA OBLIGATORIA: ' + hierarchyRule + ' No dibujes una composición intermedia. La diferencia debe ser evidente a primera vista y sobrevivir al reducir el arte al tamaño de impresión. La jerarquía controla tamaño, área y peso; el layout solo controla ubicación. Si otra instrucción contradice esta regla, IGNÓRALA.\\n';
+    const hierarchyCompositionRule = v.jerarquiaVisual === 'TEXTO_DOMINANTE'
+      ? 'PRUEBA DE DOMINANCIA TEXTUAL: el copy debe formar la silueta principal y ocupar aproximadamente 70–80% del área/peso percibido del diseño. Usa letras grandes como masa principal; el símbolo será un acento pequeño de 20–30% como máximo. PROHIBIDO poner una ilustración completa grande encima o debajo del titular, o hacer que árbol/persona se lean primero. Si el mensaje no domina al verlo en miniatura, la composición es incorrecta.'
+      : v.jerarquiaVisual === 'OBJETO_DOMINANTE'
+        ? 'PRUEBA DE DOMINANCIA DEL OBJETO: el objeto autorizado debe ocupar aproximadamente 70–80% del área/peso percibido; el copy será secundario, 20–30% como máximo. No añadir sol, flores, círculos, marcos, manchas decorativas ni símbolos auxiliares salvo que el concepto los nombre o sean imprescindibles para representar la acción. Si el texto se lee antes que el objeto, la composición es incorrecta.'
+        : v.jerarquiaVisual === 'BALANCEADO'
+          ? 'PRUEBA DE BALANCE: símbolo y copy deben tener peso equivalente; ninguno puede dominar claramente al otro.'
+          : 'PRUEBA SOLO_TEXTO: el 100% de la composición se construye con letras y espacio negativo; cero ilustraciones, objetos o adornos independientes.';
+    o += hierarchyCompositionRule + '\\n';
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += 'ARQUITECTURA TIPOGRÁFICA: ' + v.distribucionTexto + ' Aplica la arquitectura solo a letras y espacios vacíos; no la conviertas en marco, cinta ni ilustración.\\n';
     } else {
