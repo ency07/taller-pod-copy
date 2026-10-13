@@ -1029,7 +1029,6 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     // Variación desde imagen conserva su propia lógica y sus selectores.
     if (contactIdentity) {
       v.objeto = contactIdentity.symbol;
-    o += 'ARQUITECTURA TEXTUAL EXCLUSIVA DE ESTA TARJETA: ' + v.distribucionTexto + '. La asignación es variable y no pertenece a HEAVY, SOFT ni MODERN. No repetir entre A/B/C la ubicación principal, la alineación ni la relación texto-imagen, salvo excepción justificada por legibilidad, concepto o producto.\\n';
     } else if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       v.objeto = 'SIN OBJETO — composición tipográfica pura';
     } else if (conservarSimb) {
