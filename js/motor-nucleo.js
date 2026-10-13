@@ -965,6 +965,40 @@ function _resolveContactIdentity(objectPool) {
   };
 }
 
+/* Banco de arquitecturas textuales. Se baraja por conjunto, nunca por tratamiento.
+   Cada ficha recibe una solución distinta; las asignaciones cambian entre generaciones. */
+const _TEXT_COMPOSITION_BANK = [
+  'texto protagonista en franja superior; ilustración debajo, con ancho y alineación variables',
+  'mensaje como base tipográfica bajo el símbolo; puede ser bloque compacto o escalonado',
+  'texto en arco parcial alrededor del motivo, sin exigir un emblema circular',
+  'bloque tipográfico lateral asimétrico; símbolo desplazado al lado opuesto',
+  'texto entrelazado en planos delante/detrás del símbolo, conservando legibilidad',
+  'frase apilada en recorrido vertical; anchura y alineación variables',
+  'texto en diagonal siguiendo el movimiento real de la escena',
+  'mensaje aislado en un campo de espacio negativo, separado del motivo',
+  'palabra protagonista de escala monumental; recorte solo si el producto lo permite',
+  'líneas tipográficas siguiendo una curva orgánica compatible con la silueta',
+  'texto contenido en una placa o marco integrado en la composición',
+  'palabras abrazando huecos laterales de la silueta sin tapar el motivo',
+  'mensaje dividido en dos zonas de lectura que mantienen su orden natural',
+  'tipografía como capa de fondo detrás de la ilustración, con contraste suficiente',
+  'símbolo integrado dentro de letras grandes o de una palabra, si es legible',
+  'símbolo dominante con texto secundario desplazado a una zona despejada',
+  'ritmo tipográfico escalonado con líneas de longitudes y sangrías diferentes',
+  'mensaje dentro de una cinta o banda que cruza o conecta zonas del arte',
+  'texto modular en bloques separados que dialogan con la geometría del motivo',
+  'letras expresivas conectadas con un gesto o trazo de la ilustración'
+];
+
+function _assignTextCompositions() {
+  const shuffled = _TEXT_COMPOSITION_BANK.slice();
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = temp;
+  }
+  return { A: shuffled[0], B: shuffled[1], C: shuffled[2] };
+}
+
 function buildCandidate(audsPerKey, fixedIdentity) {
   const estilos = resolveEstilos(audsPerKey);
   const hierarchyPerKey = resolveTextImageModes(estilos, audsPerKey);
@@ -976,6 +1010,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
   const textosMensaje = isVar && MOTOR_STATE.variationOptions.textos === 'mismo_mensaje';
 
   const set = {};
+  const textCompositionByKey = _assignTextCompositions();
   const usedThisSet = new Set();
   const usedAxes = { layout: [], tipografia: [], formaSimbolo: [], tratamiento: [], integracionTexto: [], densidad: [], negativeSpace: [], jerarquia: [] };
   const contactIdentity = _isLockedContactSet()
@@ -1092,9 +1127,9 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     // Asignación provisional; el perfil fijo se aplica al final para que ningún selector aleatorio lo sobrescriba.
     v.integracionTexto = _pickFresh(_INTEGRACION, _INTEGRACION, usedAxes.integracionTexto);
     usedAxes.integracionTexto.push(v.integracionTexto);
-    v.distribucionTexto = contactIdentity
-      ? (contactPrimaryText ? 'texto autorizado con lectura prioritaria; integrado solo si no se deforma ni se oculta' : 'proponer copy original y exacto según la jerarquía visual; no inventar datos')
-      : _pick(_POOLS.distribucionTexto || ['texto integrado al símbolo']);
+    // Arquitectura textual única por tarjeta, asignada al azar y sin vínculo con HEAVY/SOFT/MODERN.
+    // El contenido literal del mensaje se conserva; solo cambia su estructura compositiva.
+    v.distribucionTexto = textCompositionByKey[k];
     v.jerarquia = _pick(_POOLS.jerarquia || ['Balanceado']);
     if (contactIdentity) v.guiaSimbolo = contactIdentity.guiaSimbolo;
     const productDensity = productBias.density || [];
@@ -1215,7 +1250,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
 /* --- Scoring y selección --- */
 function scoreSet(set) {
   // El objeto deja de ser eje de diversidad: el contactsheet debe conservarlo.
-  const fields = ['estilo', 'layout', 'tipografia', 'formaSimbolo', 'tratamiento', 'integracionTexto', 'familiaColor'];
+  const fields = ['estilo', 'layout', 'tipografia', 'formaSimbolo', 'tratamiento', 'integracionTexto', 'distribucionTexto', 'familiaColor'];
   const pairs = [[0, 1], [0, 2], [1, 2]];
   let diversity = 0;
 
@@ -1306,6 +1341,7 @@ function generateSet() {
     const m = scoreSet(cand);
 
     const ejesOk = new Set(K.map(function (k) { return cand[k].layout; })).size === 3
+      && new Set(K.map(function (k) { return cand[k].distribucionTexto; })).size === 3
       && new Set(K.map(function (k) { return cand[k].tipografia; })).size === 3
       && new Set(K.map(function (k) { return cand[k].formaSimbolo; })).size === 3
       && new Set(K.map(function (k) { return cand[k].integracionTexto; })).size === 3
