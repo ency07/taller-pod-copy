@@ -27,7 +27,7 @@ ok(/HEAVY\/SOFT\/MODERN modifican composición y jerarquía sin borrar ese estil
 ok(/function formatPrompt\(result\)/.test(motor), 'debe existir el punto central que construye el prompt final');
 
 // El prompt debe limitar elementos inventados, exigir diversidad estructural y hacer visible la audiencia.
-ok(/Elementos autorizados: solo los nombrados en el concepto/.test(motor), 'exploración limita los elementos a los autorizados por el concepto');
+ok(/FIJO: mismo concepto y mensaje literal; no inventes objetos, frases ni adornos/.test(motor), 'exploración limita elementos y copy al concepto autorizado');
 ok(/no añadas sol, flores, aves, montañas, marcos ornamentales ni motivos secundarios/.test(motor), 'el prompt prohíbe adornos frecuentes no solicitados');
 ok(/A\/B\/C deben cambiar de verdad encuadre, silueta global, distribución de masas, estructura tipográfica/.test(motor), 'exploración exige diferencias estructurales comprobables');
 ok(/cada perfil debe modificar al menos dos decisiones visibles/.test(motor), 'la audiencia debe gobernar decisiones visibles en cada ficha');
@@ -67,6 +67,10 @@ ok(/genera EXACTAMENTE TRES ARTES CONCEPTUALES INDEPENDIENTES[\s\S]{0,200}01A HE
 ok(/no son tres mockups, ángulos ni camisetas del mismo diseño/i.test(motor), 'el contrato debe distinguir tres diseños de varias vistas de una sola propuesta');
 ok(/entrega siempre las tres direcciones 01A HEAVY, 01B SOFT y 01C MODERN como tres diseños distintos/i.test(motor), 'la salida de cualquier modo debe preservar los tres diseños');
 ok(/en EXPLORACIÓN, entrega solo los tres artes comparativos sin mockups/i.test(motor), 'la regla global debe reservar los mockups para después de elegir una dirección');
+
+ok(/if \(!isExplore && mockupRule\)/.test(motor), 'las reglas de mockup deben omitirse por completo en exploración');
+ok(/CERO mockups, camisetas, vistas alternativas o repeticiones/.test(motor), 'exploración prohíbe mockups y vistas repetidas con una regla compacta');
+ok(/if \(!isExplore && productRule\)/.test(motor) && /if \(!isExplore && printPrepRule\)/.test(motor), 'exploración no debe cargar reglas técnicas de producto ajenas a la fase');
 
 if (failures.length) {
   console.error('FALLOS visual-prompt-contract:');
