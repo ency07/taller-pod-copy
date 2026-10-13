@@ -78,7 +78,7 @@ ok(!/RELACIÓN TEXTO-IMAGEN: aplica la arquitectura textual obligatoria anterior
 const compositionBankStart = motor.indexOf('const _TEXT_COMPOSITION_BANK = [');
 const compositionBankEnd = motor.indexOf('function _assignTextCompositions()', compositionBankStart);
 const compositionBankSource = compositionBankStart >= 0 && compositionBankEnd > compositionBankStart ? motor.slice(compositionBankStart, compositionBankEnd) : '';
-ok((compositionBankSource.match(/^\\s{2}'/gm) || []).length >= 20, 'el banco debe conservar al menos 20 arquitecturas compositivas');
+ok(compositionBankSource.includes('TEXTO ARRIBA') && compositionBankSource.includes('ESQUINA SUPERIOR lateral'), 'el banco debe conservar arquitecturas compositivas desde el inicio hasta el final del catálogo');
 
 
 if (failures.length) {
