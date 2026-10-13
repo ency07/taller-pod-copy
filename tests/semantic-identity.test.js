@@ -151,14 +151,15 @@ for (let sample = 0; sample < 12; sample++) {
 }
 const motorSourceForTextDiversity = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
 ok(motorSourceForTextDiversity.includes('const textCompositionByKey = _assignTextCompositions();'), 'la asignación textual se debe crear por conjunto, no por tratamiento');
-ok(/const fields = \\[[^\\]]*'distribucionTexto'/.test(motorSourceForTextDiversity), 'la distribución textual debe participar en la puntuación de diversidad');
-ok(/new Set\\(K\\.map\\(function \\(k\\) \\{ return cand\\[k\\]\\.distribucionTexto; \\}\\)\\)\\.size === 3/.test(motorSourceForTextDiversity), 'la aceptación del conjunto debe exigir tres arquitecturas textuales distintas');
+ok(motorSourceForTextDiversity.includes("'integracionTexto', 'distribucionTexto', 'familiaColor'"), 'la distribución textual debe participar en la puntuación de diversidad');
+ok(motorSourceForTextDiversity.includes('return cand[k].distribucionTexto; })).size === 3'), 'la aceptación del conjunto debe exigir tres arquitecturas textuales distintas');
 
 // Contratos de originalidad del prompt CONTACTSHEET.
 // Son pruebas estáticas de instrucciones; no prueban similitud de imágenes generadas.
 const motorSource = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
 ok(motorSource.includes("ORDEN FIJO DE TRATAMIENTOS: 01A HEAVY · 01B SOFT · 01C MODERN"), 'CONTACTSHEET debe fijar el orden A/B/C de los tratamientos');
-ok(motorSource.includes('DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo y fondo NUNCA se repiten entre A/B/C.'), 'el prompt debe exigir diferencias estructurales explícitas entre A/B/C');
+ok(motorSource.includes('DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo, fondo y ARQUITECTURA TEXTUAL NUNCA se repiten entre A/B/C.'), 'el prompt debe exigir diferencias estructurales explícitas entre A/B/C');
+ok(motorSource.includes('ARQUITECTURA TEXTUAL EXCLUSIVA DE ESTA TARJETA:'), 'el prompt debe comunicar la arquitectura textual exclusiva y variable de cada tarjeta');
 ok(motorSource.includes('No hagas una versión recoloreada, un simple cambio de técnica ni una réplica con texto reemplazado.'), 'variación guiada debe prohibir recoloreado o cambios superficiales como única variación');
 ok(motorSource.includes('toma decisiones visuales independientes y diferentes entre A/B/C.'), 'variación guiada debe pedir decisiones visuales independientes');
 ok(motorSource.includes('Cada tratamiento gobierna composición, jerarquía, tipografía, contraste, densidad y formas; el estilo artístico lo ejecuta sin contradecirlo.'), 'el tratamiento debe afectar estructura y no solo color/textura');
