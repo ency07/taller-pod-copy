@@ -1513,8 +1513,8 @@ function formatPrompt(result) {
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + '\n';
     o += 'CONCEPTO: ' + (conceptAnchor || 'propón una idea concreta dentro de la familia seleccionada') + ' | MENSAJE EXACTO: ' + (String(MOTOR_STATE.message || '').trim() || 'propón copy breve') + '\n';
     o += 'FAMILIA: ' + familyLabel + '. Si es orientativa, no la conviertas en tema; manda el concepto.\n';
-    o += 'ENTREGA: EXACTAMENTE 3 diseños distintos en una lámina, tres paneles separados y rotulados 01A HEAVY / 01B SOFT / 01C MODERN. Un arte completo por panel. CERO mockups, camisetas, vistas alternativas o repeticiones. Si falta un panel o dos diseños comparten composición, la salida es incorrecta.\\n';
-    o += 'FIJO: mismo concepto y mensaje literal; no inventes objetos, frases ni adornos. 01A HEAVY = masas compactas/contraste; 01B SOFT = formas abiertas/espacio negativo; 01C MODERN = geometría/síntesis. Cambia claramente composición, silueta, tipografía y relación texto-imagen en cada panel; recolorear no cuenta. Respeta el estilo elegido.\\n\\n';
+    o += 'ENTREGA: EXACTAMENTE 3 diseños distintos en una lámina, tres paneles separados y rotulados 01A HEAVY / 01B SOFT / 01C MODERN. Un arte completo por panel. CERO mockups, camisetas, vistas alternativas o repeticiones. Si falta un panel o dos diseños comparten composición, la salida es incorrecta.\n';
+    o += 'FIJO: mismo concepto y mensaje literal; no inventes objetos, frases ni adornos. 01A HEAVY = masas compactas/contraste; 01B SOFT = formas abiertas/espacio negativo; 01C MODERN = geometría/síntesis. Cambia claramente composición, silueta, tipografía y relación texto-imagen en cada panel; recolorear no cuenta. Respeta el estilo elegido.\n\n';
   } else {
     o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
