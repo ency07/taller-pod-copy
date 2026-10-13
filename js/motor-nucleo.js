@@ -847,10 +847,13 @@ function _applyStructuralProfile(v, profileKey, productBias, audienceProfile, us
     ? layouts.filter(function (x) { return audience.layoutPref.some(function (h) { return x.indexOf(h) === 0; }); })
     : [];
   const distinctLayouts = layouts.filter(function (x) { return (used.layout || []).indexOf(x) === -1; });
-  const preferredLayouts = productLayouts.concat(audienceLayouts).filter(function (x, i, all) {
-    return all.indexOf(x) === i && distinctLayouts.indexOf(x) !== -1;
+  const preferredLayouts = new Set(productLayouts.concat(audienceLayouts));
+  // Sesgo suave (3:1), no lista cerrada: cualquier layout puede salir y el
+  // catálogo completo se explora a lo largo de generaciones; dentro de A/B/C no se repite.
+  const layoutWeights = distinctLayouts.map(function (layout) {
+    return preferredLayouts.has(layout) ? 3 : 1;
   });
-  v.layout = _pick(preferredLayouts.length ? preferredLayouts : (distinctLayouts.length ? distinctLayouts : layouts));
+  v.layout = _pickWeighted(distinctLayouts.length ? distinctLayouts : layouts, layoutWeights);
 
   const typeHints = profile.type || [];
   const types = (_TIPOS || []).filter(function (x) { return typeHints.some(function (h) { return x.indexOf(h) === 0; }); });
