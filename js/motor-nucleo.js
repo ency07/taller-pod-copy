@@ -1571,17 +1571,17 @@ function formatPrompt(result) {
     }
     o += 'VARIACIÓN VISUAL REAL: crea una nueva solución gráfica basada en la referencia, no una copia ni una limpieza de la misma. Cambia obligatoriamente composición, silueta global, encuadre, distribución de masas y jerarquía tipográfica. Conserva solo los elementos que exigen los selectores. No basta recolorear, cambiar textura, añadir borde ni aplicar filtro. No inventes objetos, texto, datos o símbolos fuera de las reglas anteriores.\\n';
   }
-  o += 'COPY: conserva literalmente el mensaje exacto indicado; no añadas texto secundario ni microtexto.\\n';
+  o += 'COPY: conserva literalmente el mensaje exacto indicado; no añadas texto secundario ni microtexto.\n';
   if (!isExplore) {
-    o += 'SALIDA: entrega 01A HEAVY, 01B SOFT y 01C MODERN como tres diseños distintos; aplica los mockups indicados a cada diseño. No añadas objetos ni texto no solicitados.\\n';
+    o += 'SALIDA: entrega 01A HEAVY, 01B SOFT y 01C MODERN como tres diseños distintos; aplica los mockups indicados a cada diseño. No añadas objetos ni texto no solicitados.\n';
   }
-  o += 'REGLAS INQUEBRANTABLES:\\n';
-  if (langDir) o += 'IDIOMA: ' + langDir + '\\n';
-  if (cultDir) o += 'CULTURA: ' + cultDir + '\\n';
-  if (legalDir) o += 'LEGAL: ' + legalDir + '\\n';
-  if (!isExplore && productRule) o += 'PRODUCTO: ' + productRule + '\\n';
-  if (!isExplore && printPrepRule) o += 'ACABADO / PREPARACION TECNICA (' + printMethodName + '): ' + printPrepRule + '\\n';
-  if (!isExplore && mockupRule) o += 'PRESENTACION: ' + mockupRule + '\\n';
+  o += 'REGLAS INQUEBRANTABLES:\n';
+  if (langDir) o += 'IDIOMA: ' + langDir + '\n';
+  if (cultDir) o += 'CULTURA: ' + cultDir + '\n';
+  if (legalDir) o += 'LEGAL: ' + legalDir + '\n';
+  if (!isExplore && productRule) o += 'PRODUCTO: ' + productRule + '\n';
+  if (!isExplore && printPrepRule) o += 'ACABADO / PREPARACION TECNICA (' + printMethodName + '): ' + printPrepRule + '\n';
+  if (!isExplore && mockupRule) o += 'PRESENTACION: ' + mockupRule + '\n';
   // Template activo (banco de templates: mochila/bolso/funda). Ancla el diseño
   // a zonas reales en vez de generar a ciegas.
   if (tplActive) {
