@@ -159,7 +159,11 @@ ok(motorSourceForTextDiversity.includes('return cand[k].distribucionTexto; })).s
 const motorSource = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
 ok(motorSource.includes("ORDEN FIJO DE TRATAMIENTOS: 01A HEAVY · 01B SOFT · 01C MODERN"), 'CONTACTSHEET debe fijar el orden A/B/C de los tratamientos');
 ok(motorSource.includes('DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo, fondo y ARQUITECTURA TEXTUAL NUNCA se repiten entre A/B/C.'), 'el prompt debe exigir diferencias estructurales explícitas entre A/B/C');
-ok(motorSource.includes('ARQUITECTURA TEXTUAL EXCLUSIVA DE ESTA TARJETA:'), 'el prompt debe comunicar la arquitectura textual exclusiva y variable de cada tarjeta');
+ok(motorSource.includes('ARQUITECTURA TEXTUAL OBLIGATORIA Y EXCLUSIVA:'), 'el prompt debe comunicar una arquitectura textual exclusiva y prioritaria');
+ok(_TEXT_COMPOSITION_BANK.every(function (x) { return /ubicación|columna|franja|arco|diagonal|bloques|esquina|contorno|pila|capa/i.test(x); }), 'las arquitecturas deben proponer ubicaciones compositivas concretas');
+ok(_TEXT_COMPOSITION_BANK.every(function (x) { return /escala|proporción|dirección|densidad|distancia|símbolo/i.test(x); }), 'las arquitecturas deben controlar escala, proporción, dirección, densidad, distancia y relación con el símbolo');
+ok(motorSource.includes('No trasladar el texto automáticamente a la parte inferior.'), 'el prompt debe prohibir la convergencia automática del texto a la zona inferior');
+ok(!motorSource.includes("o += 'TEXTO/IMAGEN: ' + v.distribucionTexto + '; ' + v.integracionTexto + '; ' + v.relacion"), 'las instrucciones secundarias no deben contradecir la arquitectura textual exclusiva');
 ok(motorSource.includes('No hagas una versión recoloreada, un simple cambio de técnica ni una réplica con texto reemplazado.'), 'variación guiada debe prohibir recoloreado o cambios superficiales como única variación');
 ok(motorSource.includes('toma decisiones visuales independientes y diferentes entre A/B/C.'), 'variación guiada debe pedir decisiones visuales independientes');
 ok(motorSource.includes('Cada tratamiento gobierna composición, jerarquía, tipografía, contraste, densidad y formas; el estilo artístico lo ejecuta sin contradecirlo.'), 'el tratamiento debe afectar estructura y no solo color/textura');
