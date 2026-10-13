@@ -141,6 +141,19 @@ ok(motorSourceForAudience.includes('renderMatrix(LAST_RESULT)'), 'la regeneraci�
 ok(motorSourceForAudience.includes('const stableContext = ['), 'la audiencia Auto en exploración debe derivarse del contexto');
 ok(motorSourceForAudience.includes('const stableContext = ['), 'la audiencia Auto debe resolverse de forma estable a partir del contexto');
 
+// Diversidad combinatoria de arquitectura textual: no pertenece a un tratamiento fijo.
+ok(Array.isArray(_TEXT_COMPOSITION_BANK) && _TEXT_COMPOSITION_BANK.length >= 20, 'debe existir un banco amplio de al menos 20 arquitecturas textuales');
+ok(new Set(_TEXT_COMPOSITION_BANK).size === _TEXT_COMPOSITION_BANK.length, 'el banco de arquitecturas textuales no debe contener duplicados');
+for (let sample = 0; sample < 12; sample++) {
+  const textLayouts = _assignTextCompositions();
+  ok(new Set([textLayouts.A, textLayouts.B, textLayouts.C]).size === 3, 'cada conjunto debe asignar arquitecturas textuales distintas a A/B/C');
+  ok([textLayouts.A, textLayouts.B, textLayouts.C].every(function (x) { return _TEXT_COMPOSITION_BANK.indexOf(x) !== -1; }), 'las asignaciones deben proceder del banco registrado');
+}
+const motorSourceForTextDiversity = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
+ok(motorSourceForTextDiversity.includes('const textCompositionByKey = _assignTextCompositions();'), 'la asignación textual se debe crear por conjunto, no por tratamiento');
+ok(/const fields = \\[[^\\]]*'distribucionTexto'/.test(motorSourceForTextDiversity), 'la distribución textual debe participar en la puntuación de diversidad');
+ok(/new Set\\(K\\.map\\(function \\(k\\) \\{ return cand\\[k\\]\\.distribucionTexto; \\}\\)\\)\\.size === 3/.test(motorSourceForTextDiversity), 'la aceptación del conjunto debe exigir tres arquitecturas textuales distintas');
+
 // Contratos de originalidad del prompt CONTACTSHEET.
 // Son pruebas estáticas de instrucciones; no prueban similitud de imágenes generadas.
 const motorSource = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
