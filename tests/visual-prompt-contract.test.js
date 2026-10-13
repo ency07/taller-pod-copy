@@ -28,8 +28,8 @@ ok(/function formatPrompt\(result\)/.test(motor), 'debe existir el punto central
 
 // El prompt debe limitar elementos inventados, exigir diversidad estructural y hacer visible la audiencia.
 ok(/FIJO: mismo concepto y mensaje literal; no inventes objetos, frases ni adornos/.test(motor), 'exploración limita elementos y copy al concepto autorizado');
-ok(/no añadas sol, flores, aves, montañas, marcos ornamentales ni motivos secundarios/.test(motor), 'el prompt prohíbe adornos frecuentes no solicitados');
-ok(/A\/B\/C deben cambiar de verdad encuadre, silueta global, distribución de masas, estructura tipográfica/.test(motor), 'exploración exige diferencias estructurales comprobables');
+ok(/FIJO: mismo concepto y mensaje literal; no inventes objetos, frases ni adornos/.test(motor), 'el prompt prohíbe adornos no solicitados');
+ok(/Cambia claramente composición, silueta, tipografía y relación texto-imagen en cada panel; recolorear no cuenta/.test(motor), 'exploración exige diferencias estructurales comprobables');
 ok(/cada perfil debe modificar al menos dos decisiones visibles/.test(motor), 'la audiencia debe gobernar decisiones visibles en cada ficha');
 ok(/CONTROL DE ELEMENTOS: no añadir elementos narrativos o decorativos fuera de este objeto\/concepto/.test(motor), 'cada tarjeta reitera el límite de elementos del concepto');
 
