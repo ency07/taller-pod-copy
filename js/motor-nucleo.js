@@ -1094,8 +1094,6 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     usedAxes.integracionTexto.push(v.integracionTexto);
     v.distribucionTexto = _pickFresh(_POOLS.distribucionTexto || ['texto integrado al símbolo'], _POOLS.distribucionTexto || ['texto integrado al símbolo'], usedAxes.distribucionTexto);
     usedAxes.distribucionTexto.push(v.distribucionTexto);
-      ? (contactPrimaryText ? 'texto autorizado con lectura prioritaria; integrado solo si no se deforma ni se oculta' : 'proponer copy original y exacto según la jerarquía visual; no inventar datos')
-      : _pick(_POOLS.distribucionTexto || ['texto integrado al símbolo']);
     v.jerarquia = _pick(_POOLS.jerarquia || ['Balanceado']);
     if (contactIdentity) v.guiaSimbolo = contactIdentity.guiaSimbolo;
     const productDensity = productBias.density || [];
