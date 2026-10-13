@@ -1668,7 +1668,7 @@ function formatPrompt(result) {
           : 'COPY COMPARTIDO A/B/C: define palabras exactas de una frase principal original; conserva el mismo texto en las tres direcciones. Apoyo literal solo si aporta y también compartido; tercer nivel solo con dato real o se omite. Prohibidos placeholders y microtexto. Tipografía: ' + v.tipografia)
         : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia);
     const hierarchyRule = v.jerarquiaVisual === 'TEXTO_DOMINANTE' ? 'texto domina; símbolo secundario' : v.jerarquiaVisual === 'OBJETO_DOMINANTE' ? 'símbolo domina; texto secundario' : v.jerarquiaVisual === 'SOLO_TEXTO' ? 'solo texto; sin ilustración' : 'texto y símbolo equilibrados';
-    o += 'COMPOSICIÓN TEXTUAL: ' + v.distribucionTexto + ' | JERARQUÍA OBLIGATORIA: ' + hierarchyRule + '. La jerarquía controla tamaño y peso; la arquitectura controla ubicación y dirección. Si chocan, conserva ubicación y ajusta escala. Ubicación principal distinta en A/B/C; nunca colocar abajo por defecto.\\n';
+    o += 'COMPOSICIÓN TEXTUAL: ' + v.distribucionTexto + ' | JERARQUÍA OBLIGATORIA: ' + hierarchyRule + '. La jerarquía controla tamaño y peso; la arquitectura controla ubicación y dirección. Si chocan, conserva ubicación y ajusta escala. Ubicación principal distinta en A/B/C; nunca colocar abajo por defecto.\n';
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += contactDNA
         ? 'DIRECCIÓN: representar el mismo símbolo mediante la forma de las letras; sin añadir otros objetos ni ilustraciones.\n'
