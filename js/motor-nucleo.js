@@ -968,26 +968,26 @@ function _resolveContactIdentity(objectPool) {
 /* Banco de arquitecturas textuales. Se baraja por conjunto, nunca por tratamiento.
    Cada ficha recibe una solución distinta; las asignaciones cambian entre generaciones. */
 const _TEXT_COMPOSITION_BANK = [
-  'MENSAJE ARRIBA, ilustración debajo: alineación izquierda irregular; título ocupa 25–35% del ancho; dirección horizontal; densidad tipográfica media; separación amplia; símbolo debajo sin tocar las letras.',
-  'MENSAJE EN COLUMNA LATERAL izquierda: símbolo ocupa el lado opuesto; texto estrecho de escala media, lectura vertical por líneas cortas; densidad alta dentro de la columna y gran distancia respecto al símbolo.',
-  'MENSAJE EN ARCO ABIERTO superior, nunca círculo cerrado: letras siguen una curva parcial; escala media; símbolo dentro del vacío del arco; densidad baja y distancia corta sin solapamiento.',
-  'MENSAJE COMO BASE INFERIOR compacta: tres niveles de escala decreciente; alineación centrada; dirección horizontal; símbolo arriba; distancia breve entre frase y motivo, sin envolverlo.',
-  'MENSAJE EN DIAGONAL ascendente de izquierda a derecha: escala grande con anchura irregular; líneas inclinadas; densidad media; cruza solo el espacio negativo y no tapa la silueta del símbolo.',
-  'MENSAJE EN BANDA SUPERIOR estrecha: alineación centrada; escala pequeña-media pero legible; proporción muy horizontal; símbolo grande debajo; separación nítida entre banda y motivo.',
-  'MENSAJE PARTIDO EN DOS ZONAS laterales: primera parte a la izquierda y continuación a la derecha del símbolo; escala grande; lectura en orden natural; densidad media y el símbolo crea la pausa central.',
-  'MENSAJE DENTRO DE UN VACÍO INTERIOR real de la silueta: escala media; ajuste a la forma disponible; alineación óptica, no forzada; distancia cero solo donde el hueco lo permita; no deformar letras.',
-  'MENSAJE EN BLOQUE VERTICAL estrecho debajo y desplazado a un lado: líneas cortas, escala descendente; dirección vertical; densidad alta en bloque y gran espacio negativo al lado contrario.',
-  'UNA PALABRA DEL MENSAJE EN ESCALA MONUMENTAL, resto en tamaño secundario: composición horizontal asimétrica; texto domina un lateral; símbolo invade parcialmente el campo tipográfico sin perder lectura.',
-  'MENSAJE COMO CAPA DE FONDO detrás del símbolo: letras grandes y parcialmente ocultas solo por la silueta; dirección horizontal; densidad baja; distancia superpuesta deliberada, contraste alto y lectura íntegra.',
-  'MENSAJE EN CINTA ABIERTA que atraviesa una zona del motivo: dirección curva oblicua; escala media; distancia variable; la cinta no cierra un emblema ni cubre rostro, tronco o rasgo identificador.',
-  'MENSAJE EN DOS BLOQUES APILADOS desplazados en zigzag: alineación alterna izquierda/derecha; escalas contrastadas; dirección descendente; densidad media y espacio visible entre bloques y símbolo.',
-  'MENSAJE EN FRANJA INFERIOR LATERAL, no centrada: alineación a la izquierda o derecha según el hueco; escala media; proporción horizontal; símbolo desplazado al lado contrario y distancia amplia.',
-  'MENSAJE INTEGRADO EN LAS LETRAS como contraformas o huecos legibles: tipografía de gran escala; símbolo reconocible construido dentro de una palabra; densidad alta localizada y sin añadir un segundo bloque de texto.',
-  'MENSAJE EN PILA VERTICAL a lo largo de un borde: alineación al borde; escala media-grande; líneas muy cortas; dirección vertical; símbolo ocupa el campo central y queda separado por un corredor de espacio negativo.',
-  'MENSAJE EN ARCO LATERAL asimétrico: curva solo por un costado del símbolo; escala pequeña-media; dirección curva; densidad baja; no formar círculo, escudo ni marco completo.',
-  'MENSAJE EN BLOQUES MODULARES separados: palabras distribuidas en celdas irregulares; lectura natural indicada por tamaños y proximidad; escala mixta; símbolo ocupa un módulo independiente sin quedar encerrado.',
-  'MENSAJE ALINEADO AL CONTORNO EXTERIOR de un solo lado: sigue una curva o diagonal de la silueta; escala media; distancia constante; símbolo y texto no se solapan y el lado opuesto queda vacío.',
-  'MENSAJE EN UNA ESQUINA SUPERIOR, pequeño pero dominante por contraste: alineación a borde; proporción compacta; símbolo ocupa el resto del campo; distancia amplia; composición asimétrica con espacio negativo visible.'
+  'TEXTO ARRIBA, motivo debajo; alineación izquierda irregular; franja horizontal y separación amplia.',
+  'COLUMNA LATERAL izquierda; motivo al lado opuesto; líneas cortas y corredor de espacio negativo.',
+  'ARCO SUPERIOR abierto; motivo dentro del vacío; curva parcial, sin círculo ni emblema cerrado.',
+  'BLOQUE INFERIOR desplazado a un lado; motivo arriba y fuera del eje central.',
+  'DIAGONAL ascendente izquierda-derecha; cruza espacio negativo sin tapar la silueta.',
+  'BANDA SUPERIOR estrecha y centrada; motivo debajo separado por un intervalo limpio.',
+  'TEXTO DIVIDIDO a ambos lados del motivo; lectura natural y pausa visual central.',
+  'TEXTO dentro de un vacío real de la silueta; no deformar letras ni inventar huecos.',
+  'BLOQUE VERTICAL lateral bajo; líneas cortas y gran espacio vacío en el lado contrario.',
+  'PALABRA CLAVE en un lateral; resto separado; el motivo invade solo el margen tipográfico.',
+  'TEXTO detrás de la silueta como fondo parcial; superposición controlada y lectura intacta.',
+  'CINTA ABIERTA oblicua cruza un borde del motivo; no tapa rasgos identificadores.',
+  'DOS BLOQUES en zigzag; alineación alterna izquierda-derecha y separación visible.',
+  'FRANJA INFERIOR lateral, nunca centrada; motivo desplazado al lado contrario.',
+  'SÍMBOLO integrado en una contraforma tipográfica; sin segundo bloque de texto.',
+  'PILA VERTICAL junto a un borde; motivo ocupa el campo opuesto y queda separado.',
+  'ARCO LATERAL asimétrico en un solo costado; no formar marco completo.',
+  'BLOQUES MODULARES en celdas irregulares; motivo ocupa un módulo independiente.',
+  'TEXTO sigue un solo lado del contorno; lado opuesto queda deliberadamente vacío.',
+  'ESQUINA SUPERIOR lateral; motivo ocupa el resto del campo con asimetría marcada.'
 ];
 
 function _assignTextCompositions() {
@@ -1667,7 +1667,8 @@ function formatPrompt(result) {
           ? 'COPY PRINCIPAL LITERAL: «' + String(MOTOR_STATE.message).trim() + '»; no modificar palabras. APOYO: ' + (String(MOTOR_STATE.support || '').trim() ? '«' + String(MOTOR_STATE.support).trim() + '»' : 'omitir si no aporta') + '; tercer nivel solo con dato real; tipografía ' + v.tipografia
           : 'COPY COMPARTIDO A/B/C: define palabras exactas de una frase principal original; conserva el mismo texto en las tres direcciones. Apoyo literal solo si aporta y también compartido; tercer nivel solo con dato real o se omite. Prohibidos placeholders y microtexto. Tipografía: ' + v.tipografia)
         : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia);
-    o += 'ARQUITECTURA TEXTUAL OBLIGATORIA Y EXCLUSIVA: ' + v.distribucionTexto + '. Esta ficha manda sobre cualquier instrucción genérica de layout, composición o integración textual que la contradiga. Ejecutar sus decisiones de ubicación, alineación, escala, proporción, dirección, densidad, distancia y relación con el símbolo. No trasladar el texto automáticamente a la parte inferior. No repetir entre A/B/C la zona principal del texto ni la relación texto-símbolo. Solo se permite una excepción si la lectura del mensaje literal resultara imposible; en ese caso cambiar la solución, no volver a la plantilla inferior.\n';
+    const hierarchyRule = v.jerarquiaVisual === 'TEXTO_DOMINANTE' ? 'texto domina; símbolo secundario' : v.jerarquiaVisual === 'OBJETO_DOMINANTE' ? 'símbolo domina; texto secundario' : v.jerarquiaVisual === 'SOLO_TEXTO' ? 'solo texto; sin ilustración' : 'texto y símbolo equilibrados';
+    o += 'COMPOSICIÓN TEXTUAL: ' + v.distribucionTexto + ' | JERARQUÍA OBLIGATORIA: ' + hierarchyRule + '. La jerarquía controla tamaño y peso; la arquitectura controla ubicación y dirección. Si chocan, conserva ubicación y ajusta escala. Ubicación principal distinta en A/B/C; nunca colocar abajo por defecto.\\n';
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += contactDNA
         ? 'DIRECCIÓN: representar el mismo símbolo mediante la forma de las letras; sin añadir otros objetos ni ilustraciones.\n'
@@ -1682,7 +1683,6 @@ function formatPrompt(result) {
       o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
       o += 'TEXTO: ' + textLine + '\n';
 
-      o += 'RELACIÓN TEXTO-IMAGEN: aplica la arquitectura textual obligatoria anterior. Las preferencias secundarias de integración no pueden cambiar su ubicación, alineación, escala ni relación con el símbolo.\n';
     }
     o += 'PALETA: ' + v.paleta + '\n';
     o += 'COINCIDENCIA DE REGLAS DEL PROMPT (no evalua la imagen final): audiencia ' + (v.fitAudiencia || 0) + '/100; producto ' + (v.fitProducto || 0) + '/100\n';
