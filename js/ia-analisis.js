@@ -23,7 +23,13 @@
 
   function tell(msg) {
     const statusEl = $('status');
-    if (statusEl) statusEl.innerHTML = msg;
+    if (!statusEl) return;
+    // Compatibilidad con los mensajes heredados (<span class="good|bad|info">),
+    // pero nunca interpretar etiquetas o atributos suministrados por datos dinámicos.
+    const raw = String(msg == null ? '' : msg);
+    const classMatch = raw.match(/<span\s+class=["'](good|bad|info|blue)["'][^>]*>/i);
+    statusEl.className = classMatch ? classMatch[1] : '';
+    statusEl.textContent = raw.replace(/<\/?span\b[^>]*>/gi, '');
   }
 
   /* --- Referencias a funciones globales (de otros scripts) --- */
@@ -79,7 +85,7 @@
 
     let html = '';
     regions.forEach(function (r) {
-      html += '<option value="' + r.id + '">' + r.label + '</option>';
+      html += '<option value="' + _escapeOptionText(r.id) + '">' + _escapeOptionText(r.label) + '</option>';
     });
     regionSel.innerHTML = html;
     // Reset total al cambiar de mercado (aunque el valor anterior siga válido).
@@ -94,7 +100,7 @@
   function _subnicheOptions(ids) {
     return ids.map(function (id) {
       const label = (typeof getSubnicheLabel === 'function') ? getSubnicheLabel(id, _marketId()) : id;
-      return '<option value="' + id + '">' + label + '</option>';
+      return '<option value="' + _escapeOptionText(id) + '">' + _escapeOptionText(label) + '</option>';
     }).join('');
   }
 
@@ -159,7 +165,7 @@
     }
     audiences.forEach(function (a) {
       const label = (typeof getAudienceLabel === 'function') ? getAudienceLabel(a) : a;
-      html += '<option value="' + a + '">' + label + '</option>';
+      html += '<option value="' + _escapeOptionText(a) + '">' + _escapeOptionText(label) + '</option>';
     });
     audSel.innerHTML = html;
     if (_marketResetPending || prev === 'Auto' || !audiences.includes(prev)) audSel.value = 'Auto';
@@ -198,7 +204,7 @@
     let html = '';
     Object.keys(langs).forEach(function (id) {
       const selected = (!keepManual && !isAutoChoice && id === defaultLang) ? ' selected' : '';
-      html += '<option value="' + id + '"' + selected + '>' + langs[id] + '</option>';
+      html += '<option value="' + _escapeOptionText(id) + '"' + selected + '>' + _escapeOptionText(langs[id]) + '</option>';
     });
     // innerHTML RESETea la selección al primer option: había que restaurar el
     // valor guardado ANTES, no reasignar el valor ya perdido.
@@ -346,12 +352,28 @@
     try {
       if (typeof getActiveTemplate === 'function') tpl = getActiveTemplate(prod);
     } catch (e) { tpl = null; }
+    el.textContent = '';
     if (tpl) {
-      el.innerHTML = 'Template activo: <b>' + tpl.nombre.replace(/</g, '&lt;') + '</b> (' + tpl.producto + '). El prompt citará sus zonas. <a href="editor-bancos.html" target="_blank" rel="noopener">Cambiar</a>';
+      el.appendChild(document.createTextNode('Template activo: '));
+      var strong = document.createElement('b');
+      strong.textContent = String(tpl.nombre || '');
+      el.appendChild(strong);
+      el.appendChild(document.createTextNode(' (' + String(tpl.producto || prod) + '). El prompt citará sus zonas. '));
+      var changeLink = document.createElement('a');
+      changeLink.href = 'editor-bancos.html';
+      changeLink.target = '_blank';
+      changeLink.rel = 'noopener';
+      changeLink.textContent = 'Cambiar';
+      el.appendChild(changeLink);
     } else if (prod === 'MOCHILA' || prod === 'TOTE BAG' || prod === 'FUNDA MÓVIL') {
-      el.innerHTML = 'Sin template para ' + prod + '. <a href="editor-bancos.html" target="_blank" rel="noopener">Sube la plantilla</a> para no generar a ciegas.';
-    } else {
-      el.textContent = '';
+      el.appendChild(document.createTextNode('Sin template para ' + prod + '. '));
+      var uploadLink = document.createElement('a');
+      uploadLink.href = 'editor-bancos.html';
+      uploadLink.target = '_blank';
+      uploadLink.rel = 'noopener';
+      uploadLink.textContent = 'Sube la plantilla';
+      el.appendChild(uploadLink);
+      el.appendChild(document.createTextNode(' para no generar a ciegas.'));
     }
     updatePrintMethodOptions();
     if (typeof renderDesignToggle === 'function') renderDesignToggle();
@@ -363,16 +385,21 @@
     if (!sel) return;
     const marketId = _marketId();
     const prev = sel.value;
-    let html = '<option value="">Banco general</option>';
+    sel.innerHTML = '';
+    const common = document.createElement('option');
+    common.value = '';
+    common.textContent = 'Banco general';
+    sel.appendChild(common);
     try {
       if (typeof listPersonalBanks === 'function') {
         listPersonalBanks(marketId).forEach(function (b) {
-          html += '<option value="nb:' + b.id + '">' + b.name.replace(/</g, '&lt;') +
-            ' (' + ((b.objects || []).length + (b.phrases || []).length) + ')</option>';
+          const option = document.createElement('option');
+          option.value = 'nb:' + String(b.id || '');
+          option.textContent = String(b.name || '') + ' (' + ((b.objects || []).length + (b.phrases || []).length) + ')';
+          sel.appendChild(option);
         });
       }
     } catch (e) {}
-    sel.innerHTML = html;
     const still = Array.prototype.some.call(sel.options, function (o) { return o.value === prev; });
     if (still) sel.value = prev;
   }
@@ -419,19 +446,18 @@
     });
   }
 
-  /* Lee el slot Gemini del MISMO almacén que el panel de claves (ia-revisor.js:
-     SLOTS_KEY 'pod2_ai_slots'). Antes leía 'pod_u_ai_slots', llave que ningún
-     código escribe, así que la visión nunca encontraba la clave configurada.
-     (Compatibilidad: el flujo nuevo usa getVisionSlots + pickVisionTarget.) */
+  /* Legacy helper: no se aceptan claves persistidas en localStorage. */
   function getGeminiSlot() {
     try {
       const raw = localStorage.getItem('pod2_ai_slots');
-      if (!raw) return null;
-      const slots = JSON.parse(raw);
-      if (!Array.isArray(slots)) return null;
-      return slots.find(function (s) {
-        return s && s.provider === 'Gemini' && s.key && s.model;
-      }) || null;
+      const slots = JSON.parse(raw || 'null');
+      const sessionKeys = (typeof window.sessionStorage !== 'undefined')
+        ? JSON.parse(window.sessionStorage.getItem('pod2_ai_session_keys') || 'null')
+        : null;
+      if (!Array.isArray(slots) || !Array.isArray(sessionKeys)) return null;
+      const index = slots.findIndex(function (s) { return s && s.provider === 'Gemini' && s.model; });
+      if (index < 0 || !sessionKeys[index]) return null;
+      return Object.assign({}, slots[index], { key: String(sessionKeys[index]) });
     } catch (e) {
       return null;
     }
@@ -491,9 +517,21 @@
       }
     } catch (e) {}
     try {
+      // Nunca recuperar claves legacy persistidas en localStorage. Si el revisor
+      // no está cargado, solo aceptamos claves de la sesión de la pestaña actual.
       const raw = localStorage.getItem('pod2_ai_slots');
-      const arr = JSON.parse(raw);
-      if (Array.isArray(arr)) return arr.filter(function (s) { return s && s.key && s.model; });
+      const arr = JSON.parse(raw || 'null');
+      const sessionRaw = (typeof window.sessionStorage !== 'undefined')
+        ? window.sessionStorage.getItem('pod2_ai_session_keys')
+        : null;
+      const sessionKeys = JSON.parse(sessionRaw || 'null');
+      if (Array.isArray(arr) && Array.isArray(sessionKeys)) {
+        return arr.map(function (s, i) {
+          return s && s.model && sessionKeys[i]
+            ? Object.assign({}, s, { key: String(sessionKeys[i]) })
+            : null;
+        }).filter(function (s) { return s && s.key && s.model; });
+      }
     } catch (e) {}
     return [];
   }
@@ -557,7 +595,7 @@
       } catch (e) { return { ok: false, ms: Date.now() - t0 }; }
     }
     const results = await Promise.all([
-      ping('https://generativelanguage.googleapis.com/v1beta/models?key=AIzaSyTESTCONNECTIVITY'),
+      ping('https://generativelanguage.googleapis.com/v1beta/models'),
       ping('https://openrouter.ai/api/v1/models')
     ]);
     return { google: results[0].ok, openrouter: results[1].ok, ms: { google: results[0].ms, openrouter: results[1].ms } };
@@ -614,13 +652,13 @@
       generationConfig: { temperature: 0.2, maxOutputTokens: 2048, responseMimeType: 'application/json' }
     };
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
-      encodeURIComponent(target.model) + ':generateContent?key=' + encodeURIComponent(target.key);
+      encodeURIComponent(target.model) + ':generateContent';
     let lastErr = null;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const response = await fetchWithTimeout(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': target.key },
           body: JSON.stringify(body)
         }, target.timeoutMs);
         if (!response.ok) {
@@ -713,10 +751,10 @@
     try {
       if (target.kind === 'gemini') {
         const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
-          encodeURIComponent(target.model) + ':generateContent?key=' + encodeURIComponent(target.key);
+          encodeURIComponent(target.model) + ':generateContent';
         const r = await fetchWithTimeout(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': target.key },
           body: JSON.stringify({ contents: [{ parts: [{ text: 'Responde solo: ok' }] }] })
         }, 15000);
         if (!r.ok) return { ok: false, message: visionHttpMessage(r.status, 'Gemini') };

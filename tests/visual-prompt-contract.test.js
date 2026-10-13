@@ -1,0 +1,86 @@
+/* Contrato de prompt visual A/B/C.
+   Ejecutar: node tests/visual-prompt-contract.test.js
+   Este test valida instrucciones generadas en código; NO certifica imágenes reales. */
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const root = path.join(__dirname, '..');
+const motor = fs.readFileSync(path.join(root, 'js/motor-nucleo.js'), 'utf8');
+const estilos = fs.readFileSync(path.join(root, 'js/data-estilos.js'), 'utf8');
+let checks = 0;
+const failures = [];
+function ok(condition, message) {
+  checks++;
+  if (!condition) failures.push(message);
+}
+
+// Los tres tratamientos deben existir como decisiones visuales distintas.
+ok(/HEAVY:[^\n]{0,260}masas sólidas dominantes/i.test(estilos), 'HEAVY debe definir masas y contraste, no solo un nombre');
+ok(/SOFT:[^\n]{0,260}formas abiertas/i.test(estilos), 'SOFT debe definir aire y formas abiertas');
+ok(/MODERN:[^\n]{0,260}geometría limpia/i.test(estilos), 'MODERN debe definir geometría y bordes nítidos');
+
+// Los sesgos de producto/audiencia no deben encerrar el layout en 1-2 opciones.
+ok(/preferredLayouts\.length >= 3 \? preferredLayouts : layouts/.test(motor), 'el layout debe ampliar al pool estructural cuando las preferencias son demasiado estrechas');
+ok(/Producto y audiencia son preferencias, no candados/.test(motor), 'las preferencias de layout no deben actuar como bloqueo permanente');
+
+// El prompt debe exigir diversidad estructural, conservando la identidad conceptual.
+ok(/misma identidad semántica, soluciones distintas en composición, silueta, tipografía y relación texto-imagen/i.test(motor), 'CONTACTSHEET debe exigir diversidad estructural entre A/B/C');
+ok(/no basta recolorear o cambiar textura/i.test(motor), 'el prompt debe rechazar diferencias limitadas a color o textura');
+ok(/conserva concepto, familia, función y mensaje/i.test(motor), 'la diversidad no debe romper el ADN conceptual');
+ok(/HEAVY\/SOFT\/MODERN modifican composición y jerarquía sin borrar ese estilo/i.test(motor), 'los tratamientos no deben sustituir el estilo artístico');
+ok(/function formatPrompt\(result\)/.test(motor), 'debe existir el punto central que construye el prompt final');
+
+// El prompt debe limitar elementos inventados, exigir diversidad estructural y hacer visible la audiencia.
+ok(/FIJO: mismo concepto y mensaje literal; no inventes objetos, frases ni adornos/.test(motor), 'exploración limita elementos y copy al concepto autorizado');
+ok(/FIJO: mismo concepto y mensaje literal; no inventes objetos, frases ni adornos/.test(motor), 'el prompt prohíbe adornos no solicitados');
+ok(/Cambia claramente composición, silueta, tipografía y relación texto-imagen en cada panel; recolorear no cuenta/.test(motor), 'exploración exige diferencias estructurales comprobables');
+ok(/cada perfil debe modificar al menos dos decisiones visibles/.test(motor), 'la audiencia debe gobernar decisiones visibles en cada ficha');
+ok(/CONTROL DE ELEMENTOS: no añadir elementos narrativos o decorativos fuera de este objeto\/concepto/.test(motor), 'cada tarjeta reitera el límite de elementos del concepto');
+
+// Debe existir una capa de adaptación por producto y preparación técnica.
+ok(/_PRODUCT_RULES\[MOTOR_STATE\.product\]/.test(motor), 'el prompt debe consultar reglas del producto seleccionado');
+ok(/getPrintPrepRule\(MOTOR_STATE\.product, selectedPrintMethod\)/.test(motor), 'el prompt debe incorporar preparación técnica del producto/método');
+ok(/getMockupRule\(MOTOR_STATE\.product\)/.test(motor), 'el prompt debe incorporar reglas de presentación específicas del producto');
+ok(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8').includes('POR CADA DISEÑO A/B/C, generar cuatro mockups separados (12 vistas en total)'), 'CAMISETA SOFT exige cuatro vistas separadas por diseño');
+
+// La variación desde imagen debe prohibir explícitamente el calco estructural.
+ok(/VARIACIÓN VISUAL REAL: crea una nueva solución gráfica/i.test(motor), 'la variación debe exigir una solución gráfica nueva');
+ok(/Cambia obligatoriamente composición, silueta global, encuadre, distribución de masas y jerarquía tipográfica/i.test(motor), 'la variación debe exigir cambios estructurales verificables');
+
+
+/* Regresiones de pruebas manuales 1 y 2: no certifican imágenes generadas. */
+ok(/function _stableHash\(value\)/.test(motor) && /function _pickWeightedStable\(pool, weights, seed\)/.test(motor), 'la resolución automática de estilos debe ser determinista por contexto');
+ok(/stableBase.*bias-pick/.test(motor) && /stableBase.*explore-pick/.test(motor), 'las fichas Auto deben conservar sus estilos al regenerar el mismo contexto');
+ok(/const copyLanguage = \(MOTOR_STATE\.market === 'gospel_es'/.test(motor), 'la variación debe resolver el idioma desde el mercado, sin forzar inglés');
+ok(/no añadir mensajes secundarios, citas, versículos, datos ni afirmaciones no proporcionadas/.test(motor), 'la variación debe bloquear copy secundario inventado');
+ok(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8').includes('POR CADA DISEÑO A/B/C, generar cuatro mockups separados (12 vistas en total)'), 'CAMISETA SOFT exige 4 vistas separadas por diseño, 12 en total');
+
+ok(/QA visual pendiente/.test(motor) && /no inspeccionan el archivo de imagen generado/.test(motor), 'la interfaz no debe presentar el score del prompt como aprobación visual');
+
+
+// Los selectores muestran el bloqueo guardado, no confunden la ficha generada
+// con una elección manual que luego impediría volver a Auto.
+ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.audiencia\[k\] === a/.test(motor), 'la audiencia seleccionada debe reflejar el lock manual');
+ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === m/.test(motor), 'la jerarquía seleccionada debe reflejar el lock manual');
+ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === 'Auto'/.test(motor), 'Auto debe quedar seleccionado si no existe jerarquía fijada');
+
+
+// La exploración debe devolver tres conceptos antes de generar mockups de producto.
+ok(/workflowMode === 'explore'[\s\S]{0,260}NO generar mockups de producto en esta fase/i.test(motor), 'exploración no debe gastar la salida en mockups de un solo diseño');
+ok(/ENTREGA: EXACTAMENTE 3 diseños distintos[\s\S]{0,180}01A HEAVY \/ 01B SOFT \/ 01C MODERN/i.test(motor), 'exploración debe exigir tres artes separados y rotulados HEAVY/SOFT/MODERN');
+ok(/CERO mockups, camisetas, vistas alternativas o repeticiones/i.test(motor), 'el contrato debe distinguir tres diseños de varias vistas de una sola propuesta');
+ok(/if \(!isExplore\) \{[\s\S]{0,180}aplica los mockups indicados a cada diseño/.test(motor), 'la salida global debe preservar tres diseños y aplicar mockups solo fuera de exploración');
+ok(/if \(!isExplore && mockupRule\)/.test(motor), 'la regla global debe reservar los mockups para después de elegir una dirección');
+
+ok(/if \(!isExplore && mockupRule\)/.test(motor), 'las reglas de mockup deben omitirse por completo en exploración');
+ok(/CERO mockups, camisetas, vistas alternativas o repeticiones/.test(motor), 'exploración prohíbe mockups y vistas repetidas con una regla compacta');
+ok(/if \(!isExplore && productRule\)/.test(motor) && /if \(!isExplore && printPrepRule\)/.test(motor), 'exploración no debe cargar reglas técnicas de producto ajenas a la fase');
+
+if (failures.length) {
+  console.error('FALLOS visual-prompt-contract:');
+  failures.forEach(function (failure) { console.error(' - ' + failure); });
+  console.error(checks + ' comprobaciones ejecutadas; ' + failures.length + ' fallos.');
+  process.exitCode = 1;
+} else {
+  console.log('OK visual-prompt-contract: ' + checks + ' comprobaciones. Contrato del prompt verificado; las imágenes reales requieren revisión visual aparte.');
+}

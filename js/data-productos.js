@@ -212,11 +212,15 @@ function getPrintPrepRule(product, method) {
   }
   if (chosen === "sublimacion" && product === "MUG") rule += " Aplicar solo a taza con recubrimiento apto para sublimacion; confirmarlo con el proveedor.";
   else if (chosen === "sublimacion" && isTextile(product)) rule += " En textil, aplicar solo si la fibra es poliester compatible; no asumir que una camiseta de algodon admite sublimacion.";
+  if (product === "GORRA") {
+    const capLabels = { auto: "AUTO", bordado: "BORDADO", parche: "PARCHE", impresion: "IMPRESION DIRECTA" };
+    rule = "GORRA · " + capLabels[chosen] + ": " + rule;
+  }
   return "ESTILO VISUAL y PREPARACION TECNICA son decisiones separadas. " + rule;
 }
 
 const PRODUCT_MOCKUP_RULES = {
-  "CAMISETA SOFT": "dos mockups de camiseta (uno oscuro y otro claro); vista frontal y tres cuartos",
+  "CAMISETA SOFT": "POR CADA DISEÑO A/B/C, generar cuatro mockups separados (12 vistas en total): 1 camiseta clara frontal, 2 camiseta clara a tres cuartos, 3 camiseta oscura frontal, 4 camiseta oscura a tres cuartos. No agrupar ni omitir vistas; la prenda oscura debe verse claramente oscura. Mantener exactamente el arte asignado a esa dirección en sus cuatro vistas; no inventar, redibujar ni cambiar el texto del arte en los mockups.",
   "CAMISETA APPAREL": "dos mockups de prenda fashion (plana o modelo); vista frontal y detalle",
   "HOODIE": "dos mockups de hoodie (uno oscuro y otro claro); vista frontal y espalda",
   "GORRA": "dos mockups de gorra (vista frontal y tres cuartos) y acercamiento del panel con el acabado elegido",

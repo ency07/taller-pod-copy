@@ -14,6 +14,7 @@
   };
 
   var SLOTS_KEY = 'pod2_ai_slots';
+  var SESSION_KEYS_KEY = 'pod2_ai_session_keys';
   var AUTO_KEY = 'pod2_ai_auto';
   var APPLY_KEY = 'pod2_ai_apply';
 
@@ -43,22 +44,51 @@
     'gemini-1.5-pro': 'gemini-2.5-flash'
   };
 
+  function readSessionKeys() {
+    try {
+      if (typeof window.sessionStorage === 'undefined') return [];
+      var keys = JSON.parse(window.sessionStorage.getItem(SESSION_KEYS_KEY) || 'null');
+      return Array.isArray(keys) ? keys : [];
+    } catch (e) { return []; }
+  }
+
+  function writeSessionKeys(slots) {
+    if (typeof window.sessionStorage === 'undefined') return false;
+    try {
+      window.sessionStorage.setItem(SESSION_KEYS_KEY, JSON.stringify((slots || []).map(function (s) {
+        return String(s && s.key || '');
+      })));
+      return true;
+    } catch (e) { return false; }
+  }
+
   function migrateSlots(a) {
     var changed = false;
     (a || []).forEach(function (s) {
       if (s && DEAD_MODELS[s.model]) { s.model = DEAD_MODELS[s.model]; changed = true; }
     });
     if (changed) {
-      try { LS.setItem(SLOTS_KEY, JSON.stringify(a)); } catch (e) { /* no crítico */ }
+      try { LS.setItem(SLOTS_KEY, JSON.stringify(a.map(function (s) { return Object.assign({}, s, { key: '' }); }))); } catch (e) { /* no crítico */ }
     }
     return a;
   }
 
   function getSlots() {
     try {
-      var a = JSON.parse(LS.getItem(SLOTS_KEY) || 'null');
-      if (a && a.length === 3) return migrateSlots(a);
-      return defSlots();
+      var raw = LS.getItem(SLOTS_KEY);
+      var a = JSON.parse(raw || 'null');
+      if (!Array.isArray(a) || a.length !== 3) a = defSlots();
+      // Limpia claves heredadas que se hubieran guardado antes en localStorage.
+      var hasPersistedKeys = a.some(function (slot) { return !!(slot && slot.key); });
+      var nonSecretSlots = a.map(function (slot) { return Object.assign({}, slot, { key: '' }); });
+      nonSecretSlots = migrateSlots(nonSecretSlots);
+      if (hasPersistedKeys || !raw) {
+        try { LS.setItem(SLOTS_KEY, JSON.stringify(nonSecretSlots)); } catch (e) { /* preferencias pueden no persistir */ }
+      }
+      var sessionKeys = readSessionKeys();
+      return nonSecretSlots.map(function (slot, i) {
+        return Object.assign({}, slot, { key: String(sessionKeys[i] || '') });
+      });
     } catch (e) {
       return defSlots();
     }
@@ -178,9 +208,9 @@
           }
         };
 
-        var r = await fetch(ep(s.provider, s.model) + '?key=' + encodeURIComponent(s.key), {
+        var r = await fetch(ep(s.provider, s.model), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': s.key },
           body: JSON.stringify(body),
           signal: c.signal
         });
@@ -325,12 +355,20 @@
 
   function tellStatus(msg) {
     var st = document.getElementById('status');
-    if (st) st.innerHTML = '<span class="blue">' + msg + '</span>';
+    if (st) {
+      st.textContent = String(msg == null ? '' : msg);
+      st.className = 'blue';
+    }
   }
 
   /* --- Panel de configuración --- */
   function escA(s) {
-    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function slotHTML(s, i) {
@@ -347,7 +385,7 @@
       '</div></div>' +
       '<div class="frow"><div><label>Proveedor</label><select data-f="provider">' + pr + '</select></div>' +
       '<div><label>Modelo</label><input data-f="model" value="' + escA(s.model) + '"></div></div>' +
-      '<div class="frow"><div><label>Clave API</label><input data-f="key" type="password" value="' + escA(s.key) + '" placeholder="pegar clave…"></div>' +
+      '<div class="frow"><div><label>Clave API (solo esta pestaña)</label><input data-f="key" type="password" autocomplete="off" value="' + escA(s.key) + '" placeholder="pegar clave…"></div>' +
       '<div><label>Espera</label><select data-f="timeoutMs">' +
       [8000, 10000, 12000, 15000].map(function (t) {
         return '<option value="' + t + '"' + (s.timeoutMs === t ? ' selected' : '') + '>' + (t / 1000) + 's</option>';
@@ -439,7 +477,13 @@
 
     panel.querySelector('#ai-save').onclick = function () {
       var arr = readPanelSlots();
-      LS.setItem(SLOTS_KEY, JSON.stringify(arr));
+      // Las claves API solo se guardan en sessionStorage; localStorage conserva configuración no secreta.
+      var sessionSaved = writeSessionKeys(arr);
+      LS.setItem(SLOTS_KEY, JSON.stringify(arr.map(function (s) { return Object.assign({}, s, { key: '' }); })));
+      if (!sessionSaved && arr.some(function (s) { return !!s.key; })) {
+        tellStatus('No se pudieron conservar las claves en esta pestaña. Revisa los permisos de almacenamiento del navegador.');
+        return;
+      }
       LS.setItem(AUTO_KEY, panel.querySelector('#ai-auto').checked ? '1' : '0');
       LS.setItem(APPLY_KEY, panel.querySelector('#ai-apply').checked ? '1' : '0');
       LS.setItem('pod2_vision_cfg', JSON.stringify({
