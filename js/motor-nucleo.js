@@ -1634,6 +1634,7 @@ function formatPrompt(result) {
     o += 'SANDBOX: solo bancos globales del idioma del mercado. Prohibidos regionalismos colombianos y simbolismo gospel doctrinal.\n';
   }
   o += 'DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo, fondo y ARQUITECTURA TEXTUAL NUNCA se repiten entre A/B/C.\n';
+  o += 'PRIORIDAD DE JERARQUÍA: el selector JERARQUÍA es una restricción obligatoria, no una sugerencia. TEXTO_DOMINANTE: texto claramente mayor y más pesado que el símbolo. OBJETO_DOMINANTE: símbolo claramente mayor y más pesado que el texto. SOLO_TEXTO: únicamente letras y formas tipográficas; prohibidos personaje, árbol, iconos, ilustraciones, estrellas, llamas, cintas, marcos, emblemas y adornos no solicitados, incluso si el estilo artístico suele usarlos. BALANCEADO: texto y símbolo con peso visual comparable. Nunca cambies de modo para acomodar el estilo.\n';
   if (isPatron) {
     o += 'PATRON: cada variante es un tile sin costura visible (bordes que empatan al repetirse); motivo y fondo definidos por ficha; repetición ' + (MOTOR_STATE.repeatType || 'medio salto') + ' en toda la superficie aplicable.\n';
     o += 'TEXTO EN TILE: mínimo o nulo; si hay texto debe funcionar repetido (sin lectura lineal, sin frase que se corte entre repeticiones).\n';
@@ -1645,7 +1646,7 @@ function formatPrompt(result) {
     }
     o += 'COLOR: separa tinta, fondo del arte y color de la prenda; no uses el mismo color para fondo y tinta. Mantén contraste claro sobre el producto y no presentes el mockup como validación de producción.\\n';
   } else {
-    o += 'TEXTOS: tres niveles con peso real, todos legibles; PROHIBIDO microtexto decorativo.\n';
+    o += 'TEXTOS: si existe mensaje proporcionado, conservarlo literalmente y usarlo como único copy principal; no exigir tres niveles ni inventar apoyos, sellos, citas, datos o microtexto. Si no existe mensaje, proponer una sola frase principal exacta y omitir texto secundario salvo que el usuario lo solicite.\n';
   }
   o += 'AUDIENCIA: cada perfil debe modificar al menos dos decisiones visibles entre composición, escala/pose del personaje, tipografía, densidad, forma del símbolo y espacio negativo. Usa las preferencias estructurales de la ficha; no representes la audiencia con estereotipos ni añadiendo objetos. Si al quitar el perfil el diseño no cambia de forma verificable, RECHAZAR.\n\n';
 
@@ -1668,11 +1669,11 @@ function formatPrompt(result) {
           : 'COPY COMPARTIDO A/B/C: define palabras exactas de una frase principal original; conserva el mismo texto en las tres direcciones. Apoyo literal solo si aporta y también compartido; tercer nivel solo con dato real o se omite. Prohibidos placeholders y microtexto. Tipografía: ' + v.tipografia)
         : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia);
     const hierarchyRule = v.jerarquiaVisual === 'TEXTO_DOMINANTE' ? 'texto domina; símbolo secundario' : v.jerarquiaVisual === 'OBJETO_DOMINANTE' ? 'símbolo domina; texto secundario' : v.jerarquiaVisual === 'SOLO_TEXTO' ? 'solo texto; sin ilustración' : 'texto y símbolo equilibrados';
-    o += 'COMPOSICIÓN TEXTUAL: ' + v.distribucionTexto + ' | JERARQUÍA OBLIGATORIA: ' + hierarchyRule + '. La jerarquía controla tamaño y peso; la arquitectura controla ubicación y dirección. Si chocan, conserva ubicación y ajusta escala. Ubicación principal distinta en A/B/C; nunca colocar abajo por defecto.\n';
+    o += 'COMPOSICIÓN TEXTUAL: ' + v.distribucionTexto + ' | JERARQUÍA OBLIGATORIA: ' + hierarchyRule + '. Cumplimiento verificable: la diferencia de tamaño/peso debe ser evidente a primera vista. La jerarquía controla tamaño y peso; la arquitectura controla ubicación y dirección. Si chocan, conserva la jerarquía y adapta la escala de los elementos secundarios sin cambiar el lugar asignado. Ubicación principal distinta en A/B/C; nunca colocar abajo por defecto.\n';
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += contactDNA
-        ? 'DIRECCIÓN: representar el mismo símbolo mediante la forma de las letras; sin añadir otros objetos ni ilustraciones.\n'
-        : 'DIRECCIÓN: composición tipográfica pura en clave ' + v.estilo + '; sin objeto, figura ni ilustración.\n';
+        ? 'DIRECCIÓN: representar la idea mediante la forma de las letras únicamente; sin convertir el símbolo en una ilustración separada ni añadir otros objetos.\n'
+        : 'DIRECCIÓN: composición tipográfica pura en clave ' + v.estilo + '; el estilo solo modifica las letras. Sin objeto, figura, ilustración, icono, marco, cinta, estrella, llama, floritura ni ornamento independiente.\n';
       o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
       o += 'ARTE: tipografía como único elemento visual; ' + v.tratamiento + '\n';
       o += 'TEXTO: ' + textLine + '\n';
