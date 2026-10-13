@@ -59,6 +59,16 @@ ok(/QA visual pendiente/.test(motor) && /no inspeccionan el archivo de imagen ge
 ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.audiencia\[k\] === a/.test(motor), 'la audiencia seleccionada debe reflejar el lock manual');
 ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === m/.test(motor), 'la jerarquía seleccionada debe reflejar el lock manual');
 ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === 'Auto'/.test(motor), 'Auto debe quedar seleccionado si no existe jerarquía fijada');
+ 
+// La jerarquía seleccionada manda sobre escala/peso; la arquitectura decide ubicación.
+// Esto evita que una composición textual aleatoria contradiga TEXTO_DOMINANTE,
+// OBJETO_DOMINANTE, BALANCEADO o SOLO_TEXTO.
+ok(/const hierarchyRule = v\.jerarquiaVisual === 'TEXTO_DOMINANTE'[\s\S]{0,350}JERARQUÍA OBLIGATORIA/.test(motor), 'el prompt debe resolver explícitamente la jerarquía visual antes de pedir la composición textual');
+ok(/La jerarquía controla tamaño y peso; la arquitectura controla ubicación y dirección/.test(motor), 'la jerarquía manual debe prevalecer en tamaño y dominancia');
+ok(/Ubicación principal distinta en A\/B\/C; nunca colocar abajo por defecto/.test(motor), 'el contrato debe impedir la convergencia automática del texto a la zona inferior');
+ok(!/RELACIÓN TEXTO-IMAGEN: aplica la arquitectura textual obligatoria anterior/.test(motor), 'no debe quedar una instrucción secundaria redundante que vuelva a describir la arquitectura');
+ok((motor.match(/  '(?:TEXTO|COLUMNA|ARCO|BLOQUE|DIAGONAL|BANDA|PALABRA|CINTA|DOS|FRANJA|SÍMBOLO|PILA|ESQUINA)[^\n]*',/g) || []).length >= 20, 'el banco debe conservar al menos 20 arquitecturas compositivas');
+
 
 if (failures.length) {
   console.error('FALLOS visual-prompt-contract:');
