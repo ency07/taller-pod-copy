@@ -846,7 +846,12 @@ function _applyStructuralProfile(v, profileKey, productBias, audienceProfile, us
   const audienceLayouts = (audience.layoutPref || []).length
     ? layouts.filter(function (x) { return audience.layoutPref.some(function (h) { return x.indexOf(h) === 0; }); })
     : [];
-  v.layout = _pickProfileDistinct([productLayouts, audienceLayouts], layouts.length ? layouts : _LAYOUTS, used.layout);
+  // Producto y audiencia son preferencias, no candados. Si el sesgo solo
+  // ofrece una o dos opciones, no debe colapsar el layout a ese subconjunto.
+  // Solo se prioriza cuando hay variedad real; siempre hay fallback al perfil completo.
+  const preferredLayouts = audienceLayouts.length > productLayouts.length ? audienceLayouts : productLayouts;
+  const layoutPool = preferredLayouts.length >= 3 ? preferredLayouts : layouts;
+  v.layout = _pickProfileDistinct([], layoutPool.length ? layoutPool : _LAYOUTS, used.layout);
 
   const typeHints = profile.type || [];
   const types = (_TIPOS || []).filter(function (x) { return typeHints.some(function (h) { return x.indexOf(h) === 0; }); });
