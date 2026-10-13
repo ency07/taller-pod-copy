@@ -62,15 +62,15 @@ ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === '
  
 // La jerarquía seleccionada manda sobre escala/peso; la arquitectura decide ubicación.
 ok(/si existe mensaje proporcionado, conservarlo literalmente y usarlo como único copy principal; no exigir tres niveles/i.test(motor), 'el prompt general no debe exigir tres niveles que contradigan un mensaje único');
-ok(/PRIORIDAD DE JERARQUÍA: el selector JERARQUÍA es una restricción obligatoria/i.test(motor), 'la jerarquía seleccionada debe declararse como restricción obligatoria');
-ok(/SOLO_TEXTO: únicamente letras y formas tipográficas; prohibidos personaje, árbol, iconos, ilustraciones/i.test(motor), 'SOLO_TEXTO debe prohibir ilustraciones y adornos incluso cuando el estilo los suela usar');
+ok(/JERARQUÍA ES UNA ORDEN VISUAL/i.test(motor) && /texto 70–80%/i.test(motor) && /símbolo 70–80%/i.test(motor), 'la jerarquía debe tener umbrales visuales cuantificados');
+ok(/SOLO_TEXTO = solo letras, cero imagen/i.test(motor) && /ÚNICOS elementos permitidos: letras del copy literal/i.test(motor), 'SOLO_TEXTO debe prohibir imágenes desde el contrato global y la ficha');
 ok(/Cumplimiento verificable: la diferencia de tamaño\/peso debe ser evidente a primera vista/i.test(motor), 'cada jerarquía debe exigir una diferencia visual comprobable');
-ok(/el estilo solo modifica las letras\. Sin objeto, figura, ilustración, icono, marco, cinta/i.test(motor), 'el estilo artístico de SOLO_TEXTO solo puede afectar el tratamiento tipográfico');
+ok(/diseño tipográfico puro en /.test(motor) && /jamás autoriza ilustraciones ni ornamentos independientes/.test(motor), 'el estilo artístico de SOLO_TEXTO solo puede afectar el tratamiento tipográfico');
 // Esto evita que una composición textual aleatoria contradiga TEXTO_DOMINANTE,
 // OBJETO_DOMINANTE, BALANCEADO o SOLO_TEXTO.
-ok(/const hierarchyRule = v\.jerarquiaVisual === 'TEXTO_DOMINANTE'[\s\S]{0,350}JERARQUÍA OBLIGATORIA/.test(motor), 'el prompt debe resolver explícitamente la jerarquía visual antes de pedir la composición textual');
-ok(/La jerarquía controla tamaño y peso; la arquitectura controla ubicación y dirección/.test(motor), 'la jerarquía manual debe prevalecer en tamaño y dominancia');
-ok(/Ubicación principal distinta en A\/B\/C; nunca colocar abajo por defecto/.test(motor), 'el contrato debe impedir la convergencia automática del texto a la zona inferior');
+ok(/const hierarchyRule = v\.jerarquiaVisual === 'TEXTO_DOMINANTE'[\s\S]{0,900}JERARQUÍA OBLIGATORIA/.test(motor), 'el prompt debe resolver explícitamente la jerarquía visual antes de pedir la composición textual');
+ok(/La jerarquía controla tamaño, área y peso; el layout solo controla ubicación/.test(motor), 'la jerarquía manual debe prevalecer en tamaño, área y dominancia');
+ok(/no reutilizar la arquitectura de otra tarjeta/.test(motor), 'el contrato debe impedir repetir la arquitectura entre tarjetas');
 ok(/DIRECCIÓN ARTÍSTICA: '\s*\+ v\.formaSimbolo \+ '; ' \+ v\.tecnica \+ '; ' \+ v\.tratamiento/.test(motor), 'la dirección artística no debe volver a imponer layout/composición sobre la arquitectura textual');
 ok(!/o \+= 'DIRECCIÓN: ' \+ v\.arquitectura \+ '; ' \+ v\.composicion \+ '; ' \+ v\.layout/.test(motor), 'no debe quedar la antigua instrucción de dirección que contradecía la composición textual');
 ok(!/espacio negativo ' \+ v\.negativeSpace \+ ' · jerarquía interna ' \+ v\.jerarquia/.test(motor), 'la jerarquía interna aleatoria no debe contradecir el selector de jerarquía visible');
