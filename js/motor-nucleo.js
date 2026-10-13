@@ -837,16 +837,20 @@ function _applyStructuralProfile(v, profileKey, productBias, audienceProfile, us
   if (!profile) return v;
   const bias = productBias || {};
   const audience = audienceProfile || {};
-  // El perfil fija la dirección; producto y audiencia conservan sus preferencias
-  // cuando existe una opción compatible. No añadir opciones fuera de los pools.
-  const layouts = (_LAYOUTS || []).filter(function (x) { return profile.layout.some(function (h) { return x.indexOf(h) === 0; }); });
+  // El perfil estructural no restringe el catálogo: todo layout registrado sigue elegible.
+  // Producto y audiencia solo sesgan; cada tarjeta del conjunto recibe uno no repetido.
+  const layouts = (_LAYOUTS || []).slice();
   const productLayouts = (bias.layout || []).length
     ? layouts.filter(function (x) { return bias.layout.some(function (h) { return x.indexOf(h) === 0; }); })
     : [];
   const audienceLayouts = (audience.layoutPref || []).length
     ? layouts.filter(function (x) { return audience.layoutPref.some(function (h) { return x.indexOf(h) === 0; }); })
     : [];
-  v.layout = _pickProfileDistinct([productLayouts, audienceLayouts], layouts.length ? layouts : _LAYOUTS, used.layout);
+  const distinctLayouts = layouts.filter(function (x) { return (used.layout || []).indexOf(x) === -1; });
+  const preferredLayouts = productLayouts.concat(audienceLayouts).filter(function (x, i, all) {
+    return all.indexOf(x) === i && distinctLayouts.indexOf(x) !== -1;
+  });
+  v.layout = _pick(preferredLayouts.length ? preferredLayouts : (distinctLayouts.length ? distinctLayouts : layouts));
 
   const typeHints = profile.type || [];
   const types = (_TIPOS || []).filter(function (x) { return typeHints.some(function (h) { return x.indexOf(h) === 0; }); });
@@ -868,7 +872,8 @@ function _applyStructuralProfile(v, profileKey, productBias, audienceProfile, us
   const hierarchyCandidates = _profileCandidates(_POOLS.jerarquia, profile.hierarchy, ['Jerarquía en capas de lectura']);
   const profileForms = _profileCandidates(_FORMAS, profile.form, _FORMAS);
   v.negativeSpace = _pickProfileDistinct([negativeCandidates], _POOLS.negativeSpace, used.negativeSpace);
-  v.jerarquia = _pickProfileDistinct([hierarchyCandidates], _POOLS.jerarquia, used.jerarquia);
+  // La jerarquía elegida en el selector prevalece sobre la jerarquía decorativa del perfil.
+  v.jerarquia = v.jerarquiaVisual || _pickProfileDistinct([hierarchyCandidates], _POOLS.jerarquia, used.jerarquia);
   const audienceForms = (audience.formaPref || []).length
     ? profileForms.filter(function (x) { return audience.formaPref.indexOf(x) !== -1; })
     : [];
@@ -1634,7 +1639,7 @@ function formatPrompt(result) {
     o += 'SANDBOX: solo bancos globales del idioma del mercado. Prohibidos regionalismos colombianos y simbolismo gospel doctrinal.\n';
   }
   o += 'DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo, fondo y ARQUITECTURA TEXTUAL NUNCA se repiten entre A/B/C.\n';
-  o += 'PRIORIDAD DE JERARQUÍA: el selector JERARQUÍA es una restricción obligatoria, no una sugerencia. TEXTO_DOMINANTE: texto claramente mayor y más pesado que el símbolo. OBJETO_DOMINANTE: símbolo claramente mayor y más pesado que el texto. SOLO_TEXTO: únicamente letras y formas tipográficas; prohibidos personaje, árbol, iconos, ilustraciones, estrellas, llamas, cintas, marcos, emblemas y adornos no solicitados, incluso si el estilo artístico suele usarlos. BALANCEADO: texto y símbolo con peso visual comparable. Nunca cambies de modo para acomodar el estilo.\n';
+  o += 'JERARQUÍA ES UNA ORDEN VISUAL: TEXTO_DOMINANTE = texto 70–80% del peso/área visual y símbolo ≤20–30%; OBJETO_DOMINANTE = símbolo 70–80% y texto ≤20–30%; BALANCEADO = ambos 45–55%; SOLO_TEXTO = solo letras, cero imagen. Respeta el valor de cada ficha; no lo cambies por estilo, layout ni audiencia.\\n';
   if (isPatron) {
     o += 'PATRON: cada variante es un tile sin costura visible (bordes que empatan al repetirse); motivo y fondo definidos por ficha; repetición ' + (MOTOR_STATE.repeatType || 'medio salto') + ' en toda la superficie aplicable.\n';
     o += 'TEXTO EN TILE: mínimo o nulo; si hay texto debe funcionar repetido (sin lectura lineal, sin frase que se corte entre repeticiones).\n';
@@ -1656,8 +1661,13 @@ function formatPrompt(result) {
     o += 'JERARQUÍA: ' + v.jerarquiaVisual + '\n';
     o += 'PERFIL ESTRUCTURAL: ' + (v.perfilEstructural || _treatmentKey(v.tratamiento)) + ' · densidad ' + v.densidad + ' · espacio negativo ' + v.negativeSpace + '\n';
     o += 'COMPATIBILIDAD ESTILO × TRATAMIENTO: ' + _styleTreatmentDirective(v.estilo, v.perfilEstructural || _treatmentKey(v.tratamiento)) + '\\n';
-    o += 'OBJETO: ' + v.objeto + '\n';
-    o += 'CONTROL DE ELEMENTOS: no añadir elementos narrativos o decorativos fuera de este objeto/concepto; si un detalle no está nombrado ni es imprescindible para mostrar la acción, omitirlo.\n';
+    if (v.jerarquiaVisual === 'SOLO_TEXTO') {
+      o += 'OBJETO: NINGUNO. El concepto solo inspira el copy; no se representa como escena.\n';
+      o += 'CONTROL ABSOLUTO: no dibujar personas, árboles, símbolos, iconos, siluetas, ilustraciones, fondos narrativos, marcos, cintas, flores, estrellas, rayos, texturas figurativas ni adornos. ÚNICOS elementos permitidos: letras del copy literal y recursos tipográficos integrados en las letras.\n';
+    } else {
+      o += 'OBJETO: ' + v.objeto + '\n';
+      o += 'CONTROL DE ELEMENTOS: no añadir elementos narrativos o decorativos fuera de este objeto/concepto; si un detalle no está nombrado ni es imprescindible para mostrar la acción, omitirlo.\n';
+    }
     if (contactDNA) o += 'FUNCIÓN CONSTANTE: ' + v.funcionSimbolica + ' · intención ' + v.intencionEmocional + '\n';
     const textLine = contactDNA
       ? (contactMainText
@@ -1668,14 +1678,23 @@ function formatPrompt(result) {
           ? 'COPY PRINCIPAL LITERAL: «' + String(MOTOR_STATE.message).trim() + '»; no modificar palabras. APOYO: ' + (String(MOTOR_STATE.support || '').trim() ? '«' + String(MOTOR_STATE.support).trim() + '»' : 'omitir si no aporta') + '; tercer nivel solo con dato real; tipografía ' + v.tipografia
           : 'COPY COMPARTIDO A/B/C: define palabras exactas de una frase principal original; conserva el mismo texto en las tres direcciones. Apoyo literal solo si aporta y también compartido; tercer nivel solo con dato real o se omite. Prohibidos placeholders y microtexto. Tipografía: ' + v.tipografia)
         : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia);
-    const hierarchyRule = v.jerarquiaVisual === 'TEXTO_DOMINANTE' ? 'texto domina; símbolo secundario' : v.jerarquiaVisual === 'OBJETO_DOMINANTE' ? 'símbolo domina; texto secundario' : v.jerarquiaVisual === 'SOLO_TEXTO' ? 'solo texto; sin ilustración' : 'texto y símbolo equilibrados';
-    o += 'COMPOSICIÓN TEXTUAL: ' + v.distribucionTexto + ' | JERARQUÍA OBLIGATORIA: ' + hierarchyRule + '. Cumplimiento verificable: la diferencia de tamaño/peso debe ser evidente a primera vista. La jerarquía controla tamaño y peso; la arquitectura controla ubicación y dirección. Si chocan, conserva la jerarquía y adapta la escala de los elementos secundarios sin cambiar el lugar asignado. Ubicación principal distinta en A/B/C; nunca colocar abajo por defecto.\n';
+    const hierarchyRule = v.jerarquiaVisual === 'TEXTO_DOMINANTE'
+      ? 'TEXTO_DOMINANTE: texto 70–80% del peso visual, símbolo ≤20–30%; el título debe ser claramente mayor que cualquier símbolo.'
+      : v.jerarquiaVisual === 'OBJETO_DOMINANTE'
+        ? 'OBJETO_DOMINANTE: símbolo 70–80% del peso visual, texto ≤20–30%; el símbolo debe leerse primero y ser claramente mayor.'
+        : v.jerarquiaVisual === 'SOLO_TEXTO'
+          ? 'SOLO_TEXTO: 100% tipografía; prohibida cualquier imagen, objeto o ilustración.'
+          : 'BALANCEADO: texto y símbolo con peso visual comparable, cada uno entre 45–55%.';
+    o += 'JERARQUÍA OBLIGATORIA: ' + hierarchyRule + ' No dibujes una composición intermedia. La diferencia debe ser evidente a primera vista y sobrevivir al reducir el arte al tamaño de impresión. La jerarquía controla tamaño, área y peso; el layout solo controla ubicación. Si otra instrucción contradice esta regla, IGNÓRALA.\\n';
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
-      o += contactDNA
-        ? 'DIRECCIÓN: representar la idea mediante la forma de las letras únicamente; sin convertir el símbolo en una ilustración separada ni añadir otros objetos.\n'
-        : 'DIRECCIÓN: composición tipográfica pura en clave ' + v.estilo + '; el estilo solo modifica las letras. Sin objeto, figura, ilustración, icono, marco, cinta, estrella, llama, floritura ni ornamento independiente.\n';
+      o += 'ARQUITECTURA TIPOGRÁFICA: ' + v.distribucionTexto + ' Aplica la arquitectura solo a letras y espacios vacíos; no la conviertas en marco, cinta ni ilustración.\\n';
+    } else {
+      o += 'COMPOSICIÓN: ' + v.layout + ' · ' + v.distribucionTexto + ' · no reutilizar la arquitectura de otra tarjeta.\\n';
+    }
+    if (v.jerarquiaVisual === 'SOLO_TEXTO') {
+      o += 'DIRECCIÓN: diseño tipográfico puro en ' + v.estilo + '. El estilo solo modifica construcción, peso, cortes y textura de las letras; jamás autoriza ilustraciones ni ornamentos independientes.\n';
       o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
-      o += 'ARTE: tipografía como único elemento visual; ' + v.tratamiento + '\n';
+      o += 'ARTE: solo letras del mensaje exacto; ' + v.tratamiento + '. Sin persona, árbol, objeto, icono, ilustración, marco, cinta, estrella, llama, floritura, textura figurativa ni fondo escénico.\n';
       o += 'TEXTO: ' + textLine + '\n';
     } else {
       o += 'DIRECCIÓN ARTÍSTICA: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '. Ejecuta el estilo sin cambiar la ubicación, dirección ni estructura textual definidas en COMPOSICIÓN TEXTUAL.\n';
