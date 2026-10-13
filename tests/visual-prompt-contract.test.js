@@ -75,7 +75,10 @@ ok(/DIRECCIÓN ARTÍSTICA: '\s*\+ v\.formaSimbolo \+ '; ' \+ v\.tecnica \+ '; ' 
 ok(!/o \+= 'DIRECCIÓN: ' \+ v\.arquitectura \+ '; ' \+ v\.composicion \+ '; ' \+ v\.layout/.test(motor), 'no debe quedar la antigua instrucción de dirección que contradecía la composición textual');
 ok(!/espacio negativo ' \+ v\.negativeSpace \+ ' · jerarquía interna ' \+ v\.jerarquia/.test(motor), 'la jerarquía interna aleatoria no debe contradecir el selector de jerarquía visible');
 ok(!/RELACIÓN TEXTO-IMAGEN: aplica la arquitectura textual obligatoria anterior/.test(motor), 'no debe quedar una instrucción secundaria redundante que vuelva a describir la arquitectura');
-ok((motor.match(/  '(?:TEXTO|COLUMNA|ARCO|BLOQUE|BLOQUES|DIAGONAL|BANDA|PALABRA|CINTA|DOS|FRANJA|SÍMBOLO|PILA|ESQUINA)[^\n]*',/g) || []).length >= 20, 'el banco debe conservar al menos 20 arquitecturas compositivas');
+const compositionBankStart = motor.indexOf('const _TEXT_COMPOSITION_BANK = [');
+const compositionBankEnd = motor.indexOf('function _assignTextCompositions()', compositionBankStart);
+const compositionBankSource = compositionBankStart >= 0 && compositionBankEnd > compositionBankStart ? motor.slice(compositionBankStart, compositionBankEnd) : '';
+ok((compositionBankSource.match(/^\\s{2}'/gm) || []).length >= 20, 'el banco debe conservar al menos 20 arquitecturas compositivas');
 
 
 if (failures.length) {
