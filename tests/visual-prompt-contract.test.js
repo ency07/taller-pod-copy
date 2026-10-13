@@ -61,6 +61,11 @@ ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === m
 ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === 'Auto'/.test(motor), 'Auto debe quedar seleccionado si no existe jerarquía fijada');
  
 // La jerarquía seleccionada manda sobre escala/peso; la arquitectura decide ubicación.
+ok(/si existe mensaje proporcionado, conservarlo literalmente y usarlo como único copy principal; no exigir tres niveles/i.test(motor), 'el prompt general no debe exigir tres niveles que contradigan un mensaje único');
+ok(/PRIORIDAD DE JERARQUÍA: el selector JERARQUÍA es una restricción obligatoria/i.test(motor), 'la jerarquía seleccionada debe declararse como restricción obligatoria');
+ok(/SOLO_TEXTO: únicamente letras y formas tipográficas; prohibidos personaje, árbol, iconos, ilustraciones/i.test(motor), 'SOLO_TEXTO debe prohibir ilustraciones y adornos incluso cuando el estilo los suela usar');
+ok(/Cumplimiento verificable: la diferencia de tamaño\/peso debe ser evidente a primera vista/i.test(motor), 'cada jerarquía debe exigir una diferencia visual comprobable');
+ok(/el estilo solo modifica las letras\. Sin objeto, figura, ilustración, icono, marco, cinta/i.test(motor), 'el estilo artístico de SOLO_TEXTO solo puede afectar el tratamiento tipográfico');
 // Esto evita que una composición textual aleatoria contradiga TEXTO_DOMINANTE,
 // OBJETO_DOMINANTE, BALANCEADO o SOLO_TEXTO.
 ok(/const hierarchyRule = v\.jerarquiaVisual === 'TEXTO_DOMINANTE'[\s\S]{0,350}JERARQUÍA OBLIGATORIA/.test(motor), 'el prompt debe resolver explícitamente la jerarquía visual antes de pedir la composición textual');
