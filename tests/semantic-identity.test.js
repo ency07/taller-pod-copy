@@ -91,7 +91,7 @@ const structuralPools = {
   const profileCard = _applyStructuralProfile({}, profileKey, {});
   const spec = structuralPools[profileKey];
   ok(profileCard.perfilEstructural === profileKey, profileKey + ' debe declararse como perfil estructural explícito');
-  ok(spec.layout.some(function (hint) { return profileCard.layout.indexOf(hint) === 0; }), profileKey + ' debe seleccionar un layout permitido por el perfil');
+  ok(_LAYOUTS.indexOf(profileCard.layout) !== -1, profileKey + ' debe elegir un layout del catálogo completo, sin restringirlo al perfil');
   ok(spec.type.some(function (hint) { return profileCard.tipografia.indexOf(hint) === 0; }), profileKey + ' debe seleccionar tipografía permitida por el perfil');
   ok(spec.density.indexOf(profileCard.densidad) !== -1, profileKey + ' debe seleccionar densidad coherente');
   ok(spec.form.some(function (hint) { return profileCard.formaSimbolo === hint; }), profileKey + ' debe seleccionar una forma compatible');
@@ -111,8 +111,9 @@ const distinctProfileCards = ['HEAVY', 'SOFT', 'MODERN'].map(function (profileKe
   ok(new Set(values).size === values.length, 'HEAVY/SOFT/MODERN deben evitar repetir ' + axis + ' cuando hay opciones compatibles');
 });
 
-const productConstrainedProfile = _applyStructuralProfile({}, 'HEAVY', { layout: ['Axial centrado'], density: ['Heavy'] });
-ok(productConstrainedProfile.layout.indexOf('Axial centrado') === 0, 'si producto y perfil comparten un layout permitido, debe respetarse');
+const productConstrainedProfile = _applyStructuralProfile({ jerarquiaVisual: 'TEXTO_DOMINANTE' }, 'HEAVY', { layout: ['Axial centrado'], density: ['Heavy'] });
+ok(productConstrainedProfile.layout.indexOf('Axial centrado') === 0, 'el sesgo compatible de producto debe respetarse sin cerrar el catálogo');
+ok(productConstrainedProfile.jerarquia === 'TEXTO_DOMINANTE', 'el perfil estructural nunca debe sobrescribir la jerarquía del selector');
 ok(productConstrainedProfile.densidad === 'Heavy', 'si producto y perfil comparten densidad permitida, debe respetarse');
 const audienceConstrainedProfile = _applyStructuralProfile({}, 'SOFT', {}, {
   layoutPref: ['Editorial asimétrica'],
@@ -151,6 +152,9 @@ for (let sample = 0; sample < 12; sample++) {
 }
 const motorSourceForTextDiversity = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
 ok(motorSourceForTextDiversity.includes('const textCompositionByKey = _assignTextCompositions();'), 'la asignación textual se debe crear por conjunto, no por tratamiento');
+ok(motorSourceForTextDiversity.includes('todo layout registrado sigue elegible'), 'el perfil estructural no debe limitar el catálogo de layouts');
+ok(motorSourceForTextDiversity.includes('v.jerarquia = v.jerarquiaVisual ||'), 'la jerarquía elegida en el selector debe prevalecer sobre el perfil');
+ok(motorSourceForTextDiversity.includes('ÚNICOS elementos permitidos: letras del copy literal'), 'SOLO_TEXTO debe excluir ilustraciones desde el bloque de objeto');
 ok(motorSourceForTextDiversity.includes("'integracionTexto', 'distribucionTexto', 'familiaColor'"), 'la distribución textual debe participar en la puntuación de diversidad');
 ok(motorSourceForTextDiversity.includes('return cand[k].distribucionTexto; })).size === 3'), 'la aceptación del conjunto debe exigir tres arquitecturas textuales distintas');
 
