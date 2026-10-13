@@ -977,7 +977,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
 
   const set = {};
   const usedThisSet = new Set();
-  const usedAxes = { layout: [], tipografia: [], formaSimbolo: [], tratamiento: [], integracionTexto: [], densidad: [], negativeSpace: [], jerarquia: [] };
+  const usedAxes = { layout: [], tipografia: [], formaSimbolo: [], tratamiento: [], integracionTexto: [], distribucionTexto: [], densidad: [], negativeSpace: [], jerarquia: [] };
   const contactIdentity = _isLockedContactSet()
     ? (fixedIdentity || _resolveContactIdentity(objectPool))
     : null;
@@ -1092,7 +1092,8 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     // Asignación provisional; el perfil fijo se aplica al final para que ningún selector aleatorio lo sobrescriba.
     v.integracionTexto = _pickFresh(_INTEGRACION, _INTEGRACION, usedAxes.integracionTexto);
     usedAxes.integracionTexto.push(v.integracionTexto);
-    v.distribucionTexto = contactIdentity
+    v.distribucionTexto = _pickFresh(_POOLS.distribucionTexto || ['texto integrado al símbolo'], _POOLS.distribucionTexto || ['texto integrado al símbolo'], usedAxes.distribucionTexto);
+    usedAxes.distribucionTexto.push(v.distribucionTexto);
       ? (contactPrimaryText ? 'texto autorizado con lectura prioritaria; integrado solo si no se deforma ni se oculta' : 'proponer copy original y exacto según la jerarquía visual; no inventar datos')
       : _pick(_POOLS.distribucionTexto || ['texto integrado al símbolo']);
     v.jerarquia = _pick(_POOLS.jerarquia || ['Balanceado']);
@@ -1615,7 +1616,9 @@ function formatPrompt(result) {
 
   K.forEach(function (k, i) {
     const v = set[k];
-    o += '### ' + N[i] + ' · ' + v.estilo + ' · ' + v.audiencia + '\n';
+    o += 'JERARQUÍA: ' + v.jerarquiaVisual + '\n';
+    const hierarchyRule = v.jerarquiaVisual === 'SOLO_TEXTO' ? 'solo tipografía; no ilustración' : v.jerarquiaVisual === 'TEXTO_DOMINANTE' ? 'el texto debe ser el elemento más grande y pesado; símbolo secundario' : v.jerarquiaVisual === 'OBJETO_DOMINANTE' ? 'el símbolo debe dominar en tamaño y peso; texto secundario legible' : 'texto y símbolo con peso visual equivalente';
+    o += 'COMPOSICIÓN TEXTUAL: ' + v.distribucionTexto + '. JERARQUÍA OBLIGATORIA: ' + hierarchyRule + '. La jerarquía manda sobre tamaño y peso; la composición textual manda sobre ubicación y dirección. No cambies la jerarquía seleccionada para encajar en el layout.\n';
     o += 'JERARQUÍA: ' + v.jerarquiaVisual + '\n';
     o += 'PERFIL ESTRUCTURAL: ' + (v.perfilEstructural || _treatmentKey(v.tratamiento)) + ' · densidad ' + v.densidad + ' · espacio negativo ' + v.negativeSpace + ' · jerarquía interna ' + v.jerarquia + '\\n';
     o += 'COMPATIBILIDAD ESTILO × TRATAMIENTO: ' + _styleTreatmentDirective(v.estilo, v.perfilEstructural || _treatmentKey(v.tratamiento)) + '\\n';
