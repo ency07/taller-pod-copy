@@ -1633,7 +1633,7 @@ function formatPrompt(result) {
   if (MOTOR_STATE.market === 'global_en' || MOTOR_STATE.market === 'global_es') {
     o += 'SANDBOX: solo bancos globales del idioma del mercado. Prohibidos regionalismos colombianos y simbolismo gospel doctrinal.\n';
   }
-  o += 'DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo y fondo NUNCA se repiten entre A/B/C.\n';
+  o += 'DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo, fondo y ARQUITECTURA TEXTUAL NUNCA se repiten entre A/B/C.\\n';
   if (isPatron) {
     o += 'PATRON: cada variante es un tile sin costura visible (bordes que empatan al repetirse); motivo y fondo definidos por ficha; repetición ' + (MOTOR_STATE.repeatType || 'medio salto') + ' en toda la superficie aplicable.\n';
     o += 'TEXTO EN TILE: mínimo o nulo; si hay texto debe funcionar repetido (sin lectura lineal, sin frase que se corte entre repeticiones).\n';
@@ -1680,6 +1680,7 @@ function formatPrompt(result) {
       o += 'ESTILO PRINCIPAL (prioridad): ' + v.estilo + '. Gobierna el lenguaje visual; forma, técnica y tratamiento son secundarios y no pueden introducir estéticas incompatibles.\n';
       o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
       o += 'TEXTO: ' + textLine + '\n';
+      o += 'ARQUITECTURA TEXTUAL EXCLUSIVA DE ESTA TARJETA: ' + v.distribucionTexto + '. La asignación es variable y no pertenece a HEAVY, SOFT ni MODERN. No repetir entre A/B/C la ubicación principal, la alineación ni la relación texto-imagen, salvo excepción justificada por legibilidad, concepto o producto.\\n';
       o += 'TEXTO/IMAGEN: ' + v.distribucionTexto + '; ' + v.integracionTexto + '; ' + v.relacion + '\n';
     }
     o += 'PALETA: ' + v.paleta + '\n';
