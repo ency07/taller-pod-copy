@@ -19,6 +19,10 @@ ok(/HEAVY:[^\n]{0,260}masas sólidas dominantes/i.test(estilos), 'HEAVY debe def
 ok(/SOFT:[^\n]{0,260}formas abiertas/i.test(estilos), 'SOFT debe definir aire y formas abiertas');
 ok(/MODERN:[^\n]{0,260}geometría limpia/i.test(estilos), 'MODERN debe definir geometría y bordes nítidos');
 
+// Los sesgos de producto/audiencia no deben encerrar el layout en 1-2 opciones.
+ok(/preferredLayouts\.length >= 3 \? preferredLayouts : layouts/.test(motor), 'el layout debe ampliar al pool estructural cuando las preferencias son demasiado estrechas');
+ok(/Producto y audiencia son preferencias, no candados/.test(motor), 'las preferencias de layout no deben actuar como bloqueo permanente');
+
 // El prompt debe exigir diversidad estructural, conservando la identidad conceptual.
 ok(/misma identidad semántica, soluciones distintas en composición, silueta, tipografía y relación texto-imagen/i.test(motor), 'CONTACTSHEET debe exigir diversidad estructural entre A/B/C');
 ok(/no basta recolorear o cambiar textura/i.test(motor), 'el prompt debe rechazar diferencias limitadas a color o textura');
