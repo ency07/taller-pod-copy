@@ -136,6 +136,9 @@ ok(motor.includes("return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el símbol
 ok(motor.includes('sin añadir cinta ni objeto físico') && motor.includes('No añadas cintas, marcos, bandas, emblemas ni objetos'), 'la arquitectura debe traducirse a ubicación y no exigir objetos decorativos');
 ok(motor.includes("else if (v.jerarquiaVisual === 'TEXTO_DOMINANTE' || v.jerarquiaVisual === 'OBJETO_DOMINANTE')") && motor.includes('_compatibleCompositionDirective(v.jerarquiaVisual, v.distribucionTexto)'), 'solo TEXTO_DOMINANTE y OBJETO_DOMINANTE deben recibir la arquitectura adaptada');
 ok(motor.includes("if (v.jerarquiaVisual === 'BALANCEADO')") && motor.includes("'COMPOSICIÓN: ' + v.layout + ' · ' + v.distribucionTexto"), 'BALANCEADO debe conservar su composición original');
+ok(motor.includes("texto y símbolo tienen igual importancia y ocupan cada uno 45–55%") && motor.includes("ninguno puede quedar como adorno secundario"), 'BALANCEADO debe fijar dos protagonistas visuales con peso equivalente');
+ok(motor.includes("COMPOSICIÓN BALANCEADA: ' + v.layout + ' · ' + v.distribucionTexto") && motor.includes("La arquitectura define colocación/relación, nunca cambia la proporción"), 'BALANCEADO debe adaptar layout y arquitectura sin alterar la proporción');
+ok(motor.includes("evita dos bloques desconectados") && motor.includes("unidad compositiva"), 'BALANCEADO debe integrar texto y símbolo en una unidad compositiva');
 ok(motor.includes("if (v.jerarquiaVisual === 'SOLO_TEXTO')") && motor.includes('CONTROL ABSOLUTO: no dibujar personas'), 'SOLO_TEXTO debe seguir excluyendo objetos y escenas');
 
 if (failures.length) {
