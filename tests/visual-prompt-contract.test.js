@@ -63,7 +63,7 @@ ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === '
 // La jerarquía seleccionada manda sobre escala/peso; la arquitectura decide ubicación.
 ok(/si existe mensaje proporcionado, conservarlo literalmente y usarlo como único copy principal; no exigir tres niveles/i.test(motor), 'el prompt general no debe exigir tres niveles que contradigan un mensaje único');
 ok(/JERARQUÍA: aplica exactamente la jerarquía indicada en cada ficha/i.test(motor) && /TEXTO_DOMINANTE: el bloque tipográfico ocupa 70–80%/.test(motor) && /OBJETO_DOMINANTE: símbolo autorizado ocupa 70–80%/.test(motor), 'el contrato compacto debe cuantificar jerarquía sin duplicarla globalmente');
-ok(/SOLO_TEXTO = solo letras, cero imagen/i.test(motor) && /ÚNICOS elementos permitidos: letras del copy literal/i.test(motor), 'SOLO_TEXTO debe prohibir imágenes desde el contrato global y la ficha');
+ok(/SOLO_TEXTO: solo copy literal; 100% tipografía/.test(motor) && /ÚNICOS elementos permitidos: letras del copy literal/.test(motor), 'SOLO_TEXTO debe prohibir imágenes desde el contrato y la ficha');
 ok(/La jerarquía fija tamaño, área y peso; el layout solo ubicación/.test(motor), 'la jerarquía debe prevalecer sobre el layout');
 ok(/diseño tipográfico puro en /.test(motor) && /No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes/.test(motor), 'SOLO_TEXTO conserva una dirección tipográfica expresiva sin permitir ilustraciones ni ornamentos independientes');
 ok(/SOLO_TEXTO NO SIGNIFICA SIMPLE/.test(motor), 'SOLO_TEXTO debe ser tipográficamente impactante, no simplificado');
@@ -77,10 +77,10 @@ ok(/toda la escena, incluido árbol y persona, queda en una viñeta secundaria d
 ok(/símbolo autorizado ocupa 70–80% del arte/.test(motor), 'OBJETO_DOMINANTE debe priorizar el símbolo autorizado');
 ok(/si es Pixel \/ 8-bit, usa formas pixeladas y bloques discretos/.test(motor), 'el estilo Pixel / 8-bit debe conservar su lenguaje visual');
 ok(/SOLO LETRAS: usa únicamente el copy literal/.test(motor), 'SOLO_TEXTO no debe heredar layouts que pidan símbolos o motivos');
-ok(!/ARQUITECTURA TIPOGRÁFICA: '\s*\+ v\.distribucionTexto/.test(motor), 'SOLO_TEXTO no debe insertar una distribución que contradiga la prohibición de objetos');
+ok(!/ARQUITECTURA TIPOGRÁFICA: '\\s*' \+ v\.distribucionTexto/.test(motor), 'SOLO_TEXTO no debe insertar una distribución que contradiga la prohibición de objetos');
 ok(!/COMPOSICIÓN TEXTUAL/.test(motor), 'la dirección artística no debe referirse a una composición textual inexistente');
-ok(!/Arquitectura tipográfica de referencia: '\s*\+ v\.distribucionTexto/.test(motor), 'TEXTO_DOMINANTE no debe volver a introducir un motivo debajo del texto');
-ok(!/Arquitectura de referencia: '\s*\+ v\.layout/.test(motor), 'OBJETO_DOMINANTE no debe reintroducir layouts ornamentales en el prompt final');
+ok(!/Arquitectura tipográfica de referencia:/.test(motor), 'TEXTO_DOMINANTE no debe volver a introducir un motivo debajo del texto');
+ok(!/Arquitectura de referencia:/.test(motor), 'OBJETO_DOMINANTE no debe reintroducir layouts ornamentales en el prompt final');
 ok(/Ejecuta el estilo dentro de la jerarquía indicada/.test(motor), 'la dirección artística debe subordinarse a la jerarquía');
 ok((motor.match(/TEXTO_DOMINANTE:/g) || []).length === 1, 'la jerarquía de texto debe emitirse una sola vez en su bloque directivo');
 ok((motor.match(/OBJETO_DOMINANTE:/g) || []).length === 1, 'la jerarquía de objeto debe emitirse una sola vez en su bloque directivo');
@@ -88,7 +88,8 @@ ok(!/ORDEN VISUAL:/.test(motor), 'no deben existir bloques secundarios redundant
 ok(!/JERARQUÍA OBLIGATORIA:/.test(motor), 'no debe sobrevivir el bloque duplicado de jerarquía obligatoria');
 ok(!/COMPOSICIÓN: ' \+ v\.layout/.test(motor), 'los layouts aleatorios solo deben imprimirse en BALANCEADO');
 ok(/if \(v\.jerarquiaVisual === 'BALANCEADO'\) \{[\s\S]{0,180}COMPOSICIÓN:/.test(motor), 'el layout seleccionado solo se añade si no contradice jerarquía estricta');
-ok((motor.match(/\\\\n/g) || []).length === 0, 'formatPrompt no debe emitir secuencias literales \\n en el prompt');
+const promptBuilder = motor.slice(motor.indexOf('function formatPrompt('), motor.indexOf('/* --- Renderizado de fichas en el DOM --- */'));
+ok(!/\\\\n/.test(promptBuilder), 'formatPrompt no debe emitir secuencias literales \\n en el prompt');
 ok(!/DIRECCIÓN ARTÍSTICA:[^\n]*COMPOSICIÓN TEXTUAL/.test(motor), 'no debe quedar una referencia a una sección inexistente');
 ok(/DIFERENCIA DURA: layout, tipografía, tratamiento/.test(motor), 'se conserva el contrato de diversidad A/B/C');
 ok(/no reutilizar la arquitectura de otra tarjeta/.test(motor), 'el contrato debe impedir repetir la arquitectura entre tarjetas');
