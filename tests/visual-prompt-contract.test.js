@@ -76,6 +76,12 @@ ok(/COMPOSICIÓN PRIORITARIA TEXTO: el bloque tipográfico es la silueta global/
 ok(/La distribución elegida solo puede ordenar las letras; ignora cualquier instrucción de layout/.test(motor), 'TEXTO_DOMINANTE debe neutralizar layouts que conviertan el objeto en escena grande');
 ok(/COMPOSICIÓN PRIORITARIA OBJETO: árbol y persona descansando forman la silueta global/.test(motor), 'OBJETO_DOMINANTE debe priorizar explícitamente los únicos objetos autorizados');
 ok(/El layout solo puede ordenar la ubicación del texto y del objeto autorizado/.test(motor), 'OBJETO_DOMINANTE debe impedir que el layout introduzca marcos y adornos');
+ok(/ARQUITECTURA TIPOGRÁFICA EXCLUSIVA: compón únicamente las letras del mensaje literal/.test(motor), 'SOLO_TEXTO no debe heredar layouts que pidan símbolos o motivos');
+ok(!/ARQUITECTURA TIPOGRÁFICA: '\s*\+ v\.distribucionTexto/.test(motor), 'SOLO_TEXTO no debe insertar una distribución que contradiga la prohibición de objetos');
+ok(/No aplicar instrucciones de layout ni de distribución que contradigan esta jerarquía/.test(motor), 'TEXTO_DOMINANTE debe excluir referencias de composición incompatibles');
+ok(!/Arquitectura tipográfica de referencia: '\s*\+ v\.distribucionTexto/.test(motor), 'TEXTO_DOMINANTE no debe volver a introducir un motivo debajo del texto');
+ok(!/Arquitectura de referencia: '\s*\+ v\.layout/.test(motor), 'OBJETO_DOMINANTE no debe reintroducir layouts ornamentales en el prompt final');
+ok(/Coloca el texto de forma sencilla fuera de la silueta principal/.test(motor), 'OBJETO_DOMINANTE debe separar el texto sin inventar marcos ni adornos');
 ok(/PRUEBA DE DOMINANCIA TEXTUAL — RESTRICCIÓN DE COMPOSICIÓN: el bloque tipográfico completo es la silueta principal/.test(motor), 'TEXTO_DOMINANTE debe impedir que una ilustración grande se imponga al titular');
 ok(/PRUEBA DE DOMINANCIA DEL OBJETO — LISTA CERRADA DE ELEMENTOS: el árbol de almendro y la persona descansando son los únicos elementos ilustrados autorizados/.test(motor), 'OBJETO_DOMINANTE debe priorizar el objeto y limitar adornos no autorizados');
 ok(/PROHIBIDO añadir marcos geométricos, esquinas dibujadas, círculos, halos, manchas de tinta, salpicaduras/.test(motor), 'OBJETO_DOMINANTE debe bloquear adornos que no pertenezcan al concepto');
