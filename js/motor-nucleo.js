@@ -1728,7 +1728,7 @@ function formatPrompt(result) {
       o += _compatibleCompositionDirective(v.jerarquiaVisual, v.distribucionTexto) + '\n';
     }
     if (v.jerarquiaVisual === 'TEXTO_DOMINANTE') {
-      o += 'INTEGRACIÓN TEXTO-SÍMBOLO (obligatoria): ' + v.integracionTexto + '. Ejecuta una sola forma visual: integra partes del símbolo en los trazos, contornos o contraformas de las letras; no dibujes el objeto como bloque independiente. Si la arquitectura o esta integración sugieren separación, prioriza la fusión sin cambiar el mensaje ni su legibilidad.\\n';
+      o += 'INTEGRACIÓN TEXTO-SÍMBOLO (obligatoria): ' + v.integracionTexto + '. Ejecuta una sola forma visual: integra partes del símbolo en los trazos, contornos o contraformas de las letras; no dibujes el objeto como bloque independiente. Si la arquitectura o esta integración sugieren separación, prioriza la fusión sin cambiar el mensaje ni su legibilidad.\n';
     }
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += 'DIRECCIÓN: diseño tipográfico puro en ' + v.estilo + '. SOLO_TEXTO NO SIGNIFICA SIMPLE: crea un arte tipográfico impactante y con identidad artística. Usa las letras como forma visual principal mediante escala, ritmo, composición, cortes, contraformas, densidad, espacio negativo y textura integrada; elige una estrategia coherente y mantén legible el copy literal. No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes.\n';
