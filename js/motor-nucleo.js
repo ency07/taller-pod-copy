@@ -1690,19 +1690,19 @@ function formatPrompt(result) {
           : 'BALANCEADO: texto y símbolo con peso visual comparable, cada uno entre 45–55%.';
     o += 'JERARQUÍA OBLIGATORIA: ' + hierarchyRule + ' No dibujes una composición intermedia. La diferencia debe ser evidente a primera vista y sobrevivir al reducir el arte al tamaño de impresión. La jerarquía controla tamaño, área y peso; el layout solo controla ubicación. Si otra instrucción contradice esta regla, IGNÓRALA.\\n';
     const hierarchyCompositionRule = v.jerarquiaVisual === 'TEXTO_DOMINANTE'
-      ? 'PRUEBA DE DOMINANCIA TEXTUAL — RESTRICCIÓN DE COMPOSICIÓN: el bloque tipográfico completo es la silueta principal y ocupa 70–80% del peso visual. El texto debe ser el elemento más grande y visible a primera vista. El objeto ilustrado solo puede aparecer como una viñeta pequeña lateral o integrada en una contraforma de las letras, con máximo 20–30% del peso visual. PROHIBIDO dibujar el árbol/persona como ilustración grande, como escena completa, por encima del texto o debajo del texto. PROHIBIDO centrar una ilustración grande y relegar el mensaje a un rótulo secundario. Si el mensaje no domina en una vista pequeña, rediseña la composición hasta que lo haga.'
+      ? 'TEXTO_DOMINANTE: texto 70–80% del peso visual; símbolo máximo 20–30%. El mensaje se lee primero en miniatura. Si el símbolo compite, redúcelo. Sin escenas grandes ni adornos.'
       : v.jerarquiaVisual === 'OBJETO_DOMINANTE'
-        ? 'PRUEBA DE DOMINANCIA DEL OBJETO — LISTA CERRADA DE ELEMENTOS: el árbol de almendro y la persona descansando son los únicos elementos ilustrados autorizados; juntos ocupan 70–80% del peso visual. El mensaje exacto es secundario, máximo 20–30%. PROHIBIDO añadir marcos geométricos, esquinas dibujadas, círculos, halos, manchas de tinta, salpicaduras, líneas de velocidad, subrayados ornamentales, flores destacadas, iconos, emblemas o fondos abstractos. No añadas ningún elemento que no sea el árbol, la persona, el suelo mínimo imprescindible para sostener la pose o el copy literal. Si un elemento se puede retirar sin perder la acción de descansar bajo el árbol, retíralo.'
+        ? 'OBJETO_DOMINANTE: árbol y persona 70–80%; mensaje 20–30%. Únicos elementos: árbol, persona, suelo mínimo y copy literal. Sin marcos, arcos, círculos, salpicaduras, fondos abstractos ni adornos.'
         : v.jerarquiaVisual === 'BALANCEADO'
           ? 'PRUEBA DE BALANCE: símbolo y copy deben tener peso equivalente; ninguno puede dominar claramente al otro.'
-          : 'PRUEBA SOLO_TEXTO: el 100% de la composición se construye con letras y espacio negativo; cero ilustraciones, objetos o adornos independientes.';
+          : 'SOLO_TEXTO: solo copy literal y espacio negativo. Cero símbolos, objetos, ilustraciones, marcos o adornos.';
     o += hierarchyCompositionRule + '\\n';
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
-      o += 'ARQUITECTURA TIPOGRÁFICA EXCLUSIVA: compón únicamente las letras del mensaje literal y el espacio negativo. Puedes variar escala, saltos de línea, alineación, ritmo y contraformas tipográficas; no interpretes ninguna pauta de motivo/símbolo/layout como permiso para añadir objetos. Prohibidos personas, árboles, símbolos, iconos, escenas, marcos, cintas y adornos independientes.\\n';
+      o += 'SOLO LETRAS: usa únicamente el copy literal; crea la composición con escala, alineación, ritmo y espacio negativo. No añadas ningún objeto ni adorno.\\n';
     } else if (v.jerarquiaVisual === 'TEXTO_DOMINANTE') {
-      o += 'COMPOSICIÓN PRIORITARIA TEXTO: el bloque tipográfico es la silueta global y ocupa 70–80% del peso visual. El mensaje debe leerse primero incluso en miniatura. Si se incluye el objeto, será solo una viñeta pequeña de máximo 20–30%, lateral o integrada en letras; no dibujes una escena grande encima, debajo ni detrás del texto. No añadas marcos, cintas ni adornos independientes. No aplicar instrucciones de layout ni de distribución que contradigan esta jerarquía.\\n';
+      o += 'ORDEN VISUAL: texto primero (70–80%); símbolo secundario (máximo 20–30%). No uses una escena grande ni adornos.\\n';
     } else if (v.jerarquiaVisual === 'OBJETO_DOMINANTE') {
-      o += 'COMPOSICIÓN PRIORITARIA OBJETO: árbol de almendro y persona descansando forman la silueta global y ocupan 70–80% del peso visual; el mensaje literal queda secundario y ocupa como máximo 20–30%. Usa solo esos elementos y el suelo mínimo imprescindible. No aplicar instrucciones de layout ni de distribución que introduzcan marcos, cintas, arcos, órbitas, esquinas gráficas, fondos abstractos, salpicaduras ni adornos. Coloca el texto de forma sencilla fuera de la silueta principal sin añadir recursos gráficos.\\n';
+      o += 'ORDEN VISUAL: árbol y persona primero (70–80%); copy después (máximo 20–30%). Solo árbol, persona, suelo mínimo y copy; sin adornos.\\n';
     } else {
       o += 'COMPOSICIÓN: ' + v.layout + ' · ' + v.distribucionTexto + ' · no reutilizar la arquitectura de otra tarjeta.\\n';
     }
