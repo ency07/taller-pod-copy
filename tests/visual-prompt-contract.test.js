@@ -16,7 +16,7 @@ function ok(condition, message) {
 
 // SOLO_TEXTO debe mapear las 20 arquitecturas a geometrías tipográficas, no a ilustraciones.
 const soloHelper = motor.slice(motor.indexOf('function _soloTextCompositionDirective('), motor.indexOf('function _compatibleCompositionDirective('));
-ok((soloHelper.match(/\\/\^/g) || []).length === 20, 'SOLO_TEXTO debe tener una regla tipográfica específica para cada una de las 20 arquitecturas');
+ok((soloHelper.match(/\[\/\^/g) || []).length === 20, 'SOLO_TEXTO debe tener una regla tipográfica específica para cada una de las 20 arquitecturas');
 ok(soloHelper.includes('ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO') && soloHelper.includes('interpreta la estructura espacial como distribución de palabras y letras'), 'SOLO_TEXTO debe traducir la arquitectura espacial a reglas tipográficas');
 ok(soloHelper.includes('bloque tipográfico en la parte superior') && soloHelper.includes('columna tipográfica estrecha a la izquierda') && soloHelper.includes('composición de palabras en diagonal ascendente'), 'SOLO_TEXTO debe conservar estructuras tipográficas espaciales distintas');
 ok(soloHelper.includes('No añadir personas, escenas, objetos, iconos, símbolos independientes') && soloHelper.includes('No añadir ilustraciones, objetos, iconos'), 'SOLO_TEXTO no debe convertir referencias de layout en objetos o ilustraciones');
