@@ -72,7 +72,7 @@ ok(/const hierarchyDirective = \{/.test(motor) && /o \+= 'JERARQUÍA: ' \+ hiera
 ok(!/JERARQUÍA OBLIGATORIA:/.test(motor) && !/ORDEN VISUAL: texto primero/.test(motor) && !/ORDEN VISUAL: árbol y persona primero/.test(motor), 'no deben sobrevivir bloques de jerarquía duplicados');
 ok(motor.includes('el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimible, debe ser la primera lectura y dominar a primera vista'), 'TEXTO_DOMINANTE debe fijar el texto en 70–80% del área total');
 ok(motor.includes('Texto y símbolo forman una sola composición integrada, no dos bloques separados') && motor.includes('El símbolo aporta como máximo 20–30% del peso visual'), 'TEXTO_DOMINANTE debe mantener toda la escena subordinada al texto');
-ok(motor.includes('La jerarquía fija el área y la escala; la arquitectura solo cambia la ubicación.'), 'la arquitectura solo puede cambiar ubicación, no proporción');
+ok(motor.includes('La jerarquía fija área y escala; la arquitectura solo cambia la ubicación.'), 'la arquitectura solo puede cambiar ubicación, no proporción');
 ok(motor.includes('Si la arquitectura propone zonas separadas, conserva su dirección solo mediante solapamiento dentro de la forma unificada.'), 'una arquitectura inferior o lateral no puede hacer que una escena grande supere el copy en TEXTO_DOMINANTE');
 ok(/símbolo autorizado ocupa 70–80% del arte/.test(motor), 'OBJETO_DOMINANTE debe priorizar el símbolo autorizado');
 ok(/si es Pixel \/ 8-bit, usa formas pixeladas y bloques discretos/.test(motor), 'el estilo Pixel / 8-bit debe conservar su lenguaje visual');
