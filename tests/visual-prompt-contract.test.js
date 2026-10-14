@@ -121,6 +121,13 @@ const compositionBankEnd = motor.indexOf('function _assignTextCompositions()', c
 const compositionBankSource = compositionBankStart >= 0 && compositionBankEnd > compositionBankStart ? motor.slice(compositionBankStart, compositionBankEnd) : '';
 ok(compositionBankSource.includes('TEXTO ARRIBA') && compositionBankSource.includes('ESQUINA SUPERIOR lateral'), 'el banco debe conservar arquitecturas compositivas desde el inicio hasta el final del catálogo');
 
+/* TEXTO_DOMINANTE: proporción e integración con el objeto autorizado deben prevalecer sobre la arquitectura. */
+const textDominantDirective = motor.slice(motor.indexOf("TEXTO_DOMINANTE: el copy literal es la primera lectura"), motor.indexOf("OBJETO_DOMINANTE:", motor.indexOf("TEXTO_DOMINANTE: el copy literal es la primera lectura")));
+ok(textDominantDirective.includes("ocupa visualmente 70–80%") && textDominantDirective.includes("objeto autorizado queda subordinado en 20–30%"), "TEXTO_DOMINANTE debe imponer proporciones visibles de texto y símbolo");
+ok(textDominantDirective.includes("interactuar físicamente con las letras") && textDominantDirective.includes("objeto real"), "TEXTO_DOMINANTE debe integrar el objeto autorizado de forma plausible");
+ok(textDominantDirective.includes("sin regresar al esquema automático ilustración arriba/texto abajo"), "TEXTO_DOMINANTE debe prohibir la composición genérica de ilustración arriba y texto abajo");
+ok(textDominantDirective.includes("conserva todas las palabras exactas y legibles"), "TEXTO_DOMINANTE debe conservar el copy literal legible");
+
 /* La arquitectura debe llegar a las jerarquías estrictas como ubicación adaptada,
    nunca como una orden que cambie proporciones o añada objetos. */
 ok(motor.includes('function _compatibleCompositionDirective(hierarchy, architecture)'), 'debe existir un adaptador de arquitectura compositiva');
