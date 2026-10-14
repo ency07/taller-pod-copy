@@ -1023,7 +1023,7 @@ function _compatibleCompositionDirective(hierarchy, architecture) {
   }
   if (!placement) placement = 'texto y símbolo en zonas diferenciadas con asimetría controlada';
   if (hierarchy === 'TEXTO_DOMINANTE') {
-    return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el texto conserva 70–80% del área y el símbolo queda subordinado dentro del 20–30% restante. La ubicación nunca cambia esa proporción.';
+    return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; conserva el bloque tipográfico como primera masa visual y 70–80% del área imprimible; símbolo y escena juntos caben en el 20–30% restante. Si la ubicación inferior, lateral o envolvente reduce el texto o hace que una escena amplia domine por encima, reubica o simplifica la escena; la arquitectura cambia ubicación, nunca proporción ni jerarquía.';
   }
   if (hierarchy === 'OBJETO_DOMINANTE') {
     return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el símbolo autorizado conserva 70–80% del área y el copy queda subordinado dentro del 20–30% restante. No añadas cintas, marcos, bandas, emblemas ni objetos para ejecutar la distribución.';
@@ -1716,7 +1716,7 @@ function formatPrompt(result) {
         : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia);
     const hierarchyDirective = {
       SOLO_TEXTO: 'SOLO_TEXTO: solo copy literal; 100% tipografía y cero imágenes, objetos o adornos independientes.',
-      TEXTO_DOMINANTE: 'TEXTO_DOMINANTE: el COPY TIPOGRÁFICO debe ocupar 70–80% del área total del arte impreso y ser la masa visual claramente dominante. La escena completa (árbol y persona juntos) ocupa como máximo 20–30%, en escala secundaria; nunca debe igualar ni superar el texto, ni formar una ilustración grande independiente. Reduce la copa, el tronco y la persona hasta que el texto domine a primera vista. Si no caben ambas cosas dentro de esas proporciones, simplifica o elimina parte de la escena, nunca reduzcas el texto. La jerarquía fija el área y la escala; la arquitectura solo cambia la ubicación.',
+      TEXTO_DOMINANTE: 'TEXTO_DOMINANTE: el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimible, medido por la caja envolvente conjunta de todas las palabras visibles; debe ser la primera masa visual y captar primero la mirada. La escena y el símbolo juntos ocupan como máximo el 20–30% restante, medido por su caja envolvente combinada; son secundarios y nunca forman una ilustración grande independiente. Si no caben ambas cosas en esas proporciones, simplifica o elimina elementos de la escena, nunca reduzcas el texto. La jerarquía fija el área y la escala; la arquitectura solo cambia la ubicación.',
       OBJETO_DOMINANTE: 'OBJETO_DOMINANTE: el símbolo autorizado ocupa 70–80% del arte; copy 20–30%. Representa el concepto con solo árbol y persona; sin fondos narrativos, marcos ni adornos. Respeta literalmente el estilo seleccionado; si es Pixel / 8-bit, usa formas pixeladas y bloques discretos, no pintura orgánica ni textura de pincel.',
       BALANCEADO: 'BALANCEADO: texto y símbolo comparten el peso visual, cada uno entre 45–55%.'
     }[v.jerarquiaVisual] || '';
