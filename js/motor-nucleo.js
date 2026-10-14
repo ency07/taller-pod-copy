@@ -1642,7 +1642,7 @@ function formatPrompt(result) {
     o += 'SANDBOX: solo bancos globales del idioma del mercado. Prohibidos regionalismos colombianos y simbolismo gospel doctrinal.\n';
   }
   o += 'DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo, fondo y ARQUITECTURA TEXTUAL NUNCA se repiten entre A/B/C.\n';
-  o += 'JERARQUÍA ES UNA ORDEN VISUAL: TEXTO_DOMINANTE = texto 70–80% del peso/área visual y símbolo ≤20–30%; OBJETO_DOMINANTE = símbolo 70–80% y texto ≤20–30%; BALANCEADO = ambos 45–55%; SOLO_TEXTO = solo letras, cero imagen. Respeta el valor de cada ficha; no lo cambies por estilo, layout ni audiencia.\\n';
+  o += 'JERARQUÍA: aplica exactamente la jerarquía indicada en cada ficha; estilo y layout no pueden alterarla.\\n';
   if (isPatron) {
     o += 'PATRON: cada variante es un tile sin costura visible (bordes que empatan al repetirse); motivo y fondo definidos por ficha; repetición ' + (MOTOR_STATE.repeatType || 'medio salto') + ' en toda la superficie aplicable.\n';
     o += 'TEXTO EN TILE: mínimo o nulo; si hay texto debe funcionar repetido (sin lectura lineal, sin frase que se corte entre repeticiones).\n';
@@ -1681,30 +1681,15 @@ function formatPrompt(result) {
           ? 'COPY PRINCIPAL LITERAL: «' + String(MOTOR_STATE.message).trim() + '»; no modificar palabras. APOYO: ' + (String(MOTOR_STATE.support || '').trim() ? '«' + String(MOTOR_STATE.support).trim() + '»' : 'omitir si no aporta') + '; tercer nivel solo con dato real; tipografía ' + v.tipografia
           : 'COPY COMPARTIDO A/B/C: define palabras exactas de una frase principal original; conserva el mismo texto en las tres direcciones. Apoyo literal solo si aporta y también compartido; tercer nivel solo con dato real o se omite. Prohibidos placeholders y microtexto. Tipografía: ' + v.tipografia)
         : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia);
-    const hierarchyRule = v.jerarquiaVisual === 'TEXTO_DOMINANTE'
-      ? 'TEXTO_DOMINANTE: texto 70–80% del peso visual, símbolo ≤20–30%; el título debe ser claramente mayor que cualquier símbolo.'
-      : v.jerarquiaVisual === 'OBJETO_DOMINANTE'
-        ? 'OBJETO_DOMINANTE: símbolo 70–80% del peso visual, texto ≤20–30%; el símbolo debe leerse primero y ser claramente mayor.'
-        : v.jerarquiaVisual === 'SOLO_TEXTO'
-          ? 'SOLO_TEXTO: 100% tipografía; prohibida cualquier imagen, objeto o ilustración.'
-          : 'BALANCEADO: texto y símbolo con peso visual comparable, cada uno entre 45–55%.';
-    o += 'JERARQUÍA OBLIGATORIA: ' + hierarchyRule + ' No dibujes una composición intermedia. La diferencia debe ser evidente a primera vista y sobrevivir al reducir el arte al tamaño de impresión. La jerarquía controla tamaño, área y peso; el layout solo controla ubicación. Si otra instrucción contradice esta regla, IGNÓRALA.\\n';
-    const hierarchyCompositionRule = v.jerarquiaVisual === 'TEXTO_DOMINANTE'
-      ? 'TEXTO_DOMINANTE: texto 70–80% del peso visual; símbolo máximo 20–30%. El mensaje se lee primero en miniatura. Si el símbolo compite, redúcelo. Sin escenas grandes ni adornos.'
-      : v.jerarquiaVisual === 'OBJETO_DOMINANTE'
-        ? 'OBJETO_DOMINANTE: árbol y persona 70–80%; mensaje 20–30%. Únicos elementos: árbol, persona, suelo mínimo y copy literal. Sin marcos, arcos, círculos, salpicaduras, fondos abstractos ni adornos.'
-        : v.jerarquiaVisual === 'BALANCEADO'
-          ? 'PRUEBA DE BALANCE: símbolo y copy deben tener peso equivalente; ninguno puede dominar claramente al otro.'
-          : 'SOLO_TEXTO: solo copy literal y espacio negativo. Cero símbolos, objetos, ilustraciones, marcos o adornos.';
-    o += hierarchyCompositionRule + '\\n';
-    if (v.jerarquiaVisual === 'SOLO_TEXTO') {
-      o += 'SOLO LETRAS: usa únicamente el copy literal; crea la composición con escala, alineación, ritmo y espacio negativo. No añadas ningún objeto ni adorno.\\n';
-    } else if (v.jerarquiaVisual === 'TEXTO_DOMINANTE') {
-      o += 'ORDEN VISUAL: texto primero (70–80%); símbolo secundario (máximo 20–30%). No uses una escena grande ni adornos.\\n';
-    } else if (v.jerarquiaVisual === 'OBJETO_DOMINANTE') {
-      o += 'ORDEN VISUAL: árbol y persona primero (70–80%); copy después (máximo 20–30%). Solo árbol, persona, suelo mínimo y copy; sin adornos.\\n';
-    } else {
-      o += 'COMPOSICIÓN: ' + v.layout + ' · ' + v.distribucionTexto + ' · no reutilizar la arquitectura de otra tarjeta.\\n';
+    const hierarchyDirective = {
+      SOLO_TEXTO: 'SOLO_TEXTO: solo copy literal; 100% tipografía y cero imágenes, objetos o adornos independientes.',
+      TEXTO_DOMINANTE: 'TEXTO_DOMINANTE: el bloque tipográfico ocupa 70–80% del peso visual; símbolo completo máximo 20–30%. El mensaje se lee primero en miniatura; reduce el símbolo, nunca el texto. Sin escena grande.',
+      OBJETO_DOMINANTE: 'OBJETO_DOMINANTE: símbolo autorizado ocupa 70–80% del peso visual; copy máximo 20–30%. El símbolo se lee primero. Solo elementos imprescindibles del concepto; sin adornos.',
+      BALANCEADO: 'BALANCEADO: texto y símbolo comparten el peso visual, cada uno entre 45–55%.'
+    }[v.jerarquiaVisual] || '';
+    o += 'JERARQUÍA: ' + hierarchyDirective + ' La jerarquía fija tamaño, área y peso; el layout solo ubicación. Si hay conflicto, prevalece esta regla.\\n';
+    if (v.jerarquiaVisual === 'BALANCEADO') {
+      o += 'COMPOSICIÓN: ' + v.layout + ' · ' + v.distribucionTexto + ' · arquitectura distinta en cada tarjeta.\\n';
     }
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += 'DIRECCIÓN: diseño tipográfico puro en ' + v.estilo + '. SOLO_TEXTO NO SIGNIFICA SIMPLE: crea un arte tipográfico impactante y con identidad artística. Usa las letras como forma visual principal mediante escala, ritmo, composición, cortes, contraformas, densidad, espacio negativo y textura integrada; elige una estrategia coherente y mantén legible el copy literal. No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes.\n';
