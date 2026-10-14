@@ -65,7 +65,7 @@ ok(/si existe mensaje proporcionado, conservarlo literalmente y usarlo como úni
 ok(/JERARQUÍA ES UNA ORDEN VISUAL/i.test(motor) && /texto 70–80%/i.test(motor) && /símbolo 70–80%/i.test(motor), 'la jerarquía debe tener umbrales visuales cuantificados');
 ok(/SOLO_TEXTO = solo letras, cero imagen/i.test(motor) && /ÚNICOS elementos permitidos: letras del copy literal/i.test(motor), 'SOLO_TEXTO debe prohibir imágenes desde el contrato global y la ficha');
 ok(/La diferencia debe ser evidente a primera vista/i.test(motor), 'cada jerarquía debe exigir una diferencia visual comprobable');
-ok(/diseño tipográfico puro en /.test(motor) && /jamás autoriza ilustraciones ni ornamentos independientes/.test(motor), 'el estilo artístico de SOLO_TEXTO solo puede afectar el tratamiento tipográfico');
+ok(/diseño tipográfico puro en /.test(motor) && /No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes/.test(motor), 'SOLO_TEXTO conserva una dirección tipográfica expresiva sin permitir ilustraciones ni ornamentos independientes');
 ok(/SOLO_TEXTO NO SIGNIFICA SIMPLE/.test(motor), 'SOLO_TEXTO debe ser tipográficamente impactante, no simplificado');
 ok(/las letras como forma visual principal mediante escala, ritmo, composición/.test(motor), 'el arte tipográfico debe usar recursos compositivos expresivos sin añadir ilustraciones');
 // Esto evita que una composición textual aleatoria contradiga TEXTO_DOMINANTE,
