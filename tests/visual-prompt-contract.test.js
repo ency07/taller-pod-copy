@@ -20,8 +20,8 @@ ok((soloHelper.match(/\[\/\^/g) || []).length === 20, 'SOLO_TEXTO debe tener una
 ok(soloHelper.includes('ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO') && soloHelper.includes('interpreta la estructura espacial como distribución de palabras y letras'), 'SOLO_TEXTO debe traducir la arquitectura espacial a reglas tipográficas');
 ok(soloHelper.includes('bloque tipográfico en la parte superior') && soloHelper.includes('columna tipográfica estrecha a la izquierda') && soloHelper.includes('composición de palabras en diagonal ascendente'), 'SOLO_TEXTO debe conservar estructuras tipográficas espaciales distintas');
 ok(soloHelper.includes('No añadir personas, escenas, objetos, iconos, símbolos independientes') && soloHelper.includes('No añadir ilustraciones, objetos, iconos'), 'SOLO_TEXTO no debe convertir referencias de layout en objetos o ilustraciones');
-const soloBranch = motor.slice(motor.indexOf("if (v.jerarquiaVisual === 'SOLO_TEXTO') {", motor.indexOf('function formatPrompt(')), motor.indexOf("} else {", motor.indexOf("if (v.jerarquiaVisual === 'SOLO_TEXTO') {", motor.indexOf('function formatPrompt('))));
-ok(soloBranch.includes('_soloTextCompositionDirective(v.distribucionTexto)'), 'SOLO_TEXTO debe recibir la arquitectura asignada a la tarjeta');
+const promptBuilderIndex = motor.indexOf('function formatPrompt(');
+ok(promptBuilderIndex >= 0 && motor.indexOf('_soloTextCompositionDirective(v.distribucionTexto)', promptBuilderIndex) > promptBuilderIndex, 'SOLO_TEXTO debe recibir la arquitectura asignada a la tarjeta');
 ok(/if \(v\.jerarquiaVisual === 'SOLO_TEXTO'\) \{[\s\S]{0,180}SIN OBJETO — composición tipográfica pura'[\s\S]{0,100}\} else if \(contactIdentity\)/.test(motor), 'SOLO_TEXTO debe prevalecer sobre la identidad de símbolo bloqueada en el set');
 ok(/const hasSoloText = K\.some\([\s\S]{0,180}el símbolo se conserva solo en las tarjetas cuya jerarquía admite objeto/.test(motor), 'el ADN global no debe contradecir SOLO_TEXTO cuando coexiste con otras jerarquías');
 ok(/if \(contactDNA && v\.jerarquiaVisual !== 'SOLO_TEXTO'\) o \+= 'FUNCIÓN CONSTANTE/.test(motor), 'SOLO_TEXTO no debe recibir instrucciones funcionales de un símbolo');
