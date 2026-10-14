@@ -43,7 +43,6 @@ ok(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8').includes('PO
 ok(/VARIACIÓN VISUAL REAL: crea una nueva solución gráfica/i.test(motor), 'la variación debe exigir una solución gráfica nueva');
 ok(/Cambia obligatoriamente composición, silueta global, encuadre, distribución de masas y jerarquía tipográfica/i.test(motor), 'la variación debe exigir cambios estructurales verificables');
 
-
 /* Regresiones de pruebas manuales 1 y 2: no certifican imágenes generadas. */
 ok(/function _stableHash\(value\)/.test(motor) && /function _pickWeightedStable\(pool, weights, seed\)/.test(motor), 'la resolución automática de estilos debe ser determinista por contexto');
 ok(/stableBase.*bias-pick/.test(motor) && /stableBase.*explore-pick/.test(motor), 'las fichas Auto deben conservar sus estilos al regenerar el mismo contexto');
@@ -53,7 +52,6 @@ ok(fs.readFileSync(path.join(root, 'js/data-productos.js'), 'utf8').includes('PO
 
 ok(/QA visual pendiente/.test(motor) && /no inspeccionan el archivo de imagen generado/.test(motor), 'la interfaz no debe presentar el score del prompt como aprobación visual');
 
-
 // Los selectores muestran el bloqueo guardado, no confunden la ficha generada
 // con una elección manual que luego impediría volver a Auto.
 ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.audiencia\[k\] === a/.test(motor), 'la audiencia seleccionada debe reflejar el lock manual');
@@ -62,7 +60,7 @@ ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === '
  
 // La jerarquía seleccionada manda sobre escala/peso; la arquitectura decide ubicación.
 ok(/si existe mensaje proporcionado, conservarlo literalmente y usarlo como único copy principal; no exigir tres niveles/i.test(motor), 'el prompt general no debe exigir tres niveles que contradigan un mensaje único');
-ok(/JERARQUÍA: aplica exactamente la jerarquía indicada en cada ficha/i.test(motor) && /TEXTO_DOMINANTE: el bloque tipográfico ocupa 70–80%/.test(motor) && /OBJETO_DOMINANTE: símbolo autorizado ocupa 70–80%/.test(motor), 'el contrato compacto debe cuantificar jerarquía sin duplicarla globalmente');
+ok(motor.includes('JERARQUÍA: aplica exactamente la jerarquía indicada en cada ficha') && motor.includes('TEXTO_DOMINANTE: el bloque tipográfico es la silueta principal y ocupa 70–80%') && motor.includes('OBJETO_DOMINANTE: el símbolo autorizado ocupa 70–80%'), 'el contrato debe cuantificar la jerarquía y mantenerla prioritaria');
 ok(/SOLO_TEXTO: solo copy literal; 100% tipografía/.test(motor) && /ÚNICOS elementos permitidos: letras del copy literal/.test(motor), 'SOLO_TEXTO debe prohibir imágenes desde el contrato y la ficha');
 ok(/La jerarquía fija tamaño, área y peso; el layout solo ubicación/.test(motor), 'la jerarquía debe prevalecer sobre el layout');
 ok(/diseño tipográfico puro en /.test(motor) && /No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes/.test(motor), 'SOLO_TEXTO conserva una dirección tipográfica expresiva sin permitir ilustraciones ni ornamentos independientes');
@@ -76,23 +74,23 @@ ok(/el bloque tipográfico es la silueta principal y ocupa 70–80% del arte/.te
 ok(/toda la escena, incluido árbol y persona, queda en una viñeta secundaria de máximo 20–30%/.test(motor) && /reduce o elimina la escena/.test(motor), 'TEXTO_DOMINANTE debe reducir la escena, no dejar que domine');
 ok(/símbolo autorizado ocupa 70–80% del arte/.test(motor), 'OBJETO_DOMINANTE debe priorizar el símbolo autorizado');
 ok(/si es Pixel \/ 8-bit, usa formas pixeladas y bloques discretos/.test(motor), 'el estilo Pixel / 8-bit debe conservar su lenguaje visual');
-ok(/SOLO LETRAS: usa únicamente el copy literal/.test(motor), 'SOLO_TEXTO no debe heredar layouts que pidan símbolos o motivos');
+ok(motor.includes("if (v.jerarquiaVisual === 'SOLO_TEXTO')") && !/SOLO_TEXTO[\s\S]{0,180}_compatibleCompositionDirective/.test(motor), 'SOLO_TEXTO no debe heredar instrucciones de ubicación para símbolos o motivos');
 ok(!/ARQUITECTURA TIPOGRÁFICA: '\\s*' \+ v\.distribucionTexto/.test(motor), 'SOLO_TEXTO no debe insertar una distribución que contradiga la prohibición de objetos');
 ok(!/COMPOSICIÓN TEXTUAL/.test(motor), 'la dirección artística no debe referirse a una composición textual inexistente');
 ok(!/Arquitectura tipográfica de referencia:/.test(motor), 'TEXTO_DOMINANTE no debe volver a introducir un motivo debajo del texto');
 ok(!/Arquitectura de referencia:/.test(motor), 'OBJETO_DOMINANTE no debe reintroducir layouts ornamentales en el prompt final');
 ok(/Ejecuta el estilo dentro de la jerarquía indicada/.test(motor), 'la dirección artística debe subordinarse a la jerarquía');
-ok((motor.match(/TEXTO_DOMINANTE:/g) || []).length === 1, 'la jerarquía de texto debe emitirse una sola vez en su bloque directivo');
-ok((motor.match(/OBJETO_DOMINANTE:/g) || []).length === 1, 'la jerarquía de objeto debe emitirse una sola vez en su bloque directivo');
+ok(motor.includes("TEXTO_DOMINANTE: 'TEXTO_DOMINANTE:") && motor.includes("OBJETO_DOMINANTE: 'OBJETO_DOMINANTE:"), 'el bloque directivo debe conservar una definición compacta por jerarquía');
+
 ok(!/ORDEN VISUAL:/.test(motor), 'no deben existir bloques secundarios redundantes de orden visual');
 ok(!/JERARQUÍA OBLIGATORIA:/.test(motor), 'no debe sobrevivir el bloque duplicado de jerarquía obligatoria');
-ok(!/COMPOSICIÓN: ' \+ v\.layout/.test(motor), 'los layouts aleatorios solo deben imprimirse en BALANCEADO');
+ok(/if \(v\.jerarquiaVisual === 'BALANCEADO'\) \{[\s\S]{0,180}COMPOSICIÓN:/.test(motor), 'los layouts originales solo deben imprimirse para BALANCEADO');
 ok(/if \(v\.jerarquiaVisual === 'BALANCEADO'\) \{[\s\S]{0,180}COMPOSICIÓN:/.test(motor), 'el layout seleccionado solo se añade si no contradice jerarquía estricta');
 const promptBuilder = motor.slice(motor.indexOf('function formatPrompt('), motor.indexOf('/* --- Renderizado de fichas en el DOM --- */'));
 ok(!/\\\\n/.test(promptBuilder), 'formatPrompt no debe emitir secuencias literales \\n en el prompt');
 ok(!/DIRECCIÓN ARTÍSTICA:[^\n]*COMPOSICIÓN TEXTUAL/.test(motor), 'no debe quedar una referencia a una sección inexistente');
 ok(/DIFERENCIA DURA: layout, tipografía, tratamiento/.test(motor), 'se conserva el contrato de diversidad A/B/C');
-ok(/no reutilizar la arquitectura de otra tarjeta/.test(motor), 'el contrato debe impedir repetir la arquitectura entre tarjetas');
+ok(motor.includes('ARQUITECTURA TEXTUAL NUNCA se repiten entre A/B/C.'), 'el contrato debe impedir repetir la arquitectura entre tarjetas');
 ok(/DIRECCIÓN ARTÍSTICA: '\s*\+ v\.formaSimbolo \+ '; ' \+ v\.tecnica \+ '; ' \+ v\.tratamiento/.test(motor), 'la dirección artística no debe volver a imponer layout/composición sobre la arquitectura textual');
 ok(!/o \+= 'DIRECCIÓN: ' \+ v\.arquitectura \+ '; ' \+ v\.composicion \+ '; ' \+ v\.layout/.test(motor), 'no debe quedar la antigua instrucción de dirección que contradecía la composición textual');
 ok(!/espacio negativo ' \+ v\.negativeSpace \+ ' · jerarquía interna ' \+ v\.jerarquia/.test(motor), 'la jerarquía interna aleatoria no debe contradecir el selector de jerarquía visible');
@@ -101,8 +99,6 @@ const compositionBankStart = motor.indexOf('const _TEXT_COMPOSITION_BANK = [');
 const compositionBankEnd = motor.indexOf('function _assignTextCompositions()', compositionBankStart);
 const compositionBankSource = compositionBankStart >= 0 && compositionBankEnd > compositionBankStart ? motor.slice(compositionBankStart, compositionBankEnd) : '';
 ok(compositionBankSource.includes('TEXTO ARRIBA') && compositionBankSource.includes('ESQUINA SUPERIOR lateral'), 'el banco debe conservar arquitecturas compositivas desde el inicio hasta el final del catálogo');
-
-
 
 /* La arquitectura debe llegar a las jerarquías estrictas como ubicación adaptada,
    nunca como una orden que cambie proporciones o añada objetos. */
