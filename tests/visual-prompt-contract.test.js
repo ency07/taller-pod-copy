@@ -90,6 +90,7 @@ ok(/if \(v\.jerarquiaVisual === 'BALANCEADO'\) \{[\s\S]{0,180}COMPOSICIÓN:/.tes
 ok(/if \(v\.jerarquiaVisual === 'BALANCEADO'\) \{[\s\S]{0,180}COMPOSICIÓN:/.test(motor), 'el layout seleccionado solo se añade si no contradice jerarquía estricta');
 const promptBuilder = motor.slice(motor.indexOf('function formatPrompt('), motor.indexOf('/* --- Renderizado de fichas en el DOM --- */'));
 ok(/if \(v\.jerarquiaVisual === 'TEXTO_DOMINANTE'\) \{[\s\S]{0,500}INTEGRACIÓN TEXTO-SÍMBOLO \(obligatoria\): ' \+ v\.integracionTexto/.test(promptBuilder), 'TEXTO_DOMINANTE debe incluir la integración elegida en la tarjeta dentro del prompt final');
+ok(promptBuilder.includes('delante, detrás o atravesando las letras') && promptBuilder.includes('no es obligatorio convertirlo en letra'), 'TEXTO_DOMINANTE permite integrar el motivo mediante solapamiento y capas sin exigir que sea literalmente una letra');
 ok(!/\\\\n/.test(promptBuilder), 'formatPrompt no debe emitir secuencias literales \\n en el prompt');
 ok(!/DIRECCIÓN ARTÍSTICA:[^\n]*COMPOSICIÓN TEXTUAL/.test(motor), 'no debe quedar una referencia a una sección inexistente');
 ok(/DIFERENCIA DURA: layout, tipografía, tratamiento/.test(motor), 'se conserva el contrato de diversidad A/B/C');
