@@ -73,9 +73,9 @@ ok(/las letras como forma visual principal mediante escala, ritmo, composición/
 ok(/const hierarchyRule = v\.jerarquiaVisual === 'TEXTO_DOMINANTE'[\s\S]{0,900}JERARQUÍA OBLIGATORIA/.test(motor), 'el prompt debe resolver explícitamente la jerarquía visual antes de pedir la composición textual');
 ok(/La jerarquía controla tamaño, área y peso; el layout solo controla ubicación/.test(motor), 'la jerarquía manual debe prevalecer en tamaño, área y dominancia');
 ok(/COMPOSICIÓN PRIORITARIA TEXTO: el bloque tipográfico es la silueta global/.test(motor), 'TEXTO_DOMINANTE debe usar una rama de composición que impida al layout desplazar la jerarquía');
-ok(/La distribución elegida solo puede ordenar las letras; ignora cualquier instrucción de layout/.test(motor), 'TEXTO_DOMINANTE debe neutralizar layouts que conviertan el objeto en escena grande');
-ok(/COMPOSICIÓN PRIORITARIA OBJETO: árbol y persona descansando forman la silueta global/.test(motor), 'OBJETO_DOMINANTE debe priorizar explícitamente los únicos objetos autorizados');
-ok(/El layout solo puede ordenar la ubicación del texto y del objeto autorizado/.test(motor), 'OBJETO_DOMINANTE debe impedir que el layout introduzca marcos y adornos');
+ok(/No aplicar instrucciones de layout ni de distribución que contradigan esta jerarquía/.test(motor), 'TEXTO_DOMINANTE debe neutralizar layouts que conviertan el objeto en escena grande');
+ok(/COMPOSICIÓN PRIORITARIA OBJETO: árbol de almendro y persona descansando forman la silueta global/.test(motor), 'OBJETO_DOMINANTE debe priorizar explícitamente los únicos objetos autorizados');
+ok(/No aplicar instrucciones de layout ni de distribución que introduzcan marcos, cintas, arcos/.test(motor), 'OBJETO_DOMINANTE debe impedir que el layout introduzca marcos y adornos');
 ok(/ARQUITECTURA TIPOGRÁFICA EXCLUSIVA: compón únicamente las letras del mensaje literal/.test(motor), 'SOLO_TEXTO no debe heredar layouts que pidan símbolos o motivos');
 ok(!/ARQUITECTURA TIPOGRÁFICA: '\s*\+ v\.distribucionTexto/.test(motor), 'SOLO_TEXTO no debe insertar una distribución que contradiga la prohibición de objetos');
 ok(/No aplicar instrucciones de layout ni de distribución que contradigan esta jerarquía/.test(motor), 'TEXTO_DOMINANTE debe excluir referencias de composición incompatibles');
