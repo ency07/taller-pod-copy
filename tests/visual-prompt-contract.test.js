@@ -60,7 +60,7 @@ ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === '
  
 // La jerarquía seleccionada manda sobre escala/peso; la arquitectura decide ubicación.
 ok(/si existe mensaje proporcionado, conservarlo literalmente y usarlo como único copy principal; no exigir tres niveles/i.test(motor), 'el prompt general no debe exigir tres niveles que contradigan un mensaje único');
-ok(motor.includes('JERARQUÍA: aplica exactamente la jerarquía indicada en cada ficha') && motor.includes('TEXTO_DOMINANTE: el bloque tipográfico es la silueta principal y ocupa 70–80%') && motor.includes('OBJETO_DOMINANTE: el símbolo autorizado ocupa 70–80%'), 'el contrato debe cuantificar la jerarquía y mantenerla prioritaria');
+ok(motor.includes('JERARQUÍA: aplica exactamente la jerarquía indicada en cada ficha') && motor.includes('TEXTO_DOMINANTE: el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimible') && motor.includes('OBJETO_DOMINANTE: el símbolo autorizado ocupa 70–80%'), 'el contrato debe cuantificar la jerarquía y mantenerla prioritaria');
 ok(/SOLO_TEXTO: solo copy literal; 100% tipografía/.test(motor) && /ÚNICOS elementos permitidos: letras del copy literal/.test(motor), 'SOLO_TEXTO debe prohibir imágenes desde el contrato y la ficha');
 ok(/La jerarquía fija tamaño, área y peso; el layout solo ubicación/.test(motor), 'la jerarquía debe prevalecer sobre el layout');
 ok(/diseño tipográfico puro en /.test(motor) && /No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes/.test(motor), 'SOLO_TEXTO conserva una dirección tipográfica expresiva sin permitir ilustraciones ni ornamentos independientes');
@@ -68,11 +68,12 @@ ok(/SOLO_TEXTO NO SIGNIFICA SIMPLE/.test(motor), 'SOLO_TEXTO debe ser tipográfi
 ok(/las letras como forma visual principal mediante escala, ritmo, composición/.test(motor), 'el arte tipográfico debe usar recursos compositivos expresivos sin añadir ilustraciones');
 // Esto evita que una composición textual aleatoria contradiga TEXTO_DOMINANTE,
 // OBJETO_DOMINANTE, BALANCEADO o SOLO_TEXTO.
-ok(/const hierarchyDirective = \{[\s\S]{0,1000}JERARQUÍA:/.test(motor), 'cada ficha debe emitir un único bloque compacto de jerarquía');
+ok(/const hierarchyDirective = \{/.test(motor) && /o \+= 'JERARQUÍA: ' \+ hierarchyDirective/.test(motor), 'cada ficha debe emitir su bloque compacto de jerarquía');
 ok(!/JERARQUÍA OBLIGATORIA:/.test(motor) && !/ORDEN VISUAL: texto primero/.test(motor) && !/ORDEN VISUAL: árbol y persona primero/.test(motor), 'no deben sobrevivir bloques de jerarquía duplicados');
-ok(motor.includes('el COPY TIPOGRÁFICO debe ocupar 70–80% del área total del arte impreso y ser la masa visual claramente dominante'), 'TEXTO_DOMINANTE debe fijar el texto en 70–80% del área total');
+ok(motor.includes('el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimible, medido por la caja envolvente conjunta de todas las palabras visibles'), 'TEXTO_DOMINANTE debe fijar el texto en 70–80% del área total');
 ok(motor.includes('La escena completa (árbol y persona juntos) ocupa como máximo 20–30%') && motor.includes('nunca debe igualar ni superar el texto'), 'TEXTO_DOMINANTE debe mantener toda la escena subordinada al texto');
 ok(motor.includes('La jerarquía fija el área y la escala; la arquitectura solo cambia la ubicación.'), 'la arquitectura solo puede cambiar ubicación, no proporción');
+ok(motor.includes('reubica o simplifica la escena; la arquitectura cambia ubicación, nunca proporción ni jerarquía.'), 'una arquitectura inferior o lateral no puede hacer que una escena grande supere el copy en TEXTO_DOMINANTE');
 ok(/símbolo autorizado ocupa 70–80% del arte/.test(motor), 'OBJETO_DOMINANTE debe priorizar el símbolo autorizado');
 ok(/si es Pixel \/ 8-bit, usa formas pixeladas y bloques discretos/.test(motor), 'el estilo Pixel / 8-bit debe conservar su lenguaje visual');
 ok(motor.includes("if (v.jerarquiaVisual === 'SOLO_TEXTO')") && !/SOLO_TEXTO[\s\S]{0,180}_compatibleCompositionDirective/.test(motor), 'SOLO_TEXTO no debe heredar instrucciones de ubicación para símbolos o motivos');
@@ -104,7 +105,7 @@ ok(compositionBankSource.includes('TEXTO ARRIBA') && compositionBankSource.inclu
 /* La arquitectura debe llegar a las jerarquías estrictas como ubicación adaptada,
    nunca como una orden que cambie proporciones o añada objetos. */
 ok(motor.includes('function _compatibleCompositionDirective(hierarchy, architecture)'), 'debe existir un adaptador de arquitectura compositiva');
-ok(motor.includes("return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el texto conserva 70–80% del área"), 'TEXTO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
+ok(motor.includes("return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; conserva el bloque tipográfico como primera masa visual y 70–80% del área imprimible"), 'TEXTO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
 ok(motor.includes("return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el símbolo autorizado conserva 70–80% del área"), 'OBJETO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
 ok(motor.includes('sin añadir cinta ni objeto físico') && motor.includes('No añadas cintas, marcos, bandas, emblemas ni objetos'), 'la arquitectura debe traducirse a ubicación y no exigir objetos decorativos');
 ok(motor.includes("else if (v.jerarquiaVisual === 'TEXTO_DOMINANTE' || v.jerarquiaVisual === 'OBJETO_DOMINANTE')") && motor.includes('_compatibleCompositionDirective(v.jerarquiaVisual, v.distribucionTexto)'), 'solo TEXTO_DOMINANTE y OBJETO_DOMINANTE deben recibir la arquitectura adaptada');
