@@ -70,10 +70,10 @@ ok(/las letras como forma visual principal mediante escala, ritmo, composición/
 // OBJETO_DOMINANTE, BALANCEADO o SOLO_TEXTO.
 ok(/const hierarchyDirective = \{/.test(motor) && /o \+= 'JERARQUÍA: ' \+ hierarchyDirective/.test(motor), 'cada ficha debe emitir su bloque compacto de jerarquía');
 ok(!/JERARQUÍA OBLIGATORIA:/.test(motor) && !/ORDEN VISUAL: texto primero/.test(motor) && !/ORDEN VISUAL: árbol y persona primero/.test(motor), 'no deben sobrevivir bloques de jerarquía duplicados');
-ok(motor.includes('el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimible, medido por la caja envolvente conjunta de todas las palabras visibles'), 'TEXTO_DOMINANTE debe fijar el texto en 70–80% del área total');
-ok(motor.includes('La escena y el símbolo juntos ocupan como máximo el 20–30% restante') && motor.includes('nunca forman una ilustración grande independiente'), 'TEXTO_DOMINANTE debe mantener toda la escena subordinada al texto');
+ok(motor.includes('el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimible, debe ser la primera lectura y dominar a primera vista'), 'TEXTO_DOMINANTE debe fijar el texto en 70–80% del área total');
+ok(motor.includes('Texto y símbolo forman una sola composición integrada, no dos bloques separados') && motor.includes('El símbolo aporta como máximo 20–30% del peso visual'), 'TEXTO_DOMINANTE debe mantener toda la escena subordinada al texto');
 ok(motor.includes('La jerarquía fija el área y la escala; la arquitectura solo cambia la ubicación.'), 'la arquitectura solo puede cambiar ubicación, no proporción');
-ok(motor.includes('reubica o simplifica la escena; la arquitectura cambia ubicación, nunca proporción ni jerarquía.'), 'una arquitectura inferior o lateral no puede hacer que una escena grande supere el copy en TEXTO_DOMINANTE');
+ok(motor.includes('Si la arquitectura propone zonas separadas, conserva su dirección solo mediante solapamiento dentro de la forma unificada.'), 'una arquitectura inferior o lateral no puede hacer que una escena grande supere el copy en TEXTO_DOMINANTE');
 ok(/símbolo autorizado ocupa 70–80% del arte/.test(motor), 'OBJETO_DOMINANTE debe priorizar el símbolo autorizado');
 ok(/si es Pixel \/ 8-bit, usa formas pixeladas y bloques discretos/.test(motor), 'el estilo Pixel / 8-bit debe conservar su lenguaje visual');
 ok(motor.includes("if (v.jerarquiaVisual === 'SOLO_TEXTO')") && !/SOLO_TEXTO[\s\S]{0,180}_compatibleCompositionDirective/.test(motor), 'SOLO_TEXTO no debe heredar instrucciones de ubicación para símbolos o motivos');
@@ -89,6 +89,7 @@ ok(!/JERARQUÍA OBLIGATORIA:/.test(motor), 'no debe sobrevivir el bloque duplica
 ok(/if \(v\.jerarquiaVisual === 'BALANCEADO'\) \{[\s\S]{0,180}COMPOSICIÓN:/.test(motor), 'los layouts originales solo deben imprimirse para BALANCEADO');
 ok(/if \(v\.jerarquiaVisual === 'BALANCEADO'\) \{[\s\S]{0,180}COMPOSICIÓN:/.test(motor), 'el layout seleccionado solo se añade si no contradice jerarquía estricta');
 const promptBuilder = motor.slice(motor.indexOf('function formatPrompt('), motor.indexOf('/* --- Renderizado de fichas en el DOM --- */'));
+ok(/if \(v\.jerarquiaVisual === 'TEXTO_DOMINANTE'\) \{[\s\S]{0,500}INTEGRACIÓN TEXTO-SÍMBOLO \(obligatoria\): ' \+ v\.integracionTexto/.test(promptBuilder), 'TEXTO_DOMINANTE debe incluir la integración elegida en la tarjeta dentro del prompt final');
 ok(!/\\\\n/.test(promptBuilder), 'formatPrompt no debe emitir secuencias literales \\n en el prompt');
 ok(!/DIRECCIÓN ARTÍSTICA:[^\n]*COMPOSICIÓN TEXTUAL/.test(motor), 'no debe quedar una referencia a una sección inexistente');
 ok(/DIFERENCIA DURA: layout, tipografía, tratamiento/.test(motor), 'se conserva el contrato de diversidad A/B/C');
@@ -105,7 +106,7 @@ ok(compositionBankSource.includes('TEXTO ARRIBA') && compositionBankSource.inclu
 /* La arquitectura debe llegar a las jerarquías estrictas como ubicación adaptada,
    nunca como una orden que cambie proporciones o añada objetos. */
 ok(motor.includes('function _compatibleCompositionDirective(hierarchy, architecture)'), 'debe existir un adaptador de arquitectura compositiva');
-ok(motor.includes("return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; conserva el bloque tipográfico como primera masa visual y 70–80% del área imprimible"), 'TEXTO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
+ok(motor.includes("return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; convierte ubicación y módulos en una sola silueta tipográfica-simbólica integrada"), 'TEXTO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
 ok(motor.includes("return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el símbolo autorizado conserva 70–80% del área"), 'OBJETO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
 ok(motor.includes('sin añadir cinta ni objeto físico') && motor.includes('No añadas cintas, marcos, bandas, emblemas ni objetos'), 'la arquitectura debe traducirse a ubicación y no exigir objetos decorativos');
 ok(motor.includes("else if (v.jerarquiaVisual === 'TEXTO_DOMINANTE' || v.jerarquiaVisual === 'OBJETO_DOMINANTE')") && motor.includes('_compatibleCompositionDirective(v.jerarquiaVisual, v.distribucionTexto)'), 'solo TEXTO_DOMINANTE y OBJETO_DOMINANTE deben recibir la arquitectura adaptada');
