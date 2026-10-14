@@ -70,8 +70,9 @@ ok(/las letras como forma visual principal mediante escala, ritmo, composición/
 // OBJETO_DOMINANTE, BALANCEADO o SOLO_TEXTO.
 ok(/const hierarchyDirective = \{[\s\S]{0,1000}JERARQUÍA:/.test(motor), 'cada ficha debe emitir un único bloque compacto de jerarquía');
 ok(!/JERARQUÍA OBLIGATORIA:/.test(motor) && !/ORDEN VISUAL: texto primero/.test(motor) && !/ORDEN VISUAL: árbol y persona primero/.test(motor), 'no deben sobrevivir bloques de jerarquía duplicados');
-ok(/el bloque tipográfico es la silueta principal y ocupa 70–80% del arte/.test(motor), 'TEXTO_DOMINANTE debe hacer que la tipografía forme la silueta principal');
-ok(/toda la escena, incluido árbol y persona, queda en una viñeta secundaria de máximo 20–30%/.test(motor) && /reduce o elimina la escena/.test(motor), 'TEXTO_DOMINANTE debe reducir la escena, no dejar que domine');
+ok(motor.includes('el COPY TIPOGRÁFICO debe ocupar 70–80% del área total del arte impreso y ser la masa visual claramente dominante'), 'TEXTO_DOMINANTE debe fijar el texto en 70–80% del área total');
+ok(motor.includes('La escena completa (árbol y persona juntos) ocupa como máximo 20–30%') && motor.includes('nunca debe igualar ni superar el texto'), 'TEXTO_DOMINANTE debe mantener toda la escena subordinada al texto');
+ok(motor.includes('La jerarquía fija el área y la escala; la arquitectura solo cambia la ubicación.'), 'la arquitectura solo puede cambiar ubicación, no proporción');
 ok(/símbolo autorizado ocupa 70–80% del arte/.test(motor), 'OBJETO_DOMINANTE debe priorizar el símbolo autorizado');
 ok(/si es Pixel \/ 8-bit, usa formas pixeladas y bloques discretos/.test(motor), 'el estilo Pixel / 8-bit debe conservar su lenguaje visual');
 ok(motor.includes("if (v.jerarquiaVisual === 'SOLO_TEXTO')") && !/SOLO_TEXTO[\s\S]{0,180}_compatibleCompositionDirective/.test(motor), 'SOLO_TEXTO no debe heredar instrucciones de ubicación para símbolos o motivos');

@@ -1716,7 +1716,7 @@ function formatPrompt(result) {
         : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia);
     const hierarchyDirective = {
       SOLO_TEXTO: 'SOLO_TEXTO: solo copy literal; 100% tipografía y cero imágenes, objetos o adornos independientes.',
-      TEXTO_DOMINANTE: 'TEXTO_DOMINANTE: el bloque tipográfico es la silueta principal y ocupa 70–80% del arte; toda la escena, incluido árbol y persona, queda en una viñeta secundaria de máximo 20–30%, integrada en espacio negativo. No dibujes copa ancha ni tronco grande; no pongas la escena junto al texto a igual escala. Si compiten, reduce o elimina la escena.',
+      TEXTO_DOMINANTE: 'TEXTO_DOMINANTE: el COPY TIPOGRÁFICO debe ocupar 70–80% del área total del arte impreso y ser la masa visual claramente dominante. La escena completa (árbol y persona juntos) ocupa como máximo 20–30%, en escala secundaria; nunca debe igualar ni superar el texto, ni formar una ilustración grande independiente. Reduce la copa, el tronco y la persona hasta que el texto domine a primera vista. Si no caben ambas cosas dentro de esas proporciones, simplifica o elimina parte de la escena, nunca reduzcas el texto. La jerarquía fija el área y la escala; la arquitectura solo cambia la ubicación.',
       OBJETO_DOMINANTE: 'OBJETO_DOMINANTE: el símbolo autorizado ocupa 70–80% del arte; copy 20–30%. Representa el concepto con solo árbol y persona; sin fondos narrativos, marcos ni adornos. Respeta literalmente el estilo seleccionado; si es Pixel / 8-bit, usa formas pixeladas y bloques discretos, no pintura orgánica ni textura de pincel.',
       BALANCEADO: 'BALANCEADO: texto y símbolo comparten el peso visual, cada uno entre 45–55%.'
     }[v.jerarquiaVisual] || '';
