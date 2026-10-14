@@ -163,7 +163,7 @@ ok(motorSourceForTextDiversity.includes('return cand[k].distribucionTexto; })).s
 const motorSource = fs.readFileSync(path.join(JS, 'motor-nucleo.js'), 'utf8');
 ok(motorSource.includes("ORDEN FIJO DE TRATAMIENTOS: 01A HEAVY · 01B SOFT · 01C MODERN"), 'CONTACTSHEET debe fijar el orden A/B/C de los tratamientos');
 ok(motorSource.includes('DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo, fondo y ARQUITECTURA TEXTUAL NUNCA se repiten entre A/B/C.'), 'el prompt debe exigir diferencias estructurales explícitas entre A/B/C');
-ok((motorSource.includes('ARQUITECTURA TIPOGRÁFICA EXCLUSIVA: ') || motorSource.includes('COMPOSICIÓN PRIORITARIA TEXTO:')) && motorSource.includes('JERARQUÍA OBLIGATORIA:'), 'el prompt debe comunicar arquitectura y jerarquía con prioridad explícita');
+ok((motorSource.includes('SOLO LETRAS: ') || motorSource.includes('ORDEN VISUAL: texto primero')) && motorSource.includes('JERARQUÍA OBLIGATORIA:'), 'el prompt debe comunicar arquitectura y jerarquía con prioridad explícita');
 ok(_TEXT_COMPOSITION_BANK.length === 20 && _TEXT_COMPOSITION_BANK.every(function (x) { return /arriba|lateral|arco|inferior|diagonal|banda|dividido|vacío|vertical|detrás|cinta|zigzag|contraforma|módulos|modulares|esquina|lado/i.test(x); }), 'las 20 arquitecturas deben proponer ubicaciones compositivas concretas');
 ok(motorSource.includes('La jerarquía controla tamaño, área y peso; el layout solo controla ubicación.'), 'el prompt debe separar jerarquía de ubicación para evitar contradicciones y reducir redundancia');
 ok(motorSource.includes('no reutilizar la arquitectura de otra tarjeta.'), 'el prompt debe prohibir repetir la arquitectura entre tarjetas');
