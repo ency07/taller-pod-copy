@@ -999,27 +999,36 @@ const _TEXT_COMPOSITION_BANK = [
 ];
 
 function _soloTextCompositionDirective(architecture) {
-  const lower = String(architecture || '').toLocaleLowerCase();
-  const placements = [
-    [/texto arriba|banda superior|franja superior/, 'copy en la zona superior, con jerarquía tipográfica escalonada'],
-    [/columna lateral|bloque vertical lateral|pila vertical/, 'copy en columna tipográfica lateral, con palabras de escala alterna'],
-    [/arco superior|arco lateral|texto sigue un solo lado/, 'copy siguiendo un arco tipográfico abierto, sin dibujar un marco'],
-    [/bloque inferior|franja inferior/, 'copy en un bloque inferior desplazado, con la parte superior en espacio negativo'],
-    [/diagonal ascendente/, 'copy en diagonal ascendente mediante inclinación y escalado de letras'],
-    [/texto dividido|dos bloques|zigzag/, 'copy repartido en bloques tipográficos alternos con orden de lectura claro'],
-    [/vacío real|contraforma tipográfica/, 'copy organizado alrededor de contraformas creadas por las propias letras, sin añadir siluetas'],
-    [/palabra clave|esquina superior/, 'palabra clave ampliada en un lateral y el resto del copy en un bloque secundario tipográfico'],
-    [/texto detrás/, 'palabras superpuestas en capas tipográficas, manteniendo todas las letras legibles'],
-    [/cinta abierta/, 'copy en una trayectoria oblicua abierta construida solo con letras, sin dibujar cintas'],
-    [/bloques modulares/, 'copy distribuido en módulos tipográficos asimétricos, sin cajas ni objetos independientes'],
-    [/símbolo integrado/, 'copy integrado mediante ligaduras, contraformas y continuidad entre letras, sin añadir símbolo']
+  const source = String(architecture || '');
+  const lower = source.toLocaleLowerCase();
+  const rules = [
+    [/^TEXTO ARRIBA/, 'bloque tipográfico en la parte superior, alineado a la izquierda de forma irregular; deja una franja amplia de espacio negativo debajo'],
+    [/^COLUMNA LATERAL/, 'columna tipográfica estrecha a la izquierda, con líneas cortas y un corredor amplio de espacio negativo al lado opuesto'],
+    [/^ARCO SUPERIOR/, 'palabras siguiendo un arco superior abierto creado por la propia línea tipográfica; no cierres el arco como marco'],
+    [/^BLOQUE INFERIOR/, 'bloque tipográfico en la parte inferior y desplazado lateralmente; reserva espacio negativo arriba'],
+    [/^DIAGONAL ascendente/, 'composición de palabras en diagonal ascendente, con inclinación y escala graduadas para conservar el orden de lectura'],
+    [/^BANDA SUPERIOR/, 'franja tipográfica superior compacta, centrada y de escala contenida; el resto del copy forma un segundo nivel tipográfico debajo'],
+    [/^TEXTO DIVIDIDO/, 'divide el copy en dos grupos tipográficos a izquierda y derecha, usando solo saltos de línea y espacio negativo para crear la pausa central'],
+    [/^TEXTO dentro de un vacío real/, 'distribuye las palabras alrededor de una contraforma generada por las propias letras; no dibujes ni rellenes una silueta externa'],
+    [/^BLOQUE VERTICAL lateral bajo/, 'columna tipográfica baja en un lateral, con líneas cortas y una gran zona vacía en el lado contrario'],
+    [/^PALABRA CLAVE/, 'amplía una palabra del propio copy en un lateral y coloca las demás palabras en un bloque tipográfico secundario, sin invadir ni añadir elementos'],
+    [/^TEXTO detrás de la silueta/, 'superpone niveles de palabras como capas tipográficas: algunas letras quedan parcialmente detrás de otras letras, siempre legibles; no existe una silueta externa'],
+    [/^CINTA ABIERTA/, 'usa una línea tipográfica oblicua que atraviese parcialmente el bloque principal; la trayectoria se construye con letras, nunca con una cinta dibujada'],
+    [/^DOS BLOQUES/, 'reparte el copy en bloques tipográficos alternos en zigzag, cambiando la alineación izquierda-derecha entre niveles'],
+    [/^FRANJA INFERIOR/, 'franja tipográfica inferior desplazada hacia un lateral; coloca el resto del copy arriba y hacia el lado opuesto'],
+    [/^SÍMBOLO integrado/, 'integra las palabras mediante ligaduras, contraformas y continuidad entre trazos de letras; no añadas un símbolo externo'],
+    [/^PILA VERTICAL/, 'columna tipográfica pegada a un borde, con palabras apiladas y el lado opuesto reservado como espacio negativo'],
+    [/^ARCO LATERAL/, 'texto en arco abierto a lo largo de un único costado, con el centro y el lado contrario despejados; no cierres un marco'],
+    [/^BLOQUES MODULARES/, 'organiza el copy en módulos tipográficos asimétricos separados por espacio negativo; los módulos no son cajas ni objetos dibujados'],
+    [/^TEXTO sigue un solo lado/, 'concentra todo el copy a lo largo de un único lado del campo y deja el lado contrario deliberadamente vacío'],
+    [/^ESQUINA SUPERIOR/, 'coloca una palabra o línea breve del copy en la esquina superior lateral y distribuye el resto en niveles tipográficos asimétricos']
   ];
-  for (let i = 0; i < placements.length; i++) {
-    if (placements[i][0].test(lower)) {
-      return 'ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO: ' + placements[i][1] + '. Usa exclusivamente las palabras del copy; construye la forma con escala, peso, alineación, espaciado, cortes y espacio negativo. No representar el motivo mencionado por la arquitectura como objeto, ilustración, icono, marco o adorno.';
+  for (let i = 0; i < rules.length; i++) {
+    if (rules[i][0].test(source)) {
+      return 'ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO: ' + rules[i][1] + '. Todo el arte se construye exclusivamente con el mensaje exacto: escala, peso, ancho de letra, alineación, espaciado, saltos de línea, solapamiento tipográfico y espacio negativo. No añadir personas, escenas, objetos, iconos, símbolos independientes, cintas, marcos ni adornos figurativos.';
     }
   }
-  return 'ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO: interpreta la dirección espacial de esta arquitectura como distribución de palabras y letras, nunca como objeto o escena: ' + String(architecture || '') + '. Construye la composición solo con tipografía, escala, peso, alineación, espaciado, cortes y espacio negativo; no dibujes el motivo mencionado.';
+  return 'ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO: interpreta la estructura espacial como distribución de palabras y letras, nunca como objeto o escena: ' + lower.replace(/motivo|silueta|símbolo|cinta|banda/g, 'bloque tipográfico') + '. Usa solo el mensaje exacto, escala, peso, alineación, espaciado, cortes y espacio negativo. No añadir ilustraciones, objetos, iconos ni adornos figurativos.';
 }
 
 function _compatibleCompositionDirective(hierarchy, architecture) {

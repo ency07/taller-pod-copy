@@ -14,11 +14,12 @@ function ok(condition, message) {
   if (!condition) failures.push(message);
 }
 
-// SOLO_TEXTO debe traducir la arquitectura asignada a composición tipográfica pura.
+// SOLO_TEXTO debe mapear las 20 arquitecturas a geometrías tipográficas, no a ilustraciones.
 const soloHelper = motor.slice(motor.indexOf('function _soloTextCompositionDirective('), motor.indexOf('function _compatibleCompositionDirective('));
-ok(soloHelper.includes('ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO') && soloHelper.includes('interpreta la dirección espacial'), 'SOLO_TEXTO debe traducir la arquitectura espacial a reglas tipográficas');
-ok(soloHelper.includes('copy en la zona superior') && soloHelper.includes('copy en columna tipográfica lateral') && soloHelper.includes('copy en diagonal ascendente'), 'SOLO_TEXTO debe contemplar arquitecturas espaciales distintas');
-ok(soloHelper.includes('No representar el motivo mencionado por la arquitectura como objeto') && soloHelper.includes('no dibujes el motivo mencionado'), 'SOLO_TEXTO no debe convertir referencias de layout en objetos o ilustraciones');
+ok((soloHelper.match(/\\/\^/g) || []).length === 20, 'SOLO_TEXTO debe tener una regla tipográfica específica para cada una de las 20 arquitecturas');
+ok(soloHelper.includes('ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO') && soloHelper.includes('interpreta la estructura espacial como distribución de palabras y letras'), 'SOLO_TEXTO debe traducir la arquitectura espacial a reglas tipográficas');
+ok(soloHelper.includes('bloque tipográfico en la parte superior') && soloHelper.includes('columna tipográfica estrecha a la izquierda') && soloHelper.includes('composición de palabras en diagonal ascendente'), 'SOLO_TEXTO debe conservar estructuras tipográficas espaciales distintas');
+ok(soloHelper.includes('No añadir personas, escenas, objetos, iconos, símbolos independientes') && soloHelper.includes('No añadir ilustraciones, objetos, iconos'), 'SOLO_TEXTO no debe convertir referencias de layout en objetos o ilustraciones');
 const soloBranch = motor.slice(motor.indexOf("if (v.jerarquiaVisual === 'SOLO_TEXTO') {", motor.indexOf('function formatPrompt(')), motor.indexOf("} else {", motor.indexOf("if (v.jerarquiaVisual === 'SOLO_TEXTO') {", motor.indexOf('function formatPrompt('))));
 ok(soloBranch.includes('_soloTextCompositionDirective(v.distribucionTexto)'), 'SOLO_TEXTO debe recibir la arquitectura asignada a la tarjeta');
 ok(/function _assignTextCompositions\(\)[\s\S]{0,260}const shuffled = _TEXT_COMPOSITION_BANK\.slice\(\)/.test(motor) && /return \{ A: shuffled\[0\], B: shuffled\[1\], C: shuffled\[2\] \}/.test(motor), 'la asignación de arquitecturas debe seguir siendo aleatoria e independiente de la jerarquía');
