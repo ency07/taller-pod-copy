@@ -66,6 +66,8 @@ ok(/JERARQUÍA ES UNA ORDEN VISUAL/i.test(motor) && /texto 70–80%/i.test(motor
 ok(/SOLO_TEXTO = solo letras, cero imagen/i.test(motor) && /ÚNICOS elementos permitidos: letras del copy literal/i.test(motor), 'SOLO_TEXTO debe prohibir imágenes desde el contrato global y la ficha');
 ok(/La diferencia debe ser evidente a primera vista/i.test(motor), 'cada jerarquía debe exigir una diferencia visual comprobable');
 ok(/diseño tipográfico puro en /.test(motor) && /jamás autoriza ilustraciones ni ornamentos independientes/.test(motor), 'el estilo artístico de SOLO_TEXTO solo puede afectar el tratamiento tipográfico');
+ok(/SOLO_TEXTO NO SIGNIFICA SIMPLE/.test(motor), 'SOLO_TEXTO debe ser tipográficamente impactante, no simplificado');
+ok(/las letras como forma visual principal mediante escala, ritmo, composición/.test(motor), 'el arte tipográfico debe usar recursos compositivos expresivos sin añadir ilustraciones');
 // Esto evita que una composición textual aleatoria contradiga TEXTO_DOMINANTE,
 // OBJETO_DOMINANTE, BALANCEADO o SOLO_TEXTO.
 ok(/const hierarchyRule = v\.jerarquiaVisual === 'TEXTO_DOMINANTE'[\s\S]{0,900}JERARQUÍA OBLIGATORIA/.test(motor), 'el prompt debe resolver explícitamente la jerarquía visual antes de pedir la composición textual');
