@@ -71,7 +71,7 @@ ok(/las letras como forma visual principal mediante escala, ritmo, composición/
 ok(/const hierarchyDirective = \{/.test(motor) && /o \+= 'JERARQUÍA: ' \+ hierarchyDirective/.test(motor), 'cada ficha debe emitir su bloque compacto de jerarquía');
 ok(!/JERARQUÍA OBLIGATORIA:/.test(motor) && !/ORDEN VISUAL: texto primero/.test(motor) && !/ORDEN VISUAL: árbol y persona primero/.test(motor), 'no deben sobrevivir bloques de jerarquía duplicados');
 ok(motor.includes('el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimible, medido por la caja envolvente conjunta de todas las palabras visibles'), 'TEXTO_DOMINANTE debe fijar el texto en 70–80% del área total');
-ok(motor.includes('La escena completa (árbol y persona juntos) ocupa como máximo 20–30%') && motor.includes('nunca debe igualar ni superar el texto'), 'TEXTO_DOMINANTE debe mantener toda la escena subordinada al texto');
+ok(motor.includes('La escena y el símbolo juntos ocupan como máximo el 20–30% restante') && motor.includes('nunca forman una ilustración grande independiente'), 'TEXTO_DOMINANTE debe mantener toda la escena subordinada al texto');
 ok(motor.includes('La jerarquía fija el área y la escala; la arquitectura solo cambia la ubicación.'), 'la arquitectura solo puede cambiar ubicación, no proporción');
 ok(motor.includes('reubica o simplifica la escena; la arquitectura cambia ubicación, nunca proporción ni jerarquía.'), 'una arquitectura inferior o lateral no puede hacer que una escena grande supere el copy en TEXTO_DOMINANTE');
 ok(/símbolo autorizado ocupa 70–80% del arte/.test(motor), 'OBJETO_DOMINANTE debe priorizar el símbolo autorizado');
