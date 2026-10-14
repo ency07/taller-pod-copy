@@ -1101,10 +1101,11 @@ function buildCandidate(audsPerKey, fixedIdentity) {
 
     // En un contactsheet nuevo, el símbolo se decide una vez para A/B/C.
     // Variación desde imagen conserva su propia lógica y sus selectores.
-    if (contactIdentity) {
-      v.objeto = contactIdentity.symbol;
-    } else if (v.jerarquiaVisual === 'SOLO_TEXTO') {
+    if (v.jerarquiaVisual === 'SOLO_TEXTO') {
+      // La jerarquía tipográfica prevalece incluso en un contactsheet con identidad bloqueada.
       v.objeto = 'SIN OBJETO — composición tipográfica pura';
+    } else if (contactIdentity) {
+      v.objeto = contactIdentity.symbol;
     } else if (conservarSimb) {
       const refSymbol = String((MOTOR_STATE.imageAnalysis || {}).simbolo_descripcion || (MOTOR_STATE.imageAnalysis || {}).concepto || 'símbolo principal de la imagen');
       v.objeto = 'REDIBUJAR EL MISMO SÍMBOLO DE REFERENCIA: ' + refSymbol + '. Mantener identidad reconocible en A/B/C; variar solo la interpretación gráfica, técnica y composición. No sustituir por otro objeto.';
@@ -1627,7 +1628,10 @@ function formatPrompt(result) {
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
     o += 'CONCEPTO: ' + promptConcept + ' | MENSAJE: ' + promptMessage + '\n';
     if (contactDNA) {
-      o += 'ADN IGUAL EN A/B/C: símbolo «' + (contactSymbol || 'derivado del concepto') + '» · mensaje literal «' + (contactMainText || 'sin texto indicado; no se imprime') + '» · apoyo literal «' + (contactSupportText || 'no indicado; no se imprime') + '» · función «' + (contactFunction || 'una misma función') + '»\n';
+      const hasSoloText = K.some(function (key) { return set[key].jerarquiaVisual === 'SOLO_TEXTO'; });
+      o += hasSoloText
+        ? 'ADN IGUAL EN A/B/C: concepto y mensaje literal; el símbolo se conserva solo en las tarjetas cuya jerarquía admite objeto. SOLO_TEXTO es exclusivamente tipografía y no representa el símbolo. Apoyo literal «' + (contactSupportText || 'no indicado; no se imprime') + '»\n'
+        : 'ADN IGUAL EN A/B/C: símbolo «' + (contactSymbol || 'derivado del concepto') + '» · mensaje literal «' + (contactMainText || 'sin texto indicado; no se imprime') + '» · apoyo literal «' + (contactSupportText || 'no indicado; no se imprime') + '» · función «' + (contactFunction || 'una misma función') + '»\n';
       if (contactSymbolGuide) o += 'LECTURA CONSTANTE DEL SÍMBOLO: ' + contactSymbolGuide + '\n';
       o += 'ORDEN FIJO DE TRATAMIENTOS: 01A HEAVY · 01B SOFT · 01C MODERN. Cada tratamiento gobierna composición, jerarquía, tipografía, contraste, densidad y formas; el estilo artístico lo ejecuta sin contradecirlo.\n\n';
     } else {
@@ -1737,7 +1741,7 @@ function formatPrompt(result) {
       o += 'OBJETO: ' + v.objeto + '\n';
       o += 'CONTROL DE ELEMENTOS: no añadir elementos narrativos o decorativos fuera de este objeto/concepto; si un detalle no está nombrado ni es imprescindible para mostrar la acción, omitirlo.\n';
     }
-    if (contactDNA) o += 'FUNCIÓN CONSTANTE: ' + v.funcionSimbolica + ' · intención ' + v.intencionEmocional + '\n';
+    if (contactDNA && v.jerarquiaVisual !== 'SOLO_TEXTO') o += 'FUNCIÓN CONSTANTE: ' + v.funcionSimbolica + ' · intención ' + v.intencionEmocional + '\n';
     const textLine = contactDNA
       ? (contactMainText
         ? 'MENSAJE PRINCIPAL literal: «' + contactMainText + '»' + (contactSupportText ? ' · APOYO literal: «' + contactSupportText + '»' : '') + ' · sin texto terciario · ' + v.tipografia

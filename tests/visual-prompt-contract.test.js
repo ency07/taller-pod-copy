@@ -22,6 +22,9 @@ ok(soloHelper.includes('bloque tipográfico en la parte superior') && soloHelper
 ok(soloHelper.includes('No añadir personas, escenas, objetos, iconos, símbolos independientes') && soloHelper.includes('No añadir ilustraciones, objetos, iconos'), 'SOLO_TEXTO no debe convertir referencias de layout en objetos o ilustraciones');
 const soloBranch = motor.slice(motor.indexOf("if (v.jerarquiaVisual === 'SOLO_TEXTO') {", motor.indexOf('function formatPrompt(')), motor.indexOf("} else {", motor.indexOf("if (v.jerarquiaVisual === 'SOLO_TEXTO') {", motor.indexOf('function formatPrompt('))));
 ok(soloBranch.includes('_soloTextCompositionDirective(v.distribucionTexto)'), 'SOLO_TEXTO debe recibir la arquitectura asignada a la tarjeta');
+ok(/if \(v\.jerarquiaVisual === 'SOLO_TEXTO'\) \{[\s\S]{0,180}SIN OBJETO — composición tipográfica pura'[\s\S]{0,100}\} else if \(contactIdentity\)/.test(motor), 'SOLO_TEXTO debe prevalecer sobre la identidad de símbolo bloqueada en el set');
+ok(/const hasSoloText = K\.some\([\s\S]{0,180}el símbolo se conserva solo en las tarjetas cuya jerarquía admite objeto/.test(motor), 'el ADN global no debe contradecir SOLO_TEXTO cuando coexiste con otras jerarquías');
+ok(/if \(contactDNA && v\.jerarquiaVisual !== 'SOLO_TEXTO'\) o \+= 'FUNCIÓN CONSTANTE/.test(motor), 'SOLO_TEXTO no debe recibir instrucciones funcionales de un símbolo');
 ok(/function _assignTextCompositions\(\)[\s\S]{0,260}const shuffled = _TEXT_COMPOSITION_BANK\.slice\(\)/.test(motor) && /return \{ A: shuffled\[0\], B: shuffled\[1\], C: shuffled\[2\] \}/.test(motor), 'la asignación de arquitecturas debe seguir siendo aleatoria e independiente de la jerarquía');
 ok((motor.match(/const _TEXT_COMPOSITION_BANK = \[/g) || []).length === 1 && (motor.slice(motor.indexOf('const _TEXT_COMPOSITION_BANK = ['), motor.indexOf('function _soloTextCompositionDirective')).match(/^  '/gm) || []).length === 20, 'el banco conserva las 20 arquitecturas sin fijarlas a una tarjeta');
 
