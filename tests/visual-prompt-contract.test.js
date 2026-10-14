@@ -74,7 +74,7 @@ ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === '
  
 // La jerarquía seleccionada manda sobre escala/peso; la arquitectura decide ubicación.
 ok(/si existe mensaje proporcionado, conservarlo literalmente y usarlo como único copy principal; no exigir tres niveles/i.test(motor), 'el prompt general no debe exigir tres niveles que contradigan un mensaje único');
-ok(motor.includes('JERARQUÍA: aplica exactamente la jerarquía indicada en cada ficha') && motor.includes('TEXTO_DOMINANTE: el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimible') && motor.includes('OBJETO_DOMINANTE: el símbolo autorizado ocupa 70–80%'), 'el contrato debe cuantificar la jerarquía y mantenerla prioritaria');
+ok(motor.includes('JERARQUÍA: aplica exactamente la jerarquía indicada en cada ficha') && motor.includes('TEXTO_DOMINANTE: el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimible') && motor.includes('OBJETO_DOMINANTE: el símbolo autorizado de esta ficha («\' + v.objeto + \'») ocupa 70–80%'), 'el contrato debe cuantificar la jerarquía y mantenerla prioritaria');
 ok(/SOLO_TEXTO: solo copy literal; 100% tipografía/.test(motor) && /ÚNICOS elementos permitidos: letras del copy literal/.test(motor), 'SOLO_TEXTO debe prohibir imágenes desde el contrato y la ficha');
 ok(/La jerarquía fija tamaño, área y peso; el layout solo ubicación/.test(motor), 'la jerarquía debe prevalecer sobre el layout');
 ok(/diseño tipográfico puro en /.test(motor) && /No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes/.test(motor), 'SOLO_TEXTO conserva una dirección tipográfica expresiva sin permitir ilustraciones ni ornamentos independientes');
@@ -88,7 +88,7 @@ ok(motor.includes('el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimibl
 ok(motor.includes('Texto y símbolo forman una sola composición integrada, no dos bloques separados') && motor.includes('El símbolo aporta como máximo 20–30% del peso visual'), 'TEXTO_DOMINANTE debe mantener toda la escena subordinada al texto');
 ok(motor.includes('La jerarquía fija área y escala; la arquitectura solo cambia la ubicación.'), 'la arquitectura solo puede cambiar ubicación, no proporción');
 ok(motor.includes('Si la arquitectura propone zonas separadas, conserva su dirección solo mediante solapamiento dentro de la forma unificada.'), 'una arquitectura inferior o lateral no puede hacer que una escena grande supere el copy en TEXTO_DOMINANTE');
-ok(/símbolo autorizado ocupa 70–80% del arte/.test(motor), 'OBJETO_DOMINANTE debe priorizar el símbolo autorizado');
+ok(/símbolo autorizado de esta ficha.*ocupa 70–80% del arte/.test(motor), 'OBJETO_DOMINANTE debe priorizar el símbolo autorizado');
 ok(motor.includes("el símbolo autorizado de esta ficha («' + v.objeto + '») ocupa 70–80% del arte") && motor.includes('no lo sustituyas por árboles, personas u otros objetos no indicados'), 'OBJETO_DOMINANTE debe priorizar el objeto real de cada ficha y prohibir sustituciones concretas no solicitadas');
 ok(!/OBJETO_DOMINANTE:[^\n]*Representa el concepto con solo árbol y persona/.test(motor), 'OBJETO_DOMINANTE no debe fijar árboles/personas como objetos por defecto');
 ok(/si es Pixel \/ 8-bit, usa formas pixeladas y bloques discretos/.test(motor), 'el estilo Pixel / 8-bit debe conservar su lenguaje visual');
