@@ -62,20 +62,20 @@ ok(/_loadLocks\(memLocksMarket\(\), MOTOR_STATE\.product\)\.jerarquia\[k\] === '
  
 // La jerarquía seleccionada manda sobre escala/peso; la arquitectura decide ubicación.
 ok(/si existe mensaje proporcionado, conservarlo literalmente y usarlo como único copy principal; no exigir tres niveles/i.test(motor), 'el prompt general no debe exigir tres niveles que contradigan un mensaje único');
-ok(/JERARQUÍA ES UNA ORDEN VISUAL/i.test(motor) && /texto 70–80%/i.test(motor) && /símbolo 70–80%/i.test(motor), 'la jerarquía debe tener umbrales visuales cuantificados');
+ok(/JERARQUÍA: aplica exactamente la jerarquía indicada en cada ficha/i.test(motor) && /TEXTO_DOMINANTE: el bloque tipográfico ocupa 70–80%/.test(motor) && /OBJETO_DOMINANTE: símbolo autorizado ocupa 70–80%/.test(motor), 'el contrato compacto debe cuantificar jerarquía sin duplicarla globalmente');
 ok(/SOLO_TEXTO = solo letras, cero imagen/i.test(motor) && /ÚNICOS elementos permitidos: letras del copy literal/i.test(motor), 'SOLO_TEXTO debe prohibir imágenes desde el contrato global y la ficha');
-ok(/La diferencia debe ser evidente a primera vista/i.test(motor), 'cada jerarquía debe exigir una diferencia visual comprobable');
+ok(/La jerarquía fija tamaño, área y peso; el layout solo ubicación/.test(motor), 'la jerarquía debe prevalecer sobre el layout');
 ok(/diseño tipográfico puro en /.test(motor) && /No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes/.test(motor), 'SOLO_TEXTO conserva una dirección tipográfica expresiva sin permitir ilustraciones ni ornamentos independientes');
 ok(/SOLO_TEXTO NO SIGNIFICA SIMPLE/.test(motor), 'SOLO_TEXTO debe ser tipográficamente impactante, no simplificado');
 ok(/las letras como forma visual principal mediante escala, ritmo, composición/.test(motor), 'el arte tipográfico debe usar recursos compositivos expresivos sin añadir ilustraciones');
 // Esto evita que una composición textual aleatoria contradiga TEXTO_DOMINANTE,
 // OBJETO_DOMINANTE, BALANCEADO o SOLO_TEXTO.
-ok(/const hierarchyRule = v\.jerarquiaVisual === 'TEXTO_DOMINANTE'[\s\S]{0,900}JERARQUÍA OBLIGATORIA/.test(motor), 'el prompt debe resolver explícitamente la jerarquía visual antes de pedir la composición textual');
-ok(/La jerarquía controla tamaño, área y peso; el layout solo controla ubicación/.test(motor), 'la jerarquía manual debe prevalecer en tamaño, área y dominancia');
+ok(/const hierarchyDirective = \{[\s\S]{0,1000}JERARQUÍA:/.test(motor), 'cada ficha debe emitir un único bloque compacto de jerarquía');
+ok(!/JERARQUÍA OBLIGATORIA:/.test(motor) && !/ORDEN VISUAL: texto primero/.test(motor) && !/ORDEN VISUAL: árbol y persona primero/.test(motor), 'no deben sobrevivir bloques de jerarquía duplicados');
 ok(/COMPOSICIÓN PRIORITARIA TEXTO: el bloque tipográfico es la silueta global/.test(motor), 'TEXTO_DOMINANTE debe usar una rama de composición que impida al layout desplazar la jerarquía');
-ok(/ORDEN VISUAL: texto primero \(70–80%\)/.test(motor), 'TEXTO_DOMINANTE debe neutralizar layouts que conviertan el objeto en escena grande');
+ok(/TEXTO_DOMINANTE: el bloque tipográfico ocupa 70–80%[\s\S]*reduce el símbolo, nunca el texto/.test(motor), 'TEXTO_DOMINANTE debe ordenar reducir el símbolo en vez de encoger el mensaje');
 ok(/COMPOSICIÓN PRIORITARIA OBJETO: árbol de almendro y persona descansando forman la silueta global/.test(motor), 'OBJETO_DOMINANTE debe priorizar explícitamente los únicos objetos autorizados');
-ok(/ORDEN VISUAL: árbol y persona primero \(70–80%\)/.test(motor), 'OBJETO_DOMINANTE debe impedir que el layout introduzca marcos y adornos');
+ok(/OBJETO_DOMINANTE: símbolo autorizado ocupa 70–80%[\s\S]*Solo elementos imprescindibles del concepto; sin adornos/.test(motor), 'OBJETO_DOMINANTE debe restringir elementos al concepto autorizado');
 ok(/SOLO LETRAS: usa únicamente el copy literal/.test(motor), 'SOLO_TEXTO no debe heredar layouts que pidan símbolos o motivos');
 ok(!/ARQUITECTURA TIPOGRÁFICA: '\s*\+ v\.distribucionTexto/.test(motor), 'SOLO_TEXTO no debe insertar una distribución que contradiga la prohibición de objetos');
 ok(/No aplicar instrucciones de layout ni de distribución que contradigan esta jerarquía/.test(motor), 'TEXTO_DOMINANTE debe excluir referencias de composición incompatibles');
