@@ -1703,7 +1703,7 @@ function formatPrompt(result) {
       o += 'COMPOSICIÓN: ' + v.layout + ' · ' + v.distribucionTexto + ' · no reutilizar la arquitectura de otra tarjeta.\\n';
     }
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
-      o += 'DIRECCIÓN: diseño tipográfico puro en ' + v.estilo + '. El estilo solo modifica construcción, peso, cortes y textura de las letras; jamás autoriza ilustraciones ni ornamentos independientes.\n';
+      o += 'DIRECCIÓN: diseño tipográfico puro en ' + v.estilo + '. SOLO_TEXTO NO SIGNIFICA SIMPLE: crea un arte tipográfico impactante y con identidad artística. Usa las letras como forma visual principal mediante escala, ritmo, composición, cortes, contraformas, densidad, espacio negativo y textura integrada; elige una estrategia coherente y mantén legible el copy literal. No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes.\n';
       o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
       o += 'ARTE: solo letras del mensaje exacto; ' + v.tratamiento + '. Sin persona, árbol, objeto, icono, ilustración, marco, cinta, estrella, llama, floritura, textura figurativa ni fondo escénico.\n';
       o += 'TEXTO: ' + textLine + '\n';
