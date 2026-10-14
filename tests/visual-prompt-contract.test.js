@@ -89,8 +89,9 @@ ok(!/JERARQUÍA OBLIGATORIA:/.test(motor), 'no debe sobrevivir el bloque duplica
 ok(/if \(v\.jerarquiaVisual === 'BALANCEADO'\) \{[\s\S]{0,180}COMPOSICIÓN:/.test(motor), 'los layouts originales solo deben imprimirse para BALANCEADO');
 ok(/if \(v\.jerarquiaVisual === 'BALANCEADO'\) \{[\s\S]{0,180}COMPOSICIÓN:/.test(motor), 'el layout seleccionado solo se añade si no contradice jerarquía estricta');
 const promptBuilder = motor.slice(motor.indexOf('function formatPrompt('), motor.indexOf('/* --- Renderizado de fichas en el DOM --- */'));
-ok(/if \(v\.jerarquiaVisual === 'TEXTO_DOMINANTE'\) \{[\s\S]{0,500}INTEGRACIÓN TEXTO-SÍMBOLO \(obligatoria\): ' \+ v\.integracionTexto/.test(promptBuilder), 'TEXTO_DOMINANTE debe incluir la integración elegida en la tarjeta dentro del prompt final');
-ok(promptBuilder.includes('delante, detrás o atravesando las letras') && promptBuilder.includes('no es obligatorio convertirlo en letra'), 'TEXTO_DOMINANTE permite integrar el motivo mediante solapamiento y capas sin exigir que sea literalmente una letra');
+ok(/if \(v\.jerarquiaVisual === 'TEXTO_DOMINANTE'\) \{[\s\S]{0,500}INTEGRACIÓN TEXTO-SÍMBOLO: integra el objeto descrito en el concepto/.test(promptBuilder), 'TEXTO_DOMINANTE debe construir integración a partir del objeto real del concepto');
+ok(promptBuilder.includes("' + v.objeto + '") && promptBuilder.includes('usando su forma física y acción reales') && promptBuilder.includes('sin imponer metáforas genéricas ni partes que el objeto no posee'), 'TEXTO_DOMINANTE no debe imponer metáforas de integración incompatibles con el objeto');
+ok(promptBuilder.includes('El texto exacto ocupa 70–80% del área y es la primera lectura') && promptBuilder.includes('el símbolo ocupa como máximo 20–30%') && promptBuilder.includes('nunca aparece como ilustración separada'), 'la integración debe conservar la proporción y subordinación del símbolo');
 ok(!/\\\\n/.test(promptBuilder), 'formatPrompt no debe emitir secuencias literales \\n en el prompt');
 ok(!/DIRECCIÓN ARTÍSTICA:[^\n]*COMPOSICIÓN TEXTUAL/.test(motor), 'no debe quedar una referencia a una sección inexistente');
 ok(/DIFERENCIA DURA: layout, tipografía, tratamiento/.test(motor), 'se conserva el contrato de diversidad A/B/C');

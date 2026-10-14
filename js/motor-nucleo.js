@@ -1728,7 +1728,7 @@ function formatPrompt(result) {
       o += _compatibleCompositionDirective(v.jerarquiaVisual, v.distribucionTexto) + '\n';
     }
     if (v.jerarquiaVisual === 'TEXTO_DOMINANTE') {
-      o += 'INTEGRACIÓN TEXTO-SÍMBOLO (obligatoria): ' + v.integracionTexto + '. Ejecuta una sola forma visual: integra el símbolo mediante solapamiento y capas —delante, detrás o atravesando las letras—, continuidad de contornos o encaje en contraformas; no es obligatorio convertirlo en letra ni dibujarlo como bloque independiente. Si la arquitectura o esta integración sugieren separación, prioriza la fusión sin cambiar el mensaje ni su legibilidad.\n';
+      o += 'INTEGRACIÓN TEXTO-SÍMBOLO: integra el objeto descrito en el concepto ("' + v.objeto + '") en el lettering usando su forma física y acción reales; elige una unión visual clara y natural, sin imponer metáforas genéricas ni partes que el objeto no posee. El texto exacto ocupa 70–80% del área y es la primera lectura; el símbolo ocupa como máximo 20–30%, queda integrado y nunca aparece como ilustración separada. La arquitectura cambia ubicación, no proporción.\n';
     }
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += 'DIRECCIÓN: diseño tipográfico puro en ' + v.estilo + '. SOLO_TEXTO NO SIGNIFICA SIMPLE: crea un arte tipográfico impactante y con identidad artística. Usa las letras como forma visual principal mediante escala, ritmo, composición, cortes, contraformas, densidad, espacio negativo y textura integrada; elige una estrategia coherente y mantén legible el copy literal. No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes.\n';
