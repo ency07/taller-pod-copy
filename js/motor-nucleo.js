@@ -1699,6 +1699,10 @@ function formatPrompt(result) {
     o += hierarchyCompositionRule + '\\n';
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += 'ARQUITECTURA TIPOGRÁFICA: ' + v.distribucionTexto + ' Aplica la arquitectura solo a letras y espacios vacíos; no la conviertas en marco, cinta ni ilustración.\\n';
+    } else if (v.jerarquiaVisual === 'TEXTO_DOMINANTE') {
+      o += 'COMPOSICIÓN PRIORITARIA TEXTO: el bloque tipográfico es la silueta global y ocupa 70–80% del peso visual. La distribución elegida solo puede ordenar las letras; ignora cualquier instrucción de layout que coloque el objeto como escena, lo haga grande, añada marco/cinta o relegue el texto. El objeto es una viñeta pequeña de máximo 20–30%, lateral o integrado en letras. Arquitectura tipográfica de referencia: ' + v.distribucionTexto + '. No reutilizar la arquitectura de otra tarjeta.\\n';
+    } else if (v.jerarquiaVisual === 'OBJETO_DOMINANTE') {
+      o += 'COMPOSICIÓN PRIORITARIA OBJETO: árbol y persona descansando forman la silueta global y ocupan 70–80% del peso visual; el texto literal es secundario (20–30% máximo). El layout solo puede ordenar la ubicación del texto y del objeto autorizado; ignora cualquier instrucción que añada marco, cinta, órbita decorativa, esquina gráfica, fondo abstracto o elemento ornamental. Arquitectura de referencia: ' + v.layout + ' · ' + v.distribucionTexto + '. No reutilizar la arquitectura de otra tarjeta.\\n';
     } else {
       o += 'COMPOSICIÓN: ' + v.layout + ' · ' + v.distribucionTexto + ' · no reutilizar la arquitectura de otra tarjeta.\\n';
     }
