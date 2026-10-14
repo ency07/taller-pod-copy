@@ -1755,7 +1755,7 @@ function formatPrompt(result) {
       o += 'INTEGRACIÓN TEXTO-SÍMBOLO: integra el objeto descrito en el concepto ("' + v.objeto + '") en el lettering usando su forma física y acción reales; elige una unión visual clara y natural, sin imponer metáforas genéricas ni partes que el objeto no posee. El texto exacto ocupa 70–80% del área y es la primera lectura; el símbolo ocupa como máximo 20–30%, queda integrado y nunca aparece como ilustración separada. La arquitectura cambia ubicación, no proporción.\n';
     }
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
-      o += _soloTextCompositionDirective(v.distribucionTexto) + '\\n';
+      o += _soloTextCompositionDirective(v.distribucionTexto) + '\n';
       o += 'DIRECCIÓN: diseño tipográfico puro en ' + v.estilo + '. SOLO_TEXTO NO SIGNIFICA SIMPLE: crea un arte tipográfico impactante y con identidad artística. Usa las letras como forma visual principal mediante escala, ritmo, composición, cortes, contraformas, densidad, espacio negativo y textura integrada; elige una estrategia coherente y mantén legible el copy literal. No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes.\n';
       o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
       o += 'ARTE: solo letras del mensaje exacto; ' + v.tratamiento + '. Sin persona, árbol, objeto, icono, ilustración, marco, cinta, estrella, llama, floritura, textura figurativa ni fondo escénico.\n';
