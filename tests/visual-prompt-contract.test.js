@@ -103,6 +103,17 @@ const compositionBankSource = compositionBankStart >= 0 && compositionBankEnd > 
 ok(compositionBankSource.includes('TEXTO ARRIBA') && compositionBankSource.includes('ESQUINA SUPERIOR lateral'), 'el banco debe conservar arquitecturas compositivas desde el inicio hasta el final del catálogo');
 
 
+
+/* La arquitectura debe llegar a las jerarquías estrictas como ubicación adaptada,
+   nunca como una orden que cambie proporciones o añada objetos. */
+ok(/function _compatibleCompositionDirective\\(hierarchy, architecture\\)/.test(motor), 'debe existir un adaptador de arquitectura compositiva');
+ok(/hierarchy === 'TEXTO_DOMINANTE'[\\s\\S]{0,220}texto conserva 70–80% del área/.test(motor), 'TEXTO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
+ok(/hierarchy === 'OBJETO_DOMINANTE'[\\s\\S]{0,240}símbolo autorizado conserva 70–80% del área/.test(motor), 'OBJETO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
+ok(/DISTRIBUCIÓN ADAPTADA/.test(motor) && /sin añadir cinta ni objeto físico/.test(motor), 'la arquitectura debe traducirse a ubicación y no exigir objetos decorativos');
+ok(/else if \\(v\\.jerarquiaVisual === 'TEXTO_DOMINANTE' \\|\\| v\\.jerarquiaVisual === 'OBJETO_DOMINANTE'\\)[\\s\\S]{0,150}_compatibleCompositionDirective/.test(motor), 'solo TEXTO_DOMINANTE y OBJETO_DOMINANTE deben recibir la arquitectura adaptada');
+ok(/if \\(v\\.jerarquiaVisual === 'BALANCEADO'\\) \\{[\\s\\S]{0,180}COMPOSICIÓN:/.test(motor), 'BALANCEADO debe conservar su composición original');
+ok(/if \\(v\\.jerarquiaVisual === 'SOLO_TEXTO'\\) \\{[\\s\\S]{0,260}CONTROL ABSOLUTO/.test(motor), 'SOLO_TEXTO debe seguir excluyendo objetos y escenas');
+
 if (failures.length) {
   console.error('FALLOS visual-prompt-contract:');
   failures.forEach(function (failure) { console.error(' - ' + failure); });
