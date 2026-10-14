@@ -72,13 +72,13 @@ ok(/const hierarchyRule = v\.jerarquiaVisual === 'TEXTO_DOMINANTE'[\s\S]{0,900}J
 ok(/La jerarquía controla tamaño, área y peso; el layout solo controla ubicación/.test(motor), 'la jerarquía manual debe prevalecer en tamaño, área y dominancia');
 ok(/PRUEBA DE DOMINANCIA TEXTUAL — RESTRICCIÓN DE COMPOSICIÓN: el bloque tipográfico completo es la silueta principal/.test(motor), 'TEXTO_DOMINANTE debe impedir que una ilustración grande se imponga al titular');
 ok(/PRUEBA DE DOMINANCIA DEL OBJETO — LISTA CERRADA DE ELEMENTOS: el árbol de almendro y la persona descansando son los únicos elementos ilustrados autorizados/.test(motor), 'OBJETO_DOMINANTE debe priorizar el objeto y limitar adornos no autorizados');
-ok(/No añadir sol, flores, círculos, marcos, manchas decorativas/.test(motor), 'OBJETO_DOMINANTE debe bloquear adornos que no pertenezcan al concepto');
+ok(/PROHIBIDO añadir marcos geométricos, esquinas dibujadas, círculos, halos, manchas de tinta, salpicaduras/.test(motor), 'OBJETO_DOMINANTE debe bloquear adornos que no pertenezcan al concepto');
 ok(/RESTRICCIÓN DE COMPOSICIÓN: el bloque tipográfico completo es la silueta principal/.test(motor), 'TEXTO_DOMINANTE debe exigir que el bloque tipográfico sea la silueta principal');
 ok(/PROHIBIDO dibujar el árbol\/persona como ilustración grande/.test(motor), 'TEXTO_DOMINANTE debe prohibir una escena grande encima o debajo del texto');
 ok(/LISTA CERRADA DE ELEMENTOS: el árbol de almendro y la persona descansando son los únicos elementos ilustrados autorizados/.test(motor), 'OBJETO_DOMINANTE debe definir una lista cerrada de objetos permitidos');
 ok(/salpicaduras, líneas de velocidad, subrayados ornamentales/.test(motor), 'OBJETO_DOMINANTE debe prohibir explícitamente los adornos abstractos observados en la prueba visual');
 ok(/Si un elemento se puede retirar sin perder la acción de descansar bajo el árbol, retíralo/.test(motor), 'OBJETO_DOMINANTE debe aplicar una prueba de necesidad a cada elemento ilustrado');
-ok(/Si el mensaje no domina al verlo en miniatura, la composición es incorrecta/.test(motor), 'el contrato debe exigir una comprobación de dominancia textual a escala reducida');
+ok(/Si el mensaje no domina en una vista pequeña, rediseña la composición hasta que lo haga/.test(motor), 'el contrato debe exigir una comprobación de dominancia textual a escala reducida');
 ok(/no reutilizar la arquitectura de otra tarjeta/.test(motor), 'el contrato debe impedir repetir la arquitectura entre tarjetas');
 ok(/DIRECCIÓN ARTÍSTICA: '\s*\+ v\.formaSimbolo \+ '; ' \+ v\.tecnica \+ '; ' \+ v\.tratamiento/.test(motor), 'la dirección artística no debe volver a imponer layout/composición sobre la arquitectura textual');
 ok(!/o \+= 'DIRECCIÓN: ' \+ v\.arquitectura \+ '; ' \+ v\.composicion \+ '; ' \+ v\.layout/.test(motor), 'no debe quedar la antigua instrucción de dirección que contradecía la composición textual');
