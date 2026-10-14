@@ -1023,7 +1023,7 @@ function _compatibleCompositionDirective(hierarchy, architecture) {
   }
   if (!placement) placement = 'texto y símbolo en zonas diferenciadas con asimetría controlada';
   if (hierarchy === 'TEXTO_DOMINANTE') {
-    return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; conserva el bloque tipográfico como primera masa visual y 70–80% del área imprimible; símbolo y escena juntos caben en el 20–30% restante. Si la ubicación inferior, lateral o envolvente reduce el texto o hace que una escena amplia domine por encima, reubica o simplifica la escena; la arquitectura cambia ubicación, nunca proporción ni jerarquía.';
+    return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; convierte ubicación y módulos en una sola silueta tipográfica-simbólica integrada: letras y símbolo se solapan o comparten trazos, contornos o contraformas. No presentes el texto y el objeto como dos bloques o ilustraciones separados. El texto sigue siendo la primera lectura y conserva 70–80% del área imprimible; el símbolo queda integrado y subordinado. Si la arquitectura propone zonas separadas, conserva su dirección solo mediante solapamiento dentro de la forma unificada. La arquitectura cambia ubicación, nunca separación ni jerarquía.';
   }
   if (hierarchy === 'OBJETO_DOMINANTE') {
     return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el símbolo autorizado conserva 70–80% del área y el copy queda subordinado dentro del 20–30% restante. No añadas cintas, marcos, bandas, emblemas ni objetos para ejecutar la distribución.';
@@ -1716,7 +1716,7 @@ function formatPrompt(result) {
         : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia);
     const hierarchyDirective = {
       SOLO_TEXTO: 'SOLO_TEXTO: solo copy literal; 100% tipografía y cero imágenes, objetos o adornos independientes.',
-      TEXTO_DOMINANTE: 'TEXTO_DOMINANTE: el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimible, medido por la caja envolvente conjunta de todas las palabras visibles; debe ser la primera masa visual y captar primero la mirada. La escena y el símbolo juntos ocupan como máximo el 20–30% restante, medido por su caja envolvente combinada; son secundarios y nunca forman una ilustración grande independiente. Si no caben ambas cosas en esas proporciones, simplifica o elimina elementos de la escena, nunca reduzcas el texto. La jerarquía fija el área y la escala; la arquitectura solo cambia la ubicación.',
+      TEXTO_DOMINANTE: 'TEXTO_DOMINANTE: el COPY TIPOGRÁFICO ocupa 70–80% del área total imprimible, debe ser la primera lectura y dominar a primera vista. Texto y símbolo forman una sola composición integrada, no dos bloques separados. Integra el objeto en los trazos, contornos o contraformas de las letras; puede solaparse y compartir líneas con ellas, sin alterar ni volver ilegible el mensaje exacto. El símbolo aporta como máximo 20–30% del peso visual, queda subordinado y no aparece como ilustración independiente. Si la arquitectura separa zonas, transforma esa separación en solapamiento o continuidad dentro de una silueta unificada. La jerarquía fija área y escala; la arquitectura solo cambia la ubicación.',
       OBJETO_DOMINANTE: 'OBJETO_DOMINANTE: el símbolo autorizado ocupa 70–80% del arte; copy 20–30%. Representa el concepto con solo árbol y persona; sin fondos narrativos, marcos ni adornos. Respeta literalmente el estilo seleccionado; si es Pixel / 8-bit, usa formas pixeladas y bloques discretos, no pintura orgánica ni textura de pincel.',
       BALANCEADO: 'BALANCEADO: texto y símbolo comparten el peso visual, cada uno entre 45–55%.'
     }[v.jerarquiaVisual] || '';
@@ -1726,6 +1726,9 @@ function formatPrompt(result) {
     }
     else if (v.jerarquiaVisual === 'TEXTO_DOMINANTE' || v.jerarquiaVisual === 'OBJETO_DOMINANTE') {
       o += _compatibleCompositionDirective(v.jerarquiaVisual, v.distribucionTexto) + '\n';
+    }
+    if (v.jerarquiaVisual === 'TEXTO_DOMINANTE') {
+      o += 'INTEGRACIÓN TEXTO-SÍMBOLO (obligatoria): ' + v.integracionTexto + '. Ejecuta una sola forma visual: integra partes del símbolo en los trazos, contornos o contraformas de las letras; no dibujes el objeto como bloque independiente. Si la arquitectura o esta integración sugieren separación, prioriza la fusión sin cambiar el mensaje ni su legibilidad.\\n';
     }
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += 'DIRECCIÓN: diseño tipográfico puro en ' + v.estilo + '. SOLO_TEXTO NO SIGNIFICA SIMPLE: crea un arte tipográfico impactante y con identidad artística. Usa las letras como forma visual principal mediante escala, ritmo, composición, cortes, contraformas, densidad, espacio negativo y textura integrada; elige una estrategia coherente y mantén legible el copy literal. No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes.\n';
