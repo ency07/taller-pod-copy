@@ -106,13 +106,13 @@ ok(compositionBankSource.includes('TEXTO ARRIBA') && compositionBankSource.inclu
 
 /* La arquitectura debe llegar a las jerarquías estrictas como ubicación adaptada,
    nunca como una orden que cambie proporciones o añada objetos. */
-ok(/function _compatibleCompositionDirective\\(hierarchy, architecture\\)/.test(motor), 'debe existir un adaptador de arquitectura compositiva');
-ok(/hierarchy === 'TEXTO_DOMINANTE'[\\s\\S]{0,220}texto conserva 70–80% del área/.test(motor), 'TEXTO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
-ok(/hierarchy === 'OBJETO_DOMINANTE'[\\s\\S]{0,240}símbolo autorizado conserva 70–80% del área/.test(motor), 'OBJETO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
-ok(/DISTRIBUCIÓN ADAPTADA/.test(motor) && /sin añadir cinta ni objeto físico/.test(motor), 'la arquitectura debe traducirse a ubicación y no exigir objetos decorativos');
-ok(/else if \\(v\\.jerarquiaVisual === 'TEXTO_DOMINANTE' \\|\\| v\\.jerarquiaVisual === 'OBJETO_DOMINANTE'\\)[\\s\\S]{0,150}_compatibleCompositionDirective/.test(motor), 'solo TEXTO_DOMINANTE y OBJETO_DOMINANTE deben recibir la arquitectura adaptada');
-ok(/if \\(v\\.jerarquiaVisual === 'BALANCEADO'\\) \\{[\\s\\S]{0,180}COMPOSICIÓN:/.test(motor), 'BALANCEADO debe conservar su composición original');
-ok(/if \\(v\\.jerarquiaVisual === 'SOLO_TEXTO'\\) \\{[\\s\\S]{0,260}CONTROL ABSOLUTO/.test(motor), 'SOLO_TEXTO debe seguir excluyendo objetos y escenas');
+ok(motor.includes('function _compatibleCompositionDirective(hierarchy, architecture)'), 'debe existir un adaptador de arquitectura compositiva');
+ok(motor.includes("return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el texto conserva 70–80% del área"), 'TEXTO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
+ok(motor.includes("return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el símbolo autorizado conserva 70–80% del área"), 'OBJETO_DOMINANTE debe conservar la proporción al adaptar la ubicación');
+ok(motor.includes('sin añadir cinta ni objeto físico') && motor.includes('No añadas cintas, marcos, bandas, emblemas ni objetos'), 'la arquitectura debe traducirse a ubicación y no exigir objetos decorativos');
+ok(motor.includes("else if (v.jerarquiaVisual === 'TEXTO_DOMINANTE' || v.jerarquiaVisual === 'OBJETO_DOMINANTE')") && motor.includes('_compatibleCompositionDirective(v.jerarquiaVisual, v.distribucionTexto)'), 'solo TEXTO_DOMINANTE y OBJETO_DOMINANTE deben recibir la arquitectura adaptada');
+ok(motor.includes("if (v.jerarquiaVisual === 'BALANCEADO')") && motor.includes("'COMPOSICIÓN: ' + v.layout + ' · ' + v.distribucionTexto"), 'BALANCEADO debe conservar su composición original');
+ok(motor.includes("if (v.jerarquiaVisual === 'SOLO_TEXTO')") && motor.includes('CONTROL ABSOLUTO: no dibujar personas'), 'SOLO_TEXTO debe seguir excluyendo objetos y escenas');
 
 if (failures.length) {
   console.error('FALLOS visual-prompt-contract:');
