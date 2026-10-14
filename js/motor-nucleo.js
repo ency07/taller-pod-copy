@@ -998,6 +998,39 @@ const _TEXT_COMPOSITION_BANK = [
   'ESQUINA SUPERIOR lateral; motivo ocupa el resto del campo con asimetría marcada.'
 ];
 
+function _compatibleCompositionDirective(hierarchy, architecture) {
+  const lower = String(architecture || '').toLocaleLowerCase();
+  const placements = [
+    [/texto arriba|banda superior|franja superior/, 'texto en la zona superior'],
+    [/columna lateral|bloque vertical lateral|pila vertical/, 'texto en una columna lateral'],
+    [/arco superior|arco lateral|texto sigue un solo lado/, 'texto siguiendo un tramo del contorno'],
+    [/bloque inferior|franja inferior/, 'texto en la zona inferior, desplazado del centro'],
+    [/diagonal ascendente/, 'texto en diagonal ascendente'],
+    [/texto dividido|dos bloques|zigzag/, 'texto distribuido en bloques separados con lectura natural'],
+    [/vacío real|contraforma tipográfica/, 'texto integrado en un vacío real de la silueta, sin deformar letras'],
+    [/palabra clave|esquina superior/, 'palabra clave en un lateral y el resto en un bloque separado'],
+    [/texto detrás/, 'texto parcialmente detrás de la silueta solo si conserva legibilidad'],
+    [/cinta abierta/, 'texto en una trayectoria oblicua abierta, sin añadir cinta ni objeto físico'],
+    [/bloques modulares/, 'texto en módulos asimétricos separados'],
+    [/símbolo integrado/, 'símbolo integrado en la contraforma tipográfica existente, sin crear otro bloque']
+  ];
+  let placement = '';
+  for (let i = 0; i < placements.length; i++) {
+    if (placements[i][0].test(lower)) {
+      placement = placements[i][1];
+      break;
+    }
+  }
+  if (!placement) placement = 'texto y símbolo en zonas diferenciadas con asimetría controlada';
+  if (hierarchy === 'TEXTO_DOMINANTE') {
+    return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el texto conserva 70–80% del área y el símbolo queda subordinado dentro del 20–30% restante. La ubicación nunca cambia esa proporción.';
+  }
+  if (hierarchy === 'OBJETO_DOMINANTE') {
+    return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el símbolo autorizado conserva 70–80% del área y el copy queda subordinado dentro del 20–30% restante. No añadas cintas, marcos, bandas, emblemas ni objetos para ejecutar la distribución.';
+  }
+  return '';
+}
+
 function _assignTextCompositions() {
   const shuffled = _TEXT_COMPOSITION_BANK.slice();
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -1690,6 +1723,9 @@ function formatPrompt(result) {
     o += 'JERARQUÍA: ' + hierarchyDirective + ' La jerarquía fija tamaño, área y peso; el layout solo ubicación. Si hay conflicto, prevalece esta regla.\n';
     if (v.jerarquiaVisual === 'BALANCEADO') {
       o += 'COMPOSICIÓN: ' + v.layout + ' · ' + v.distribucionTexto + ' · arquitectura distinta en cada tarjeta.\n';
+    }
+    else if (v.jerarquiaVisual === 'TEXTO_DOMINANTE' || v.jerarquiaVisual === 'OBJETO_DOMINANTE') {
+      o += _compatibleCompositionDirective(v.jerarquiaVisual, v.distribucionTexto) + '\n';
     }
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
       o += 'DIRECCIÓN: diseño tipográfico puro en ' + v.estilo + '. SOLO_TEXTO NO SIGNIFICA SIMPLE: crea un arte tipográfico impactante y con identidad artística. Usa las letras como forma visual principal mediante escala, ritmo, composición, cortes, contraformas, densidad, espacio negativo y textura integrada; elige una estrategia coherente y mantén legible el copy literal. No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes.\n';
