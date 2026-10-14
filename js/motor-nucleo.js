@@ -998,6 +998,30 @@ const _TEXT_COMPOSITION_BANK = [
   'ESQUINA SUPERIOR lateral; motivo ocupa el resto del campo con asimetría marcada.'
 ];
 
+function _soloTextCompositionDirective(architecture) {
+  const lower = String(architecture || '').toLocaleLowerCase();
+  const placements = [
+    [/texto arriba|banda superior|franja superior/, 'copy en la zona superior, con jerarquía tipográfica escalonada'],
+    [/columna lateral|bloque vertical lateral|pila vertical/, 'copy en columna tipográfica lateral, con palabras de escala alterna'],
+    [/arco superior|arco lateral|texto sigue un solo lado/, 'copy siguiendo un arco tipográfico abierto, sin dibujar un marco'],
+    [/bloque inferior|franja inferior/, 'copy en un bloque inferior desplazado, con la parte superior en espacio negativo'],
+    [/diagonal ascendente/, 'copy en diagonal ascendente mediante inclinación y escalado de letras'],
+    [/texto dividido|dos bloques|zigzag/, 'copy repartido en bloques tipográficos alternos con orden de lectura claro'],
+    [/vacío real|contraforma tipográfica/, 'copy organizado alrededor de contraformas creadas por las propias letras, sin añadir siluetas'],
+    [/palabra clave|esquina superior/, 'palabra clave ampliada en un lateral y el resto del copy en un bloque secundario tipográfico'],
+    [/texto detrás/, 'palabras superpuestas en capas tipográficas, manteniendo todas las letras legibles'],
+    [/cinta abierta/, 'copy en una trayectoria oblicua abierta construida solo con letras, sin dibujar cintas'],
+    [/bloques modulares/, 'copy distribuido en módulos tipográficos asimétricos, sin cajas ni objetos independientes'],
+    [/símbolo integrado/, 'copy integrado mediante ligaduras, contraformas y continuidad entre letras, sin añadir símbolo']
+  ];
+  for (let i = 0; i < placements.length; i++) {
+    if (placements[i][0].test(lower)) {
+      return 'ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO: ' + placements[i][1] + '. Usa exclusivamente las palabras del copy; construye la forma con escala, peso, alineación, espaciado, cortes y espacio negativo. No representar el motivo mencionado por la arquitectura como objeto, ilustración, icono, marco o adorno.';
+    }
+  }
+  return 'ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO: interpreta la dirección espacial de esta arquitectura como distribución de palabras y letras, nunca como objeto o escena: ' + String(architecture || '') + '. Construye la composición solo con tipografía, escala, peso, alineación, espaciado, cortes y espacio negativo; no dibujes el motivo mencionado.';
+}
+
 function _compatibleCompositionDirective(hierarchy, architecture) {
   const lower = String(architecture || '').toLocaleLowerCase();
   const placements = [
@@ -1731,6 +1755,7 @@ function formatPrompt(result) {
       o += 'INTEGRACIÓN TEXTO-SÍMBOLO: integra el objeto descrito en el concepto ("' + v.objeto + '") en el lettering usando su forma física y acción reales; elige una unión visual clara y natural, sin imponer metáforas genéricas ni partes que el objeto no posee. El texto exacto ocupa 70–80% del área y es la primera lectura; el símbolo ocupa como máximo 20–30%, queda integrado y nunca aparece como ilustración separada. La arquitectura cambia ubicación, no proporción.\n';
     }
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
+      o += _soloTextCompositionDirective(v.distribucionTexto) + '\\n';
       o += 'DIRECCIÓN: diseño tipográfico puro en ' + v.estilo + '. SOLO_TEXTO NO SIGNIFICA SIMPLE: crea un arte tipográfico impactante y con identidad artística. Usa las letras como forma visual principal mediante escala, ritmo, composición, cortes, contraformas, densidad, espacio negativo y textura integrada; elige una estrategia coherente y mantén legible el copy literal. No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes.\n';
       o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
       o += 'ARTE: solo letras del mensaje exacto; ' + v.tratamiento + '. Sin persona, árbol, objeto, icono, ilustración, marco, cinta, estrella, llama, floritura, textura figurativa ni fondo escénico.\n';

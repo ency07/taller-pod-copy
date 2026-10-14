@@ -14,6 +14,16 @@ function ok(condition, message) {
   if (!condition) failures.push(message);
 }
 
+// SOLO_TEXTO debe traducir la arquitectura asignada a composición tipográfica pura.
+const soloHelper = motor.slice(motor.indexOf('function _soloTextCompositionDirective('), motor.indexOf('function _compatibleCompositionDirective('));
+ok(soloHelper.includes('ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO') && soloHelper.includes('interpreta la dirección espacial'), 'SOLO_TEXTO debe traducir la arquitectura espacial a reglas tipográficas');
+ok(soloHelper.includes('copy en la zona superior') && soloHelper.includes('copy en columna tipográfica lateral') && soloHelper.includes('copy en diagonal ascendente'), 'SOLO_TEXTO debe contemplar arquitecturas espaciales distintas');
+ok(soloHelper.includes('No representar el motivo mencionado por la arquitectura como objeto') && soloHelper.includes('no dibujes el motivo mencionado'), 'SOLO_TEXTO no debe convertir referencias de layout en objetos o ilustraciones');
+const soloBranch = motor.slice(motor.indexOf("if (v.jerarquiaVisual === 'SOLO_TEXTO') {", motor.indexOf('function formatPrompt(')), motor.indexOf("} else {", motor.indexOf("if (v.jerarquiaVisual === 'SOLO_TEXTO') {", motor.indexOf('function formatPrompt('))));
+ok(soloBranch.includes('_soloTextCompositionDirective(v.distribucionTexto)'), 'SOLO_TEXTO debe recibir la arquitectura asignada a la tarjeta');
+ok(/function _assignTextCompositions\(\)[\s\S]{0,260}const shuffled = _TEXT_COMPOSITION_BANK\.slice\(\)/.test(motor) && /return \{ A: shuffled\[0\], B: shuffled\[1\], C: shuffled\[2\] \}/.test(motor), 'la asignación de arquitecturas debe seguir siendo aleatoria e independiente de la jerarquía');
+ok((motor.match(/const _TEXT_COMPOSITION_BANK = \[/g) || []).length === 1 && (motor.slice(motor.indexOf('const _TEXT_COMPOSITION_BANK = ['), motor.indexOf('function _soloTextCompositionDirective')).match(/^  '/gm) || []).length === 20, 'el banco conserva las 20 arquitecturas sin fijarlas a una tarjeta');
+
 // Los tres tratamientos deben existir como decisiones visuales distintas.
 ok(/HEAVY:[^\n]{0,260}masas sólidas dominantes/i.test(estilos), 'HEAVY debe definir masas y contraste, no solo un nombre');
 ok(/SOFT:[^\n]{0,260}formas abiertas/i.test(estilos), 'SOFT debe definir aire y formas abiertas');
