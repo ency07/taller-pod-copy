@@ -72,6 +72,10 @@ ok(/las letras como forma visual principal mediante escala, ritmo, composición/
 // OBJETO_DOMINANTE, BALANCEADO o SOLO_TEXTO.
 ok(/const hierarchyRule = v\.jerarquiaVisual === 'TEXTO_DOMINANTE'[\s\S]{0,900}JERARQUÍA OBLIGATORIA/.test(motor), 'el prompt debe resolver explícitamente la jerarquía visual antes de pedir la composición textual');
 ok(/La jerarquía controla tamaño, área y peso; el layout solo controla ubicación/.test(motor), 'la jerarquía manual debe prevalecer en tamaño, área y dominancia');
+ok(/COMPOSICIÓN PRIORITARIA TEXTO: el bloque tipográfico es la silueta global/.test(motor), 'TEXTO_DOMINANTE debe usar una rama de composición que impida al layout desplazar la jerarquía');
+ok(/La distribución elegida solo puede ordenar las letras; ignora cualquier instrucción de layout/.test(motor), 'TEXTO_DOMINANTE debe neutralizar layouts que conviertan el objeto en escena grande');
+ok(/COMPOSICIÓN PRIORITARIA OBJETO: árbol y persona descansando forman la silueta global/.test(motor), 'OBJETO_DOMINANTE debe priorizar explícitamente los únicos objetos autorizados');
+ok(/El layout solo puede ordenar la ubicación del texto y del objeto autorizado/.test(motor), 'OBJETO_DOMINANTE debe impedir que el layout introduzca marcos y adornos');
 ok(/PRUEBA DE DOMINANCIA TEXTUAL — RESTRICCIÓN DE COMPOSICIÓN: el bloque tipográfico completo es la silueta principal/.test(motor), 'TEXTO_DOMINANTE debe impedir que una ilustración grande se imponga al titular');
 ok(/PRUEBA DE DOMINANCIA DEL OBJETO — LISTA CERRADA DE ELEMENTOS: el árbol de almendro y la persona descansando son los únicos elementos ilustrados autorizados/.test(motor), 'OBJETO_DOMINANTE debe priorizar el objeto y limitar adornos no autorizados');
 ok(/PROHIBIDO añadir marcos geométricos, esquinas dibujadas, círculos, halos, manchas de tinta, salpicaduras/.test(motor), 'OBJETO_DOMINANTE debe bloquear adornos que no pertenezcan al concepto');
