@@ -89,6 +89,8 @@ ok(motor.includes('Texto y símbolo forman una sola composición integrada, no d
 ok(motor.includes('La jerarquía fija área y escala; la arquitectura solo cambia la ubicación.'), 'la arquitectura solo puede cambiar ubicación, no proporción');
 ok(motor.includes('Si la arquitectura propone zonas separadas, conserva su dirección solo mediante solapamiento dentro de la forma unificada.'), 'una arquitectura inferior o lateral no puede hacer que una escena grande supere el copy en TEXTO_DOMINANTE');
 ok(/símbolo autorizado ocupa 70–80% del arte/.test(motor), 'OBJETO_DOMINANTE debe priorizar el símbolo autorizado');
+ok(motor.includes("el símbolo autorizado de esta ficha («' + v.objeto + '») ocupa 70–80% del arte") && motor.includes('no lo sustituyas por árboles, personas u otros objetos no indicados'), 'OBJETO_DOMINANTE debe priorizar el objeto real de cada ficha y prohibir sustituciones concretas no solicitadas');
+ok(!/OBJETO_DOMINANTE:[^\n]*Representa el concepto con solo árbol y persona/.test(motor), 'OBJETO_DOMINANTE no debe fijar árboles/personas como objetos por defecto');
 ok(/si es Pixel \/ 8-bit, usa formas pixeladas y bloques discretos/.test(motor), 'el estilo Pixel / 8-bit debe conservar su lenguaje visual');
 ok(motor.includes("if (v.jerarquiaVisual === 'SOLO_TEXTO')") && !/SOLO_TEXTO[\s\S]{0,180}_compatibleCompositionDirective/.test(motor), 'SOLO_TEXTO no debe heredar instrucciones de ubicación para símbolos o motivos');
 ok(!/ARQUITECTURA TIPOGRÁFICA: '\\s*' \+ v\.distribucionTexto/.test(motor), 'SOLO_TEXTO no debe insertar una distribución que contradiga la prohibición de objetos');
