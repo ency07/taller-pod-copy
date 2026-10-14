@@ -1759,7 +1759,7 @@ function formatPrompt(result) {
     }[v.jerarquiaVisual] || '';
     o += 'JERARQUÍA: ' + hierarchyDirective + ' La jerarquía fija tamaño, área y peso; el layout solo ubicación. Si hay conflicto, prevalece esta regla.\n';
     if (v.jerarquiaVisual === 'BALANCEADO') {
-      o += 'COMPOSICIÓN BALANCEADA: ' + v.layout + ' · ' + v.distribucionTexto + '. Adapta la arquitectura para mantener texto y símbolo entre 45–55% cada uno; ambos deben leerse como partes co-protagonistas de una unidad, no como elemento principal más adorno. La arquitectura define colocación/relación, nunca cambia la proporción.\\n';
+      o += 'COMPOSICIÓN BALANCEADA: ' + v.layout + ' · ' + v.distribucionTexto + '. Adapta la arquitectura para mantener texto y símbolo entre 45–55% cada uno; ambos deben leerse como partes co-protagonistas de una unidad, no como elemento principal más adorno. La arquitectura define colocación/relación, nunca cambia la proporción.\n';
     }
     else if (v.jerarquiaVisual === 'TEXTO_DOMINANTE' || v.jerarquiaVisual === 'OBJETO_DOMINANTE') {
       o += _compatibleCompositionDirective(v.jerarquiaVisual, v.distribucionTexto) + '\n';
