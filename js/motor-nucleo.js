@@ -104,7 +104,8 @@ let MOTOR_STATE = {
   dominio: 'auto',
   dominioDetectado: 'auto',
   domImagen: 'Auto',
-  workflowMode: 'new',
+  workflowMode: 'explore',
+  explorationBrief: null,
   groupMode: 'distintos',
   objectMode: 'simple',
   designMode: 'contacto',
@@ -125,17 +126,26 @@ let MOTOR_STATE = {
 const K = ['A', 'B', 'C'];
 const N = ['01A', '01B', '01C'];
 
+/* --- Sincronización mínima del contexto de locks --- */
+function syncContext() {
+  const marketEl = document.getElementById('market');
+  const regionEl = document.getElementById('region');
+  const productEl = document.getElementById('product');
+  MOTOR_STATE.market = marketEl ? marketEl.value : 'global_en';
+  MOTOR_STATE.region = regionEl ? regionEl.value : 'global';
+  MOTOR_STATE.product = productEl ? productEl.value : 'CAMISETA SOFT';
+  return { market: MOTOR_STATE.market, region: MOTOR_STATE.region, product: MOTOR_STATE.product };
+}
+
 /* --- Lectura de estado desde el DOM --- */
 function readStateFromDOM() {
   const g = function (id) { return document.getElementById(id); };
   const v = function (id, fallback) { const el = g(id); return el ? el.value : fallback; };
 
-  MOTOR_STATE.market = v('market', 'global_en');
+  syncContext();
   MOTOR_STATE.language = v('language', 'auto');
   MOTOR_STATE.marketplace = v('marketplace', 'generic');
-  MOTOR_STATE.region = v('region', 'global');
   MOTOR_STATE.subniche = v('subniche', 'auto');
-  MOTOR_STATE.product = v('product', 'CAMISETA SOFT');
   MOTOR_STATE.serie = v('serie', '');
   MOTOR_STATE.concept = v('concept', '');
   MOTOR_STATE.message = v('message', '');
@@ -184,16 +194,19 @@ function readStateFromDOM() {
 function getCurrentAudiencePool() {
   const market = MOTOR_STATE.market;
   const region = MOTOR_STATE.region;
+  const subniche = MOTOR_STATE.subniche;
   let pool = typeof getAudiencesForMarketRegion === 'function'
     ? getAudiencesForMarketRegion(market, region)
     : (typeof getAudiencesForRegion === 'function' ? getAudiencesForRegion(region) : _AUD_NAMES.slice());
 
-  if (MOTOR_STATE.subniche !== 'auto' && typeof getAudiencesForSubniche === 'function') {
-    const subPool = getAudiencesForSubniche(MOTOR_STATE.subniche, region) || [];
-    const compatible = pool.filter(function (aud) { return subPool.indexOf(aud) !== -1; });
-    if (compatible.length) pool = compatible;
+  if (typeof getAudiencesForSubniche === 'function') {
+    const subPool = getAudiencesForSubniche(subniche, region, market) || [];
+    const allowed = new Set(subPool);
+    const compatible = pool.filter(function (aud) { return allowed.has(aud); });
+    // Nunca abrir la lista a perfiles de otros mercados como recuperación silenciosa.
+    pool = compatible.length ? compatible : pool;
   }
-  return pool.length ? pool : _AUD_NAMES.slice();
+  return pool.filter(function (id) { return !!id; });
 }
 
 function resolveAudiences() {
@@ -201,16 +214,18 @@ function resolveAudiences() {
   const multi = MOTOR_STATE.audienceMulti === 'si';
   const market = MOTOR_STATE.market;
   const region = MOTOR_STATE.region;
-
   const pool = getCurrentAudiencePool();
-
-  const locks = _loadLocks(market, MOTOR_STATE.product);
+  const locks = _loadLocks(memLocksMarket(), MOTOR_STATE.product) || {};
+  const audienceLocks = locks.audiencia || {};
   const result = {};
   const autos = [];
 
+  // Las elecciones manuales por tarjeta prevalecen también en Exploración.
+  // No se deben sustituir al pulsar "Crear los 3 diseños".
   K.forEach(function (k) {
-    if (locks.audiencia[k] && locks.audiencia[k] !== 'Auto' && pool.indexOf(locks.audiencia[k]) !== -1) {
-      result[k] = locks.audiencia[k];
+    const locked = audienceLocks[k];
+    if (locked && locked !== 'Auto' && pool.indexOf(locked) !== -1) {
+      result[k] = locked;
     } else {
       autos.push(k);
     }
@@ -219,42 +234,60 @@ function resolveAudiences() {
   if (!autos.length) return result;
 
   if (multi) {
-    const picks = _pickDistinct(autos, pool);
-    autos.forEach(function (k) { result[k] = picks[k]; });
-  } else {
-    let pick;
-    if (base !== 'Auto' && pool.indexOf(base) !== -1) {
-      pick = base;
-    } else {
-      pick = _pick(pool);
-    }
-    autos.forEach(function (k) { result[k] = pick; });
+    // "Explorar 3 audiencias": cada tarjeta Auto recibe un perfil propio
+    // cuando el pool lo permite; las audiencias fijadas manualmente quedan intactas.
+    const used = new Set(K.filter(function (k) { return !!result[k]; }).map(function (k) { return result[k]; }));
+    autos.forEach(function (k) {
+      const available = pool.filter(function (aud) { return !used.has(aud); });
+      let pick = '';
+      if (available.length) {
+        if (MOTOR_STATE.workflowMode === 'explore') {
+          const stableContext = [
+            market, region, MOTOR_STATE.subniche, MOTOR_STATE.product,
+            MOTOR_STATE.concept, MOTOR_STATE.message, MOTOR_STATE._rerollNonce || 0, k
+          ].map(function (value) { return String(value || '').trim().toLowerCase(); }).join('|');
+          let stableHash = 0;
+          for (let i = 0; i < stableContext.length; i++) {
+            stableHash = ((stableHash << 5) - stableHash + stableContext.charCodeAt(i)) | 0;
+          }
+          pick = available[Math.abs(stableHash) % available.length];
+        } else {
+          pick = _pick(available);
+        }
+      } else {
+        pick = pool.length ? pool[0] : '';
+      }
+      result[k] = pick;
+      if (pick) used.add(pick);
+    });
+    return result;
   }
 
+  // Sin audiencia distinta por tarjeta, Auto comparte una audiencia estable.
+  // Los locks manuales de B/C nunca se sobrescriben con el valor de A.
+  let shared = base !== 'Auto' && pool.indexOf(base) !== -1 ? base : '';
+  if (!shared) {
+    const stableContext = [
+      market, region, MOTOR_STATE.subniche, MOTOR_STATE.product,
+      MOTOR_STATE.concept, MOTOR_STATE.message, MOTOR_STATE._rerollNonce || 0
+    ].map(function (value) { return String(value || '').trim().toLowerCase(); }).join('|');
+    let stableHash = 0;
+    for (let i = 0; i < stableContext.length; i++) {
+      stableHash = ((stableHash << 5) - stableHash + stableContext.charCodeAt(i)) | 0;
+    }
+    shared = pool.length ? pool[Math.abs(stableHash) % pool.length] : '';
+  }
+  autos.forEach(function (k) { result[k] = shared; });
   return result;
 }
 
 /* --- Resolución de estilos --- */
 function _styleCandidatesForContext() {
-  const subniche = MOTOR_STATE.subniche;
-  const recommended = subniche !== 'auto' && _STYLE_CANDIDATES[subniche]
-    ? _STYLE_CANDIDATES[subniche].slice() : [];
-  let candidates = recommended.concat(_ESTILOS_LIST.filter(function (style) {
-    return recommended.indexOf(style) === -1;
-  }));
-  if (isGospelMarket()) {
-    const allow = ["Folk Popular", "Vitral / Mosaico", "Barroco Ornamental", "Grabado / Linóleo", "Hand-Drawn", "Acuarela Suelta", "Sumi-e / Tinta Lavada", "Minimal Modern", "Bordado / Puntada", "Ukiyo-e / Woodblock", "Retro 70s", "Kids Storybook", "Collage Cut-Paper", "Papercraft 3D", "Airbrush Smooth", "Foil Stamp / Metallic", "Vintage Desgastado", "Bohemian"];
-    candidates = candidates.filter(function (e) { return allow.indexOf(e) !== -1; });
-  }
-  return candidates;
+  const productionTreatments = ["Indexed Palette / Paleta indizada","Vector Flat / Plano vectorial","Spot Color Simulated / Tintas planas simuladas","Halftone Controlled / Tramado controlado","Knockout / Reserva blanca","Choke/Spread Trapping","Distress Production / Desgaste de producción","White Ink Optimized / Tinta blanca optimizada","CMYK Safe Gamut / Gamut CMYK seguro","Metallic Foil Ready / Listo para foil","Glitter Zone / Zona glitter","Glow Zone / Zona fosforescente"];
+  return _ESTILOS_LIST.filter(function (style) {
+    return productionTreatments.indexOf(style) === -1;
+  });
 }
-
-/**
- * Contador de uso global de estilos para garantizar cobertura de cola larga.
- * Los estilos no usados hace más generaciones suben prioridad.
- * Usa clave dedicada (no interfiere con memoria creativa existente).
- * Delega a memoria-local.js si expone getStyleUsageCounter/recordStyleUse.
- */
 function _getStyleUsageScore(style) {
   try {
     if (typeof getStyleUsageCounter === 'function') {
@@ -300,11 +333,39 @@ function _pickWeighted(pool, weights) {
   return pool[pool.length - 1];
 }
 
+function _stableHash(value) {
+  const text = String(value == null ? '' : value);
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+function _stableUnit(value) {
+  return _stableHash(value) / 4294967296;
+}
+function _pickWeightedStable(pool, weights, seed) {
+  if (!pool || !pool.length) return null;
+  const total = pool.reduce(function (sum, _, i) { return sum + (weights[i] || 1); }, 0);
+  let r = _stableUnit(seed) * total;
+  for (let i = 0; i < pool.length; i++) {
+    r -= (weights[i] || 1);
+    if (r < 0) return pool[i];
+  }
+  return pool[pool.length - 1];
+}
+
 function resolveEstilos(audsPerKey) {
   const locks = _loadLocks(memLocksMarket(), MOTOR_STATE.product);
   const candidates = _styleCandidatesForContext();
+  const stableBase = [MOTOR_STATE.market, MOTOR_STATE.product, MOTOR_STATE.concept, MOTOR_STATE.message, MOTOR_STATE.groupMode, MOTOR_STATE._rerollNonce || 0].join('|');
   const fixed = {};
   const auto = [];
+  const memKeyFn = typeof memKey === 'function' ? memKey : _memKey;
+  const recentKey = memKeyFn(['styleRecentSets', MOTOR_STATE.market, MOTOR_STATE.region || 'global', MOTOR_STATE.product]);
+  const recentSets = (typeof getJSON === 'function' ? getJSON(recentKey, []) : _memGetJSON(recentKey, [])) || [];
+  const recentStyles = new Set([].concat.apply([], recentSets.slice(-3)));
 
   K.forEach(function (k) {
     if (locks.estilo[k] && locks.estilo[k] !== 'Auto' && candidates.indexOf(locks.estilo[k]) !== -1) {
@@ -319,68 +380,63 @@ function resolveEstilos(audsPerKey) {
   if (MOTOR_STATE.groupMode === 'mismo') {
     const baseAud = audsPerKey[K[0]] || 'unisex_nacional';
     const basePref = (typeof AUD_STYLE_PREF !== 'undefined' ? AUD_STYLE_PREF[baseAud] : []) || [];
-    const preferred = candidates.filter(function (e) { return basePref.indexOf(_getStyleBase(e)) !== -1; });
-    const pool = preferred.length ? preferred : candidates;
-    const weights = pool.map(function (e) { return basePref.indexOf(_getStyleBase(e)) !== -1 ? 3 : 1; });
-    const base = Object.values(fixed)[0] || _pickWeighted(pool, weights);
+    const weights = candidates.map(function (style) {
+      let weight = basePref.indexOf(_getStyleBase(style)) !== -1 ? 3 : 1;
+      if (recentStyles.has(style)) weight *= 0.35;
+      return weight;
+    });
+    const base = Object.values(fixed)[0] || _pickWeightedStable(candidates, weights, stableBase + '|same-group|' + baseAud);
     auto.forEach(function (k) { fixed[k] = base; });
+    const usedStyles = Array.from(new Set(Object.values(fixed)));
+    if (typeof setJSON === 'function') setJSON(recentKey, recentSets.concat([usedStyles]).slice(-3));
+    else _memSetJSON(recentKey, recentSets.concat([usedStyles]).slice(-3));
+    usedStyles.forEach(_recordStyleUse);
     return fixed;
   }
 
   const used = new Set(Object.values(fixed));
   const autoKeys = auto.slice();
-  
-  // Cuota: al menos 1 de cada 3 fichas fuera del top-3 de su audiencia
-  const quotaNeeded = Math.max(1, Math.ceil(autoKeys.length / 3));
+  const quotaNeeded = Math.min(autoKeys.length, Math.max(2, Math.ceil(autoKeys.length * 2 / 3)));
   let quotaUsed = 0;
 
   autoKeys.forEach(function (k, idx) {
     const aud = audsPerKey[k] || 'unisex_nacional';
     const pref = (typeof AUD_STYLE_PREF !== 'undefined' ? AUD_STYLE_PREF[aud] : []) || [];
-    const top3 = pref.slice(0, 3);
-    
     const isLast = idx === autoKeys.length - 1;
-    const mustExplore = (quotaUsed < quotaNeeded) && (isLast || Math.random() < 0.4);
-    
-    // Nivel 1: bias fuerte (pref - used) - peso 3
+    const mustExplore = (quotaUsed < quotaNeeded) && (isLast || _stableUnit(stableBase + '|explore|' + k + '|' + aud) < 0.8);
     const biasPool = candidates.filter(function (e) {
       return pref.indexOf(_getStyleBase(e)) !== -1 && !used.has(e);
     });
-    // Nivel 2: exploración (candidates - used - bias) - peso 2
     const explorePool = candidates.filter(function (e) {
       return !used.has(e) && biasPool.indexOf(e) === -1;
     });
-    // Nivel 3: garantía cola larga (candidates - used) - peso 1 + score uso
     const fallbackPool = candidates.filter(function (e) { return !used.has(e); });
-
     let pick;
     if (mustExplore && explorePool.length) {
-      // Forzar exploración: elegir de explorePool con peso por score de uso
-      const weights = explorePool.map(function (e) { return 2 + _getStyleUsageScore(e) / 25; });
-      pick = _pickWeighted(explorePool, weights);
+      const weights = explorePool.map(function (style) { return recentStyles.has(style) ? 0.7 : 2; });
+      pick = _pickWeightedStable(explorePool, weights, stableBase + '|explore-pick|' + k + '|' + aud);
       quotaUsed++;
-    } else if (biasPool.length && Math.random() < 0.7) {
-      // 70% bias hacia pref de audiencia
-      const weights = biasPool.map(function (e) { return 3; });
-      pick = _pickWeighted(biasPool, weights);
+    } else if (biasPool.length && _stableUnit(stableBase + '|bias|' + k + '|' + aud) < 0.7) {
+      const weights = biasPool.map(function (style) { return recentStyles.has(style) ? 1.05 : 3; });
+      pick = _pickWeightedStable(biasPool, weights, stableBase + '|bias-pick|' + k + '|' + aud);
     } else if (explorePool.length) {
-      // Exploración normal
-      const weights = explorePool.map(function (e) { return 2 + _getStyleUsageScore(e) / 50; });
-      pick = _pickWeighted(explorePool, weights);
+      const weights = explorePool.map(function (style) { return recentStyles.has(style) ? 0.7 : 2; });
+      pick = _pickWeightedStable(explorePool, weights, stableBase + '|explore-normal|' + k + '|' + aud);
       if (!biasPool.length) quotaUsed++;
     } else if (fallbackPool.length) {
-      // Garantía cola larga
-      const weights = fallbackPool.map(function (e) { return 1 + _getStyleUsageScore(e) / 100; });
-      pick = _pickWeighted(fallbackPool, weights);
+      const weights = fallbackPool.map(function (style) { return recentStyles.has(style) ? 0.35 : 1; });
+      pick = _pickWeightedStable(fallbackPool, weights, stableBase + '|fallback|' + k + '|' + aud);
     } else {
-      // Fallback total (no debería pasar)
-      pick = _pick(candidates);
+      pick = candidates[_stableHash(stableBase + '|last-resort|' + k) % candidates.length];
     }
 
     fixed[k] = pick;
     used.add(pick);
     _recordStyleUse(pick);
   });
+  const usedStyles = Array.from(new Set(Object.values(fixed)));
+  if (typeof setJSON === 'function') setJSON(recentKey, recentSets.concat([usedStyles]).slice(-3));
+  else _memSetJSON(recentKey, recentSets.concat([usedStyles]).slice(-3));
   return fixed;
 }
 function resolveTextImageModes(estilos, audsPerKey) {
@@ -570,14 +626,82 @@ function getObjectPool() {
     try { pool = getBankForSubniche(gid, MOTOR_STATE.region, MOTOR_STATE.market) || []; } catch (e) {}
   }
 
+  // Capturar la falta de banco antes de añadir objetos personales: estos no autorizan
+  // a importar el banco común de otra familia.
+  const explicitExploreFamilyMissingBank = MOTOR_STATE.workflowMode === 'explore'
+    && MOTOR_STATE.subniche && MOTOR_STATE.subniche !== 'auto'
+    && !pool.length;
   const personalObjs = _getPersonalObjects(MOTOR_STATE.market, sub || 'auto');
   pool = pool.concat(personalObjs);
-  // Banco común genérico: PROHIBIDO en gospel (mezclaba secular con doctrinal y
-  // hacía predominar gospel en otros). Y en mercados EN va el común en inglés:
-  // OBJECT_BANK_COMMON está íntegramente en español y se filtraba al pool EN.
-  if (!gospel) pool = pool.concat(_commonBankForMarket());
+  // Banco común solo como complemento normal; nunca como fallback de una familia
+  // manual que no dispone de banco compatible en el mercado activo.
+  if (!gospel && !explicitExploreFamilyMissingBank) pool = pool.concat(_commonBankForMarket());
 
   return [...new Set(pool.filter(Boolean))];
+}
+
+/* --- Resolución universal del brief de exploración --- */
+function _resolveExplorationBrief() {
+  const explicitConcept = String(MOTOR_STATE.concept || '').trim();
+  const explicitSub = MOTOR_STATE.subniche && MOTOR_STATE.subniche !== 'auto' ? MOTOR_STATE.subniche : '';
+  const domain = dominioEfectivo();
+  let familyId = explicitSub || subnicheForDominio(domain) || effectiveSubniche() || '';
+  let candidates = [];
+  let selectedFrom = '';
+  function addBank(id) {
+    if (!id || typeof getBankForSubniche !== 'function') return [];
+    try {
+      const bank = getBankForSubniche(id, MOTOR_STATE.region, MOTOR_STATE.market);
+      return Array.isArray(bank) ? bank.filter(function (x) { return typeof x === 'string' && x.trim(); }) : [];
+    } catch (e) { return []; }
+  }
+  if (domain && isGospelMarket() && typeof getDominiosGospel === 'function') {
+    try {
+      const domains = getDominiosGospel(MOTOR_STATE.market) || {};
+      if (domains[domain] && Array.isArray(domains[domain].objetos)) {
+        candidates = domains[domain].objetos.filter(Boolean);
+        if (candidates.length) { familyId = domain; selectedFrom = 'domain-bank'; }
+      }
+    } catch (e) {}
+  }
+  if (!candidates.length && familyId) {
+    candidates = addBank(familyId);
+    if (candidates.length) selectedFrom = 'selected-family-bank';
+  }
+  if (!explicitSub && !domain && !candidates.length && !explicitConcept && !String(MOTOR_STATE.message || '').trim()) {
+    const ids = _marketSubnicheIds().filter(function (id, i, all) {
+      return id && all.indexOf(id) === i && (!isGospelMarket() || id === 'gospel_es' || id === 'gospel_en');
+    });
+    const eligible = [];
+    ids.forEach(function (id) {
+      const bank = addBank(id);
+      if (bank.length) eligible.push({ id: id, bank: bank });
+    });
+    if (eligible.length) {
+      const selected = _pick(eligible);
+      familyId = selected.id;
+      candidates = selected.bank;
+      selectedFrom = 'market-compatible-bank';
+    }
+  }
+  const concept = explicitConcept || (candidates.length ? String(_pick(candidates) || '').trim() : '');
+  const detectedFamilyLabel = familyId && typeof getSubnicheLabel === 'function'
+    ? (getSubnicheLabel(familyId, MOTOR_STATE.market) || familyId)
+    : (familyId || 'sin familia confirmada');
+  // Si el concepto fue escrito por el usuario, una detección automática no debe
+  // imponerse como clasificación segura ni desviar al generador del concepto.
+  const manualFamily = !!explicitSub || !!(MOTOR_STATE.dominio && MOTOR_STATE.dominio !== 'auto');
+  const familyLabel = explicitConcept && !manualFamily
+    ? 'orientativa (' + detectedFamilyLabel + '); prevalece el concepto del usuario'
+    : detectedFamilyLabel;
+  return {
+    concept: concept, familyId: familyId, familyLabel: familyLabel,
+    bankFound: candidates.length > 0,
+    selectedFrom: selectedFrom || (explicitSub ? 'selected-family-without-bank' : 'no-compatible-bank'),
+    hasUserConcept: !!explicitConcept,
+    message: String(MOTOR_STATE.message || '').trim(),
+    support: String(MOTOR_STATE.support || '').trim()
+  };
 }
 
 /* --- Construcción de candidato --- */
@@ -619,26 +743,334 @@ function _pickFreshTreatment(biasPool, fullPool, used) {
   return _pick(preferred.length ? preferred : available);
 }
 
+/* --- Perfiles estructurales universales HEAVY / SOFT / MODERN --- */
+/* El tratamiento deja de ser solo una etiqueta artística: gobierna decisiones
+   de composición, densidad, tipografía y espacio negativo. No cambia el concepto,
+   el mercado, la familia, el producto ni una jerarquía explícitamente elegida. */
+const _STRUCTURAL_PROFILES = {
+  HEAVY: {
+    density: ['Heavy'],
+    layout: ['Axial centrado', 'Emblema circular', 'Banda horizontal', 'Sangrado total', 'Arco y cúpula', 'Escalinata'],
+    type: ['Grotesca black condensada', 'Slab pesada de oficio', 'Stencil de plantilla', 'Gótica blackletter', 'Rounded amable'],
+    negative: ['Campo de tinta con margen vivo', 'Perímetro simétrico controlado', 'Cortes diagonales de aire'],
+    hierarchy: ['Símbolo 70% / Texto 30%', 'Símbolo dominante + texto descubrible', 'Texto dominante + símbolo descubrible'],
+    form: ['silueta sólida a una tinta', 'tallado en bloque', 'fragmentado en planos'],
+    integration: ['la palabra principal es un elemento más del objeto', 'el título abraza y parte el símbolo', 'el título rompe la silueta del símbolo']
+  },
+  SOFT: {
+    density: ['Minimal', 'Balanced'],
+    layout: ['Editorial asimétrica', 'Retícula áurea', 'Sello descentrado', 'Columna apilada', 'Split 2/3-1/3'],
+    type: ['Sans humanista limpia', 'Rounded amable', 'Serif clásica titulada', 'Manuscrita de cuaderno'],
+    negative: ['Vacío como protagonista', 'Aire alrededor del motivo principal', 'Bloques de respiración laterales', 'Fragmentos separados por silencio visual'],
+    hierarchy: ['Símbolo dominante + texto descubrible', '50 / 50 equilibrado', 'Jerarquía en capas de lectura'],
+    form: ['contorno lineal calibrado', 'orgánico gestual con pincel', 'caligráfico de un solo trazo'],
+    integration: ['el texto corre por el contorno del símbolo', 'texto y símbolo comparten una sola línea de dibujo', 'el texto principal cruza un eje de la composición']
+  },
+  MODERN: {
+    density: ['Minimal', 'Balanced'],
+    layout: ['Editorial asimétrica', 'Split 2/3-1/3', 'Retícula áurea', 'Diagonal ascendente', 'Diagonal descendente', 'Tarjeta interior'],
+    type: ['Sans humanista limpia', 'Mono técnica', 'Geométrica deconstructivista', 'Custom modular geométrica'],
+    negative: ['Vacíos verticales que guían la lectura', 'Cortes diagonales de aire', 'Aire alrededor del motivo principal'],
+    hierarchy: ['Jerarquía en capas de lectura', '50 / 50 equilibrado', 'Texto dominante + símbolo descubrible'],
+    form: ['geometrizado por módulos', 'construido por retícula visible', 'fragmentado en planos'],
+    integration: ['las letras habitan la estructura del objeto', 'el título rompe la silueta del símbolo', 'el texto principal cruza un eje de la composición']
+  }
+};
+
+function _profileCandidates(pool, hints, fallback) {
+  const source = Array.isArray(pool) ? pool : [];
+  const matched = source.filter(function (item) {
+    return (hints || []).some(function (hint) { return String(item).indexOf(hint) !== -1; });
+  });
+  return matched.length ? matched : (source.length ? source : (fallback || []));
+}
+
+function _profilePick(pool, hints, fallback) {
+  return _pick(_profileCandidates(pool, hints, fallback));
+}
+
+/* Prioriza preferencias compatibles, pero evita repetir ejes estructurales
+   ya asignados a las tarjetas anteriores del mismo conjunto. */
+function _pickProfileDistinct(preferredPools, fallbackPool, used) {
+  const pools = (preferredPools || []).filter(function (pool) { return Array.isArray(pool) && pool.length; });
+  const usedValues = Array.isArray(used) ? used : [];
+  for (let i = 0; i < pools.length; i++) {
+    const available = pools[i].filter(function (item) { return usedValues.indexOf(item) === -1; });
+    if (available.length) return _pick(available);
+  }
+  const fallback = Array.isArray(fallbackPool) ? fallbackPool : [];
+  const availableFallback = fallback.filter(function (item) { return usedValues.indexOf(item) === -1; });
+  return _pick(availableFallback.length ? availableFallback : (pools[0] || fallback));
+}
+
+/* Compatibilidad explícita entre el lenguaje artístico y el tratamiento estructural.
+   La técnica define la superficie; HEAVY/SOFT/MODERN define la arquitectura.
+   Esta directriz resuelve aparentes conflictos sin sustituir el estilo elegido. */
+function _styleTreatmentDirective(styleValue, profileKey) {
+  const style = _getStyleBase(styleValue).toLowerCase();
+  const key = String(profileKey || '').toUpperCase();
+  const profileRules = {
+    HEAVY: 'Prioriza masas visuales claras, contornos firmes y contraste alto. Evita que líneas finas, textura o detalles delicados debiliten la silueta. Mantén el carácter del estilo mediante su técnica aplicada en áreas amplias.',
+    SOFT: 'Prioriza aire, formas abiertas y jerarquía amable. Evita que el estilo convierta toda la superficie en una masa densa. Conserva su técnica en detalles selectivos y deja espacio negativo visible.',
+    MODERN: 'Prioriza geometría legible, bordes definidos y síntesis. Conserva los rasgos reconocibles del estilo como acentos controlados; no permitas que ornamento, textura, efectos o detalle secundario rompan la estructura limpia.'
+  };
+  const techniqueRules = [];
+  if (/acuarela|watercolor|airbrush|glow|neon|neón|gradient|degrad/.test(style)) {
+    techniqueRules.push('Los efectos de color o atmósfera quedan contenidos en áreas definidas; no deben borrar los bordes, la jerarquía ni la lectura del símbolo.');
+  }
+  if (/grunge|distress|tattoo|tatuaje|engraving|grabado|linocut|linóleo|risograph|risografía|halftone|trama/.test(style)) {
+    techniqueRules.push('La textura y la trama son selectivas, nunca una capa uniforme que cierre el espacio negativo o destruya la legibilidad.');
+  }
+  if (/minimal|geometric|geométr|papercraft|paper-cut|cut-paper|vector|stencil|pixel/.test(style)) {
+    techniqueRules.push('Conserva la síntesis propia de este lenguaje; no añadas adornos para simular el tratamiento estructural.');
+  }
+  if (/kids|storybook|infantil|folk|hand-drawn|manuscrita|bordado|embroidery/.test(style)) {
+    techniqueRules.push('Conserva el carácter expresivo o artesanal del estilo; el tratamiento cambia la arquitectura, no lo convierte en otro género visual.');
+  }
+  return (profileRules[key] || 'Respeta el lenguaje artístico elegido y evita instrucciones visuales contradictorias.')
+    + ' Estilo artístico activo: «' + _getStyleBase(styleValue) + '». ' + techniqueRules.join(' ');
+}
+
+function _applyStructuralProfile(v, profileKey, productBias, audienceProfile, usedAxes) {
+  const used = usedAxes || {};
+  const profile = _STRUCTURAL_PROFILES[String(profileKey || '').toUpperCase()];
+  if (!profile) return v;
+  const bias = productBias || {};
+  const audience = audienceProfile || {};
+  // El perfil estructural no restringe el catálogo: todo layout registrado sigue elegible.
+  // Producto y audiencia solo sesgan; cada tarjeta del conjunto recibe uno no repetido.
+  const layouts = (_LAYOUTS || []).slice();
+  const productLayouts = (bias.layout || []).length
+    ? layouts.filter(function (x) { return bias.layout.some(function (h) { return x.indexOf(h) === 0; }); })
+    : [];
+  const audienceLayouts = (audience.layoutPref || []).length
+    ? layouts.filter(function (x) { return audience.layoutPref.some(function (h) { return x.indexOf(h) === 0; }); })
+    : [];
+  const distinctLayouts = layouts.filter(function (x) { return (used.layout || []).indexOf(x) === -1; });
+  const preferredLayouts = new Set(productLayouts.concat(audienceLayouts));
+  // Sesgo suave (3:1), no lista cerrada: cualquier layout puede salir y el
+  // catálogo completo se explora a lo largo de generaciones; dentro de A/B/C no se repite.
+  const layoutWeights = distinctLayouts.map(function (layout) {
+    return preferredLayouts.has(layout) ? 3 : 1;
+  });
+  v.layout = _pickWeighted(distinctLayouts.length ? distinctLayouts : layouts, layoutWeights);
+
+  const typeHints = profile.type || [];
+  const types = (_TIPOS || []).filter(function (x) { return typeHints.some(function (h) { return x.indexOf(h) === 0; }); });
+  const audienceTypes = (audience.tipoPref || []).length
+    ? types.filter(function (x) { return audience.tipoPref.some(function (h) { return x.indexOf(h) === 0; }); })
+    : [];
+  v.tipografia = _pickProfileDistinct([audienceTypes], types.length ? types : _TIPOS, used.tipografia);
+
+  const density = (_POOLS.densidad || []).filter(function (x) { return profile.density.indexOf(x) !== -1; });
+  const productDensity = (bias.density || []).length
+    ? density.filter(function (x) { return bias.density.indexOf(x) !== -1; })
+    : [];
+  const audienceDensity = (audience.densityPref || []).length
+    ? density.filter(function (x) { return audience.densityPref.indexOf(x) !== -1; })
+    : [];
+  v.densidad = _pickProfileDistinct([productDensity, audienceDensity], density.length ? density : (_POOLS.densidad || []), used.densidad);
+
+  const negativeCandidates = _profileCandidates(_POOLS.negativeSpace, profile.negative, ['Aire alrededor del motivo principal']);
+  const hierarchyCandidates = _profileCandidates(_POOLS.jerarquia, profile.hierarchy, ['Jerarquía en capas de lectura']);
+  const profileForms = _profileCandidates(_FORMAS, profile.form, _FORMAS);
+  v.negativeSpace = _pickProfileDistinct([negativeCandidates], _POOLS.negativeSpace, used.negativeSpace);
+  // La jerarquía elegida en el selector prevalece sobre la jerarquía decorativa del perfil.
+  v.jerarquia = v.jerarquiaVisual || _pickProfileDistinct([hierarchyCandidates], _POOLS.jerarquia, used.jerarquia);
+  const audienceForms = (audience.formaPref || []).length
+    ? profileForms.filter(function (x) { return audience.formaPref.indexOf(x) !== -1; })
+    : [];
+  v.formaSimbolo = _pickProfileDistinct([audienceForms], profileForms, used.formaSimbolo);
+  const integrationCandidates = _profileCandidates(_INTEGRACION, profile.integration, _INTEGRACION);
+  v.integracionTexto = _pickProfileDistinct([integrationCandidates], _INTEGRACION, used.integracionTexto);
+  v.perfilEstructural = String(profileKey).toUpperCase();
+  return v;
+}
+
 function _isLockedContactSet() {
-  return MOTOR_STATE.workflowMode !== 'variation' && MOTOR_STATE.designMode !== 'patron';
+  return MOTOR_STATE.workflowMode !== 'variation' && MOTOR_STATE.workflowMode !== 'explore' && MOTOR_STATE.designMode !== 'patron';
+}
+
+/* El banco aporta candidatos, no sustituye la semántica del concepto.
+   Si ningún objeto del banco coincide claramente, conserva el concepto como ancla. */
+function _chooseConceptCompatibleObject(objectPool, concept) {
+  const normalize = function (value) {
+    return (typeof _normalizeTxt === 'function' ? _normalizeTxt(String(value || '')) : String(value || '').toLowerCase())
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+  };
+  const source = normalize(concept);
+  if (!source) return '';
+  const stop = new Set(['que','con','para','desde','hacia','sobre','entre','una','uno','unos','unas','los','las','el','la','de','del','en','por','como','sin','the','and','with','for','from','into','over','under','that','which','holding','sosteniendo','representa','lugares','turisticos','tourist','places','profundo','deep','my','a','an','of','to']);
+  const tokens = [...new Set(source.split(/\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); }))];
+  const ranked = (Array.isArray(objectPool) ? objectPool : []).map(function (item) {
+    const label = String(item || '').trim();
+    const words = [...new Set(normalize(label).split(/\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); }))];
+    const overlap = words.filter(function (t) { return tokens.indexOf(t) !== -1; });
+    return { label: label, score: overlap.reduce(function (sum, t) { return sum + Math.min(t.length, 10); }, 0), matches: overlap.length };
+  }).filter(function (x) { return x.score > 0; }).sort(function (a, b) { return b.score - a.score || b.matches - a.matches; });
+  if (ranked.length && (!ranked[1] || ranked[0].score > ranked[1].score)) return ranked[0].label;
+  return String(concept).trim();
 }
 
 function _resolveContactIdentity(objectPool) {
   const concept = String(MOTOR_STATE.concept || '').trim();
   const message = String(MOTOR_STATE.message || '').trim();
-  const source = concept || message;
-  const relation = source.match(/^\s*(?:(?:a|an|the|un|una|el|la|los|las)\s+)?([A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ'’-]*(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ'’-]*){0,2}?)\s+(?:que|that|which)\s+(?:protege|protegen|proteger|protects|protect|guards|defends)\b/i);
-  const symbol = (relation && relation[1] ? relation[1].trim() : '') || _pick(objectPool) || source || 'símbolo del nicho';
+  // La identidad primaria debe venir del concepto del usuario.
+  // Si no hay un único objeto, el concepto completo funciona como ancla semántica:
+  // el motor puede crear una escena o metáfora coherente sin elegir un objeto al azar.
+  const normalize = function (value) {
+    return (typeof _normalizeTxt === 'function' ? _normalizeTxt(String(value || '')) : String(value || '').toLowerCase())
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+  };
+  const source = normalize(concept);
+  const stop = new Set(['que','con','para','desde','hacia','sobre','entre','una','uno','unos','unas','los','las','el','la','de','del','en','por','como','sin','the','and','with','for','from','into','over','under','that','which','holding','sosteniendo','representa','lugares','turisticos','tourist','places','profundo','deep']);
+  const tokens = source.split(/\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); });
+  const pool = Array.isArray(objectPool) ? objectPool : [];
+  const scored = pool.map(function (item) {
+    const label = String(item || '').trim();
+    const normLabel = normalize(label);
+    const labelTokens = [...new Set(normLabel.split(/\s+/).filter(function (t) { return t.length >= 3 && !stop.has(t); }))];
+    const overlap = labelTokens.filter(function (t) { return tokens.indexOf(t) !== -1; });
+    const distinctive = overlap.filter(function (t) { return t.length >= 5; });
+    return {
+      label: label,
+      distinctive: distinctive,
+      score: distinctive.reduce(function (sum, t) { return sum + Math.min(t.length, 10); }, 0)
+    };
+  }).filter(function (x) { return x.score > 0; })
+    .sort(function (a, b) { return b.score - a.score || b.distinctive.length - a.distinctive.length; });
+
+  let symbol = '';
+  let resolvedFromBank = false;
+  if (scored.length && scored[0].distinctive.length) {
+    const first = scored[0], second = scored[1];
+    // Usar un objeto del banco solo si destaca inequívocamente.
+    if (!second || first.score > second.score) {
+      symbol = first.label;
+      resolvedFromBank = true;
+    }
+  }
+
+  // Los conceptos largos, escenas y relaciones entre varios elementos son válidos.
+  // En vez de bloquear o inventar un símbolo, conservar la frase completa como ancla.
+  const hasConcept = !!concept;
+  if (!symbol && hasConcept) symbol = concept;
+
   const protective = /\b(proteg\w*|protect\w*|guard\w*|defend\w*|cuid\w*|care\w*|safe\w*)\b/i.test(concept + ' ' + message);
   const claw = /\b(garra|claw|pata|paw)\b/i.test(source);
   return {
+    ok: hasConcept,
+    reason: hasConcept ? '' : 'Escribe el concepto principal para generar A/B/C. Si no existe un único objeto, describe la escena o idea completa.',
     symbol: symbol,
-    guiaSimbolo: claw
-      ? 'Representa una garra o pata animal completa y reconocible como protección; no la conviertas en arañazo o ataque ni inventes una especie que el usuario no indicó.'
-      : 'Representa el símbolo indicado de forma reconocible; no lo sustituyas por otro objeto ni añadas acciones ajenas al concepto.',
-    funcionSimbolica: protective ? 'Protección y cuidado' : (_pick(_POOLS.funcionSimbolica) || 'Emblema de identidad'),
-    intencionEmocional: protective ? 'Seguridad y cuidado' : (_pick(_POOLS.intencionEmocional) || 'Certeza silenciosa')
+    identityMode: resolvedFromBank ? 'symbol' : 'concept',
+    guiaSimbolo: resolvedFromBank
+      ? (claw
+        ? 'Mantén reconocible la garra o pata animal completa como símbolo de protección; no la conviertas en arañazo o ataque ni inventes una especie.'
+        : 'Representa el símbolo identificado en el concepto sin sustituirlo por otro objeto no solicitado.')
+      : 'Usa el concepto completo como ancla semántica. Si describe una escena, lugar, relación o conjunto de elementos, representa esa idea de forma coherente; no la reduzcas a un objeto arbitrario ni inventes un símbolo dominante.',
+    funcionSimbolica: protective ? 'Protección y cuidado' : 'Expresión visual del concepto indicado',
+    intencionEmocional: protective ? 'Seguridad y cuidado' : 'Interpretación coherente con el concepto indicado'
   };
+}
+
+/* Banco de arquitecturas textuales. Se baraja por conjunto, nunca por tratamiento.
+   Cada ficha recibe una solución distinta; las asignaciones cambian entre generaciones. */
+const _TEXT_COMPOSITION_BANK = [
+  'TEXTO ARRIBA, motivo debajo; alineación izquierda irregular; franja horizontal y separación amplia.',
+  'COLUMNA LATERAL izquierda; motivo al lado opuesto; líneas cortas y corredor de espacio negativo.',
+  'ARCO SUPERIOR abierto; motivo dentro del vacío; curva parcial, sin círculo ni emblema cerrado.',
+  'BLOQUE INFERIOR desplazado a un lado; motivo arriba y fuera del eje central.',
+  'DIAGONAL ascendente izquierda-derecha; cruza espacio negativo sin tapar la silueta.',
+  'BANDA SUPERIOR estrecha y centrada; motivo debajo separado por un intervalo limpio.',
+  'TEXTO DIVIDIDO a ambos lados del motivo; lectura natural y pausa visual central.',
+  'TEXTO dentro de un vacío real de la silueta; no deformar letras ni inventar huecos.',
+  'BLOQUE VERTICAL lateral bajo; líneas cortas y gran espacio vacío en el lado contrario.',
+  'PALABRA CLAVE en un lateral; resto separado; el motivo invade solo el margen tipográfico.',
+  'TEXTO detrás de la silueta como fondo parcial; superposición controlada y lectura intacta.',
+  'CINTA ABIERTA oblicua cruza un borde del motivo; no tapa rasgos identificadores.',
+  'DOS BLOQUES en zigzag; alineación alterna izquierda-derecha y separación visible.',
+  'FRANJA INFERIOR lateral, nunca centrada; motivo desplazado al lado contrario.',
+  'SÍMBOLO integrado en una contraforma tipográfica; sin segundo bloque de texto.',
+  'PILA VERTICAL junto a un borde; motivo ocupa el campo opuesto y queda separado.',
+  'ARCO LATERAL asimétrico en un solo costado; no formar marco completo.',
+  'BLOQUES MODULARES en celdas irregulares; motivo ocupa un módulo independiente.',
+  'TEXTO sigue un solo lado del contorno; lado opuesto queda deliberadamente vacío.',
+  'ESQUINA SUPERIOR lateral; motivo ocupa el resto del campo con asimetría marcada.'
+];
+
+function _soloTextCompositionDirective(architecture) {
+  const source = String(architecture || '');
+  const lower = source.toLocaleLowerCase();
+  const rules = [
+    [/^TEXTO ARRIBA/, 'bloque tipográfico en la parte superior, alineado a la izquierda de forma irregular; deja una franja amplia de espacio negativo debajo'],
+    [/^COLUMNA LATERAL/, 'columna tipográfica estrecha a la izquierda, con líneas cortas y un corredor amplio de espacio negativo al lado opuesto'],
+    [/^ARCO SUPERIOR/, 'palabras siguiendo un arco superior abierto creado por la propia línea tipográfica; no cierres el arco como marco'],
+    [/^BLOQUE INFERIOR/, 'bloque tipográfico en la parte inferior y desplazado lateralmente; reserva espacio negativo arriba'],
+    [/^DIAGONAL ascendente/, 'composición de palabras en diagonal ascendente, con inclinación y escala graduadas para conservar el orden de lectura'],
+    [/^BANDA SUPERIOR/, 'franja tipográfica superior compacta, centrada y de escala contenida; el resto del copy forma un segundo nivel tipográfico debajo'],
+    [/^TEXTO DIVIDIDO/, 'divide el copy en dos grupos tipográficos a izquierda y derecha, usando solo saltos de línea y espacio negativo para crear la pausa central'],
+    [/^TEXTO dentro de un vacío real/, 'distribuye las palabras alrededor de una contraforma generada por las propias letras; no dibujes ni rellenes una silueta externa'],
+    [/^BLOQUE VERTICAL lateral bajo/, 'columna tipográfica baja en un lateral, con líneas cortas y una gran zona vacía en el lado contrario'],
+    [/^PALABRA CLAVE/, 'amplía una palabra del propio copy en un lateral y coloca las demás palabras en un bloque tipográfico secundario, sin invadir ni añadir elementos'],
+    [/^TEXTO detrás de la silueta/, 'superpone niveles de palabras como capas tipográficas: algunas letras quedan parcialmente detrás de otras letras, siempre legibles; no existe una silueta externa'],
+    [/^CINTA ABIERTA/, 'usa una línea tipográfica oblicua que atraviese parcialmente el bloque principal; la trayectoria se construye con letras, nunca con una cinta dibujada'],
+    [/^DOS BLOQUES/, 'reparte el copy en bloques tipográficos alternos en zigzag, cambiando la alineación izquierda-derecha entre niveles'],
+    [/^FRANJA INFERIOR/, 'franja tipográfica inferior desplazada hacia un lateral; coloca el resto del copy arriba y hacia el lado opuesto'],
+    [/^SÍMBOLO integrado/, 'integra las palabras mediante ligaduras, contraformas y continuidad entre trazos de letras; no añadas un símbolo externo'],
+    [/^PILA VERTICAL/, 'columna tipográfica pegada a un borde, con palabras apiladas y el lado opuesto reservado como espacio negativo'],
+    [/^ARCO LATERAL/, 'texto en arco abierto a lo largo de un único costado, con el centro y el lado contrario despejados; no cierres un marco'],
+    [/^BLOQUES MODULARES/, 'organiza el copy en módulos tipográficos asimétricos separados por espacio negativo; los módulos no son cajas ni objetos dibujados'],
+    [/^TEXTO sigue un solo lado/, 'concentra todo el copy a lo largo de un único lado del campo y deja el lado contrario deliberadamente vacío'],
+    [/^ESQUINA SUPERIOR/, 'coloca una palabra o línea breve del copy en la esquina superior lateral y distribuye el resto en niveles tipográficos asimétricos']
+  ];
+  for (let i = 0; i < rules.length; i++) {
+    if (rules[i][0].test(source)) {
+      return 'ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO: ' + rules[i][1] + '. Todo el arte se construye exclusivamente con el mensaje exacto: escala, peso, ancho de letra, alineación, espaciado, saltos de línea, solapamiento tipográfico y espacio negativo. No añadir personas, escenas, objetos, iconos, símbolos independientes, cintas, marcos ni adornos figurativos.';
+    }
+  }
+  return 'ARQUITECTURA TIPOGRÁFICA SOLO_TEXTO: interpreta la estructura espacial como distribución de palabras y letras, nunca como objeto o escena: ' + lower.replace(/motivo|silueta|símbolo|cinta|banda/g, 'bloque tipográfico') + '. Usa solo el mensaje exacto, escala, peso, alineación, espaciado, cortes y espacio negativo. No añadir ilustraciones, objetos, iconos ni adornos figurativos.';
+}
+
+function _compatibleCompositionDirective(hierarchy, architecture) {
+  const lower = String(architecture || '').toLocaleLowerCase();
+  const placements = [
+    [/texto arriba|banda superior|franja superior/, 'texto en la zona superior'],
+    [/columna lateral|bloque vertical lateral|pila vertical/, 'texto en una columna lateral'],
+    [/arco superior|arco lateral|texto sigue un solo lado/, 'texto siguiendo un tramo del contorno'],
+    [/bloque inferior|franja inferior/, 'texto en la zona inferior, desplazado del centro'],
+    [/diagonal ascendente/, 'texto en diagonal ascendente'],
+    [/texto dividido|dos bloques|zigzag/, 'texto distribuido en bloques separados con lectura natural'],
+    [/vacío real|contraforma tipográfica/, 'texto integrado en un vacío real de la silueta, sin deformar letras'],
+    [/palabra clave|esquina superior/, 'palabra clave en un lateral y el resto en un bloque separado'],
+    [/texto detrás/, 'texto parcialmente detrás de la silueta solo si conserva legibilidad'],
+    [/cinta abierta/, 'texto en una trayectoria oblicua abierta, sin añadir cinta ni objeto físico'],
+    [/bloques modulares/, 'texto en módulos asimétricos separados'],
+    [/símbolo integrado/, 'símbolo integrado en la contraforma tipográfica existente, sin crear otro bloque']
+  ];
+  let placement = '';
+  for (let i = 0; i < placements.length; i++) {
+    if (placements[i][0].test(lower)) {
+      placement = placements[i][1];
+      break;
+    }
+  }
+  if (!placement) placement = 'texto y símbolo en zonas diferenciadas con asimetría controlada';
+  if (hierarchy === 'TEXTO_DOMINANTE') {
+    return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; convierte ubicación y módulos en una sola silueta tipográfica-simbólica integrada: letras y símbolo se solapan o comparten trazos, contornos o contraformas. No presentes el texto y el objeto como dos bloques o ilustraciones separados. El texto sigue siendo la primera lectura y conserva 70–80% del área imprimible; el símbolo queda integrado y subordinado. Si la arquitectura propone zonas separadas, conserva su dirección solo mediante solapamiento dentro de la forma unificada. La arquitectura cambia ubicación, nunca separación ni jerarquía.';
+  }
+  if (hierarchy === 'OBJETO_DOMINANTE') {
+    return 'DISTRIBUCIÓN ADAPTADA: ' + placement + '; el símbolo autorizado conserva 70–80% del área y el copy queda subordinado dentro del 20–30% restante. No añadas cintas, marcos, bandas, emblemas ni objetos para ejecutar la distribución.';
+  }
+  return '';
+}
+
+function _assignTextCompositions() {
+  const shuffled = _TEXT_COMPOSITION_BANK.slice();
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = temp;
+  }
+  return { A: shuffled[0], B: shuffled[1], C: shuffled[2] };
 }
 
 function buildCandidate(audsPerKey, fixedIdentity) {
@@ -646,14 +1078,15 @@ function buildCandidate(audsPerKey, fixedIdentity) {
   const hierarchyPerKey = resolveTextImageModes(estilos, audsPerKey);
   const objectPool = getObjectPool();
   const isVar = MOTOR_STATE.workflowMode === 'variation';
-  const conservarSimb = isVar && !!MOTOR_STATE.imageReference && MOTOR_STATE.variationOptions.simbolo === 'conservar';
+  const conservarSimb = isVar && !!MOTOR_STATE.imageReference && MOTOR_STATE.variationOptions.simbolo !== 'sustituir';
   const conservarPaleta = isVar && !!MOTOR_STATE.imageReference && MOTOR_STATE.variationOptions.paleta === 'conservar';
   const textosImagen = isVar && !!MOTOR_STATE.imageReference && MOTOR_STATE.variationOptions.textos === 'conservar_palabras';
   const textosMensaje = isVar && MOTOR_STATE.variationOptions.textos === 'mismo_mensaje';
 
   const set = {};
+  const textCompositionByKey = _assignTextCompositions();
   const usedThisSet = new Set();
-  const usedAxes = { layout: [], tipografia: [], formaSimbolo: [], tratamiento: [], integracionTexto: [] };
+  const usedAxes = { layout: [], tipografia: [], formaSimbolo: [], tratamiento: [], integracionTexto: [], densidad: [], negativeSpace: [], jerarquia: [] };
   const contactIdentity = _isLockedContactSet()
     ? (fixedIdentity || _resolveContactIdentity(objectPool))
     : null;
@@ -668,12 +1101,25 @@ function buildCandidate(audsPerKey, fixedIdentity) {
 
     // En un contactsheet nuevo, el símbolo se decide una vez para A/B/C.
     // Variación desde imagen conserva su propia lógica y sus selectores.
-    if (contactIdentity) {
-      v.objeto = contactIdentity.symbol;
-    } else if (v.jerarquiaVisual === 'SOLO_TEXTO') {
+    if (v.jerarquiaVisual === 'SOLO_TEXTO') {
+      // La jerarquía tipográfica prevalece incluso en un contactsheet con identidad bloqueada.
       v.objeto = 'SIN OBJETO — composición tipográfica pura';
+    } else if (contactIdentity) {
+      v.objeto = contactIdentity.symbol;
     } else if (conservarSimb) {
-      v.objeto = '(símbolo de la imagen REDIBUJADO: misma función simbólica; prohibido copiar silueta)';
+      const refSymbol = String((MOTOR_STATE.imageAnalysis || {}).simbolo_descripcion || (MOTOR_STATE.imageAnalysis || {}).concepto || 'símbolo principal de la imagen');
+      v.objeto = 'REDIBUJAR EL MISMO SÍMBOLO DE REFERENCIA: ' + refSymbol + '. Mantener identidad reconocible en A/B/C; variar solo la interpretación gráfica, técnica y composición. No sustituir por otro objeto.';
+    } else if (isVar) {
+      const analysis = MOTOR_STATE.imageAnalysis || {};
+      const semanticAnchor = String(analysis.concepto || MOTOR_STATE.concept || MOTOR_STATE.message || '').trim();
+      // No escoger un objeto al azar solo por compartir nicho.
+      v.objeto = _chooseConceptCompatibleObject(objectPool, semanticAnchor) || semanticAnchor || 'proponer un símbolo directamente derivado del concepto y la familia seleccionada';
+    } else if (MOTOR_STATE.workflowMode === 'explore') {
+      const brief = MOTOR_STATE.explorationBrief || _resolveExplorationBrief();
+      const anchor = String(brief.concept || MOTOR_STATE.message || '').trim();
+      v.objeto = anchor
+        ? anchor
+        : 'PROPUESTA CONCEPTUAL PENDIENTE PARA LA FAMILIA SELECCIONADA: definir concepto y símbolo coherentes antes de diseñar';
     } else {
       let obj, g = 0;
       do {
@@ -696,16 +1142,23 @@ function buildCandidate(audsPerKey, fixedIdentity) {
       v.textoApoyo = '(conservar literalmente las palabras secundarias de la imagen)';
       v.textoTerciario = '(conservar referencia legible si existe)';
     } else if (textosMensaje) {
-      v.textoApoyo = '(mantener la misma idea secundaria; reformular sin añadir)';
-      v.textoTerciario = '(conservar referencia si existe; no inventar)';
+      v.textoPrincipal = 'REDACTAR DE NUEVO el mensaje original con palabras distintas y naturales; preservar exactamente su significado, intención y audiencia. No copiar literalmente la frase fuente.';
+      v.textoApoyo = 'Crear una frase secundaria distinta que amplíe la misma idea sin repetir el título ni añadir afirmaciones.';
+      v.textoTerciario = 'Conservar literalmente solo fechas, cifras, nombres propios o referencias que sean datos; no inventar datos.';
     } else {
       v.textoApoyo = _pick(sp.textoApoyo || _TEXTO_FALLBACK_SECULAR.textoApoyo || ['texto de apoyo con peso']);
       v.textoTerciario = _pick(sp.textoTerciario || _TEXTO_FALLBACK_SECULAR.textoTerciario || ['dato de serie legible']);
     }
     if (contactIdentity) {
-      v.textoPrincipal = contactPrimaryText;
-      v.textoApoyo = contactSupportText;
-      v.textoTerciario = '';
+      if (contactPrimaryText) {
+        v.textoPrincipal = contactPrimaryText;
+        v.textoApoyo = contactSupportText;
+        v.textoTerciario = '';
+      } else {
+        v.textoPrincipal = 'PROPONER una frase original, concreta y natural en el idioma del mercado; escribir el texto final exacto y adaptarlo a la jerarquía ' + v.jerarquiaVisual + '.';
+        v.textoApoyo = contactSupportText || 'proponer apoyo solo si mejora el concepto; si no, omitirlo';
+        v.textoTerciario = 'no añadir fechas, cifras, sellos ni microtexto sin datos confirmados';
+      }
     }
 
     v.tecnica = _pick(sp.tecnica || ['técnica mixta']);
@@ -723,6 +1176,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
       formaPref: _rawAud.formaPref || [],
       tratPref: _rawAud.tratPref || [],
       layoutPref: _rawAud.layoutPref || _LP,
+      densityPref: (typeof AUD_DENSITY_PREF !== 'undefined' ? AUD_DENSITY_PREF[v.audiencia] : []) || [],
       modoCol: _rawAud.modoCol || [],
       stylePref: _SP
     };
@@ -740,16 +1194,17 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     usedAxes.formaSimbolo.push(v.formaSimbolo);
 
     const tratBias = (productBias.trat || []).concat(audProfile.tratPref || []);
-    const fixedTreatment = contactIdentity ? _CONTACT_TREATMENT_ORDER[k] : '';
+    const fixedTreatment = (contactIdentity || MOTOR_STATE.workflowMode === 'explore') ? _CONTACT_TREATMENT_ORDER[k] : '';
     const fixedTreatmentSpec = fixedTreatment && _TRATAMIENTOS.find(function (x) { return _treatmentKey(x) === fixedTreatment; });
     v.tratamiento = fixedTreatmentSpec || _pickFreshTreatment(tratBias, _TRATAMIENTOS, usedAxes.tratamiento);
     usedAxes.tratamiento.push(v.tratamiento);
 
+    // Asignación provisional; el perfil fijo se aplica al final para que ningún selector aleatorio lo sobrescriba.
     v.integracionTexto = _pickFresh(_INTEGRACION, _INTEGRACION, usedAxes.integracionTexto);
     usedAxes.integracionTexto.push(v.integracionTexto);
-    v.distribucionTexto = contactIdentity
-      ? (contactPrimaryText ? 'texto autorizado con lectura prioritaria; integrado solo si no se deforma ni se oculta' : 'sin texto principal autorizado; no inventar')
-      : _pick(_POOLS.distribucionTexto || ['texto integrado al símbolo']);
+    // Arquitectura textual única por tarjeta, asignada al azar y sin vínculo con HEAVY/SOFT/MODERN.
+    // El contenido literal del mensaje se conserva; solo cambia su estructura compositiva.
+    v.distribucionTexto = textCompositionByKey[k];
     v.jerarquia = _pick(_POOLS.jerarquia || ['Balanceado']);
     if (contactIdentity) v.guiaSimbolo = contactIdentity.guiaSimbolo;
     const productDensity = productBias.density || [];
@@ -758,6 +1213,29 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     const densityPool = compatibleDensity.length ? compatibleDensity : (productDensity.length ? productDensity : (audienceDensity.length ? audienceDensity : (_POOLS.densidad || ['Balanced'])));
     v.densidad = _pick(densityPool);
     v.negativeSpace = _pick(_POOLS.negativeSpace || ['aire alrededor del motivo']);
+
+    // Aplicar al final: A/B/C conservan perfiles estructurales fijos también en variación guiada.
+    // Evita contradicciones entre el nombre del tratamiento y el perfil que llega al generador de imágenes.
+    if (contactIdentity || MOTOR_STATE.workflowMode === 'explore' || MOTOR_STATE.workflowMode === 'variation') {
+      // Excluir los valores provisionales de esta tarjeta: solo cuentan las tarjetas previas.
+      const priorProfileAxes = {
+        layout: usedAxes.layout.slice(0, -1),
+        tipografia: usedAxes.tipografia.slice(0, -1),
+        formaSimbolo: usedAxes.formaSimbolo.slice(0, -1),
+        integracionTexto: usedAxes.integracionTexto.slice(0, -1),
+        densidad: usedAxes.densidad,
+        negativeSpace: usedAxes.negativeSpace,
+        jerarquia: usedAxes.jerarquia
+      };
+      _applyStructuralProfile(v, _CONTACT_TREATMENT_ORDER[k], productBias, audProfile, priorProfileAxes);
+      usedAxes.layout[usedAxes.layout.length - 1] = v.layout;
+      usedAxes.tipografia[usedAxes.tipografia.length - 1] = v.tipografia;
+      usedAxes.formaSimbolo[usedAxes.formaSimbolo.length - 1] = v.formaSimbolo;
+      usedAxes.integracionTexto[usedAxes.integracionTexto.length - 1] = v.integracionTexto;
+      usedAxes.densidad.push(v.densidad);
+      usedAxes.negativeSpace.push(v.negativeSpace);
+      usedAxes.jerarquia.push(v.jerarquia);
+    }
     v.funcionSimbolica = contactIdentity
       ? contactIdentity.funcionSimbolica
       : _pick(_POOLS.funcionSimbolica || ['Emblema de identidad']);
@@ -792,10 +1270,33 @@ function buildCandidate(audsPerKey, fixedIdentity) {
     const audHierarchy = (typeof AUD_HIERARCHY_PREF !== 'undefined' ? AUD_HIERARCHY_PREF[v.audiencia] : []) || [];
     const audDensity = (typeof AUD_DENSITY_PREF !== 'undefined' ? AUD_DENSITY_PREF[v.audiencia] : []) || [];
     const audChecks = [];
-    if (audStylePref.length) audChecks.push(audStylePref.indexOf(styleBase) !== -1);
-    if (audProfile.tipoPref.length) audChecks.push(audProfile.tipoPref.indexOf(v.tipografia) !== -1);
-    if (audProfile.formaPref.length) audChecks.push(audProfile.formaPref.indexOf(v.formaSimbolo) !== -1);
-    if (audProfile.tratPref.length) audChecks.push(audProfile.tratPref.some(function (x) { return String(v.tratamiento).startsWith(x); }));
+    // AUD_STYLE_PREF contiene etiquetas visibles (p. ej. "Y2K / Cyber"), mientras
+    // styleBase es una clave interna normalizada. Comparar ambos contra la etiqueta
+    // visible evita penalizar una dirección que sí pertenece al perfil.
+    if (audStylePref.length) {
+      const visibleStyle = String(v.estilo || '').trim().toLowerCase();
+      const normalizedStyle = String(styleBase || '').trim().toLowerCase();
+      audChecks.push(audStylePref.some(function (x) {
+        const pref = String(x || '').trim().toLowerCase();
+        return pref === visibleStyle || pref === normalizedStyle;
+      }));
+    }
+    // Las fichas contienen descripciones extendidas; evaluar coincidencia textual
+    // normalizada evita que una preferencia válida falle por incluir atributos extra.
+    const matchesPreference = function (actual, preferences) {
+      const value = String(actual || '').trim().toLowerCase();
+      return preferences.some(function (preference) {
+        const preferred = String(preference || '').trim().toLowerCase();
+        return !!preferred && (value === preferred || value.indexOf(preferred) !== -1 || preferred.indexOf(value) !== -1);
+      });
+    };
+    if (audProfile.tipoPref.length) audChecks.push(matchesPreference(v.tipografia, audProfile.tipoPref));
+    if (audProfile.formaPref.length) audChecks.push(matchesPreference(v.formaSimbolo, audProfile.formaPref));
+    // En exploración, HEAVY/SOFT/MODERN son una restricción del producto creativo.
+    // No penalizar la audiencia por no preferir las tres direcciones obligatorias.
+    if (audProfile.tratPref.length && MOTOR_STATE.workflowMode !== 'explore') {
+      audChecks.push(audProfile.tratPref.some(function (x) { return String(v.tratamiento).startsWith(x); }));
+    }
     if (audProfile.layoutPref.length) audChecks.push(audProfile.layoutPref.some(function (x) { return String(v.layout).startsWith(x); }));
     if (audHierarchy.length) audChecks.push(audHierarchy.indexOf(v.jerarquiaVisual) !== -1);
     if (audDensity.length) audChecks.push(audDensity.indexOf(v.densidad) !== -1);
@@ -824,7 +1325,7 @@ function buildCandidate(audsPerKey, fixedIdentity) {
 /* --- Scoring y selección --- */
 function scoreSet(set) {
   // El objeto deja de ser eje de diversidad: el contactsheet debe conservarlo.
-  const fields = ['estilo', 'layout', 'tipografia', 'formaSimbolo', 'tratamiento', 'integracionTexto', 'familiaColor'];
+  const fields = ['estilo', 'layout', 'tipografia', 'formaSimbolo', 'tratamiento', 'integracionTexto', 'distribucionTexto', 'familiaColor'];
   const pairs = [[0, 1], [0, 2], [1, 2]];
   let diversity = 0;
 
@@ -896,16 +1397,26 @@ function _patternConflictsOf(cand) {
 
 function generateSet() {
   readStateFromDOM();
+  MOTOR_STATE.explorationBrief = MOTOR_STATE.workflowMode === 'explore' ? _resolveExplorationBrief() : null;
   const audsPerKey = resolveAudiences();
+  const fixedIdentity = _isLockedContactSet() ? _resolveContactIdentity(getObjectPool()) : null;
+  if (_isLockedContactSet() && (!fixedIdentity || !fixedIdentity.ok)) {
+    const statusEl = document.getElementById('status');
+    if (statusEl) statusEl.textContent = (fixedIdentity && fixedIdentity.reason)
+      || 'No se pudo resolver el símbolo principal. Especifica el objeto dominante.';
+    console.warn('[Motor] Generación detenida: identidad semántica no resuelta.');
+    return null;
+  }
 
   let best = null, bestScore = null, bestTotal = -1e9;          // mejor de todos (fallback)
   let bestOk = null, bestOkScore = null, bestOkTotal = -1e9;    // mejor que pasa TODOS los controles
 
   for (let i = 0; i < 3000; i++) {
-    const cand = buildCandidate(audsPerKey);
+    const cand = buildCandidate(audsPerKey, fixedIdentity);
     const m = scoreSet(cand);
 
     const ejesOk = new Set(K.map(function (k) { return cand[k].layout; })).size === 3
+      && new Set(K.map(function (k) { return cand[k].distribucionTexto; })).size === 3
       && new Set(K.map(function (k) { return cand[k].tipografia; })).size === 3
       && new Set(K.map(function (k) { return cand[k].formaSimbolo; })).size === 3
       && new Set(K.map(function (k) { return cand[k].integracionTexto; })).size === 3
@@ -963,7 +1474,7 @@ function generateSet() {
   const usedObjs = K.filter(function (k) { return best[k].jerarquiaVisual !== 'SOLO_TEXTO'; }).map(function (k) { return best[k].objeto; });
   _addUsedObjects(historyKey, usedObjs);
 
-  LAST_RESULT = { set: best, score: bestScore, passed: passed };
+  LAST_RESULT = { set: best, score: bestScore, passed: passed, explorationBrief: MOTOR_STATE.explorationBrief };
   try { window.LAST_RESULT = LAST_RESULT; } catch (e) {}
   try { window.V = best; } catch (e) {} // Puente para el revisor IA (ia-revisor.js lee window.V con fichas A/B/C).
   return LAST_RESULT;
@@ -1040,9 +1551,11 @@ function formatPrompt(result) {
   const supportsPattern = ['MOCHILA', 'TOTE BAG', 'FUNDA MÓVIL'].indexOf(MOTOR_STATE.product) !== -1;
   const isPatron = MOTOR_STATE.designMode === 'patron' && !isVar && supportsPattern;
   const tplActive = _activeTemplateSafe();
-  const promptConcept = String(MOTOR_STATE.concept || '').trim() || String(MOTOR_STATE.message || '').trim() || '—';
+  const explorationBrief = MOTOR_STATE.workflowMode === 'explore' ? (MOTOR_STATE.explorationBrief || _resolveExplorationBrief()) : null;
+  const promptConcept = String((explorationBrief && explorationBrief.concept) || MOTOR_STATE.concept || '').trim() || String(MOTOR_STATE.message || '').trim() || '—';
   const promptMessage = String(MOTOR_STATE.message || '').trim() || '—';
-  const contactDNA = !isVar && !isPatron;
+  const isExplore = MOTOR_STATE.workflowMode === 'explore';
+  const contactDNA = !isVar && !isPatron && !isExplore;
   const contactSymbol = contactDNA && set.A ? String(set.A.objeto || '').trim() : '';
   const contactSymbolGuide = contactDNA && set.A ? String(set.A.guiaSimbolo || '').trim() : '';
   const contactFunction = contactDNA && set.A ? String(set.A.funcionSimbolica || '').trim() : '';
@@ -1051,8 +1564,8 @@ function formatPrompt(result) {
   const activeDomain = dominioEfectivo();
   let promptFamilyId = null;
   if (isGospelMarket()) promptFamilyId = activeDomain || null;
-  else promptFamilyId = subnicheForDominio(activeDomain)
-    || (_marketSubnicheIds().indexOf(activeDomain) !== -1 ? activeDomain : effectiveSubniche());
+  else promptFamilyId = (explorationBrief && explorationBrief.familyId) || subnicheForDominio(activeDomain)
+    || (_marketSubnicheIds().indexOf(activeDomain) !== -1 ? activeDomain : effectiveSubniche() || (MOTOR_STATE.subniche !== 'auto' ? MOTOR_STATE.subniche : null));
   let promptFamily = promptFamilyId && typeof getSubnicheLabel === 'function'
     ? getSubnicheLabel(promptFamilyId, MOTOR_STATE.market)
     : (promptFamilyId || 'Auto: inferir del concepto/mensaje y mantener en A/B/C');
@@ -1079,23 +1592,46 @@ function formatPrompt(result) {
     }
     if (MOTOR_STATE.variationOptions.esencia) o += 'ESENCIA ESCRITA POR EL USUARIO: ' + MOTOR_STATE.variationOptions.esencia + '\n';
     o += 'SELECTORES: simbolo=' + MOTOR_STATE.variationOptions.simbolo + '; color=' + MOTOR_STATE.variationOptions.paleta + '; textos=' + MOTOR_STATE.variationOptions.textos + '.\n';
-    if (MOTOR_STATE.variationOptions.simbolo === 'conservar' && !hasAnalysis) o += 'Si se adjunta referencia, conserva funcion y silueta; sin imagen no finjas conocer el simbolo.\n';
+    if (MOTOR_STATE.variationOptions.simbolo !== 'sustituir') {
+      o += 'SIMBOLO: CONSERVAR EL ADN CONCEPTUAL, NO CALCAR LA REPRESENTACION. Mantén reconocible la categoría del símbolo/personaje, pero crea una representación gráfica nueva. No reproduzcas el mismo rostro, pose, ángulo, encuadre, silueta, marco ni distribución de la referencia. Rediseña la construcción visual y la relación con la composición; conserva solo los rasgos conceptuales necesarios para entender quién/qué es. Cada dirección debe resolverlo de forma distinta.\n';
+      if (!hasAnalysis) o += 'Sin análisis confirmado, no afirmes detalles que no conoces: usa la imagen adjunta para identificar el concepto, pero construye una solución visual independiente.\n';
+    } else {
+      o += 'SIMBOLO: REINTERPRETACION CONCEPTUAL. Para cada dirección, propón una representación visual nueva derivada del concepto, la función simbólica y el nicho. Puede cambiar la forma del símbolo, pero cada elección debe tener una relación explicable con la intención original; no selecciones objetos arbitrarios solo porque aparecen en un banco. No copies el rostro, la pose, la silueta ni la composición distintiva de la referencia.\n';
+    }
+    o += 'ORIGINALIDAD VISUAL: la referencia sirve para entender la idea, no como plantilla de trazado. No hagas una versión recoloreada, un simple cambio de técnica ni una réplica con texto reemplazado. Replantea la pose/representación, el encuadre, la estructura compositiva y la integración tipográfica. Mantén el ADN conceptual, pero toma decisiones visuales independientes y diferentes entre A/B/C.\n';
     if (MOTOR_STATE.variationOptions.paleta === 'conservar' && !hasAnalysis) o += 'Si se adjunta referencia, conserva sus colores; sin imagen usa la paleta explicita de cada ficha y no afirmes que replica la original.\n';
-    if (MOTOR_STATE.variationOptions.textos === 'conservar_palabras') o += 'Conserva literalmente solo texto fuente visible en el analisis o escrito en MENSAJE/CONCEPTO; si no existe, no inventes palabras que deban conservarse.\n';
-    else if (MOTOR_STATE.variationOptions.textos === 'mismo_mensaje') o += 'Conserva la idea de MENSAJE/CONCEPTO; permite reformular sin cambiar su sentido.\n';
-    else o += 'Crea redaccion nueva desde CONCEPTO/MENSAJE, sin atribuirla a la imagen fuente.\n';
+    const copyLanguage = (MOTOR_STATE.market === 'gospel_es' || /español natural/i.test(langDir)) ? 'español natural' : 'inglés nativo';
+    if (MOTOR_STATE.variationOptions.textos === 'conservar_palabras') {
+      o += 'TEXTOS: conservar literalmente las frases visibles de la referencia cuando se detecten con confianza. No sustituir, completar ni inventar texto; si una frase no se lee con seguridad, omitirla.\n';
+    } else if (MOTOR_STATE.variationOptions.textos === 'mismo_mensaje') {
+      o += 'TEXTOS: reescribir el mensaje en ' + copyLanguage + ' con una frase concreta y natural para cada dirección 01A, 01B y 01C. Mantener significado, intención y audiencia. Las frases pueden variar en redacción, pero no añadir mensajes secundarios, citas, versículos, datos ni afirmaciones no proporcionadas.\n';
+    } else {
+      o += 'TEXTOS: crear copy original en ' + copyLanguage + ' desde concepto, función y nicho. Una frase concreta por dirección. No añadir citas, versículos, datos ni afirmaciones no proporcionadas.\n';
+    }
     o += 'ESQUEMAS: aplica las decisiones particulares de cada ficha.\n\n';
   } else if (isPatron) {
     o += '/PATRON REPETIDO — 3 VARIANTES DE TILE · MISMO CONCEPTO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
     o += 'CONCEPTO: ' + promptConcept + ' | MENSAJE: ' + promptMessage + '\n';
     o += 'REPETICIÓN: ' + (MOTOR_STATE.repeatType || 'medio salto') + ' | CADA VARIANTE ES UN TILE DISTINTO DEL MISMO CONCEPTO\n\n';
+  } else if (isExplore) {
+    const brief = explorationBrief || _resolveExplorationBrief();
+    const familyLabel = brief.familyLabel || promptFamily;
+    const conceptAnchor = String(brief.concept || '').trim();
+    o += '/EXPLORACIÓN — 3 DIRECCIONES DEL MISMO CONCEPTO\n';
+    o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + '\n';
+    o += 'CONCEPTO: ' + (conceptAnchor || 'propón una idea concreta dentro de la familia seleccionada') + ' | MENSAJE EXACTO: ' + (String(MOTOR_STATE.message || '').trim() || 'propón copy breve') + '\n';
+    o += 'FAMILIA: ' + familyLabel + '. Si es orientativa, no la conviertas en tema; manda el concepto.\n';
+    o += 'CONTRATO CREATIVO: conserva concepto, familia, función y mensaje. Elementos autorizados: solo los nombrados en el concepto y los imprescindibles para representarlos; no añadas sol, flores, aves, montañas, marcos ornamentales ni motivos secundarios si no se solicitan. El fondo será espacio negativo o textura del estilo, nunca una escena nueva. HEAVY: masas/contraste; SOFT: aire/formas abiertas; MODERN: geometría/síntesis. A/B/C deben cambiar de verdad encuadre, silueta global, distribución de masas, estructura tipográfica y relación texto-imagen; no basta recolorear ni cambiar técnica. Respeta el estilo seleccionado.\n\n';
   } else {
     o += '/CONTACTSHEET — 3 DIRECCIONES · MISMO CONCEPTO · NADA CLONADO\n';
     o += 'MERCADO: ' + MOTOR_STATE.market + ' | PRODUCTO: ' + MOTOR_STATE.product + ' | SERIE: ' + (MOTOR_STATE.serie || '—') + '\n';
     o += 'CONCEPTO: ' + promptConcept + ' | MENSAJE: ' + promptMessage + '\n';
     if (contactDNA) {
-      o += 'ADN IGUAL EN A/B/C: símbolo «' + (contactSymbol || 'derivado del concepto') + '» · mensaje literal «' + (contactMainText || 'sin texto indicado; no se imprime') + '» · apoyo literal «' + (contactSupportText || 'no indicado; no se imprime') + '» · función «' + (contactFunction || 'una misma función') + '»\n';
+      const hasSoloText = K.some(function (key) { return set[key].jerarquiaVisual === 'SOLO_TEXTO'; });
+      o += hasSoloText
+        ? 'ADN IGUAL EN A/B/C: concepto y mensaje literal; el símbolo se conserva solo en las tarjetas cuya jerarquía admite objeto. SOLO_TEXTO es exclusivamente tipografía y no representa el símbolo. Apoyo literal «' + (contactSupportText || 'no indicado; no se imprime') + '»\n'
+        : 'ADN IGUAL EN A/B/C: símbolo «' + (contactSymbol || 'derivado del concepto') + '» · mensaje literal «' + (contactMainText || 'sin texto indicado; no se imprime') + '» · apoyo literal «' + (contactSupportText || 'no indicado; no se imprime') + '» · función «' + (contactFunction || 'una misma función') + '»\n';
       if (contactSymbolGuide) o += 'LECTURA CONSTANTE DEL SÍMBOLO: ' + contactSymbolGuide + '\n';
       o += 'ORDEN FIJO DE TRATAMIENTOS: 01A HEAVY · 01B SOFT · 01C MODERN. Cada tratamiento gobierna composición, jerarquía, tipografía, contraste, densidad y formas; el estilo artístico lo ejecuta sin contradecirlo.\n\n';
     } else {
@@ -1103,10 +1639,51 @@ function formatPrompt(result) {
     }
   }
 
-  o += 'NICHO/FAMILIA: ' + promptFamily + '\n';
-  o += contactDNA
-    ? 'ANCLA: misma ' + (contactSymbol ? '«' + contactSymbol + '»' : 'idea central') + ', mensaje y función en A/B/C; variar su tratamiento visual, tipografía, composición y jerarquía.\n'
-    : 'ANCLA: mismo nicho/concepto en A/B/C; variar expresion. SOLO_TEXTO: nombrar el nicho en el texto.\n';
+  if (!isExplore) {
+    o += 'NICHO/FAMILIA: ' + promptFamily + '\n';
+    o += contactDNA
+      ? 'ANCLA: misma ' + (contactSymbol ? '«' + contactSymbol + '»' : 'idea central') + ', mensaje y función en A/B/C; variar su tratamiento visual, tipografía, composición y jerarquía.\n'
+      : 'ANCLA: mismo nicho/concepto en A/B/C; variar expresión. SOLO_TEXTO: nombrar el nicho en el texto.\n';
+    o += 'CONTRATO CREATIVO: conserva concepto, familia, función y mensaje; no inventes objetos, datos ni texto. Si falta un dato, omítelo.\n';
+    o += 'DIRECCIÓN: el estilo artístico define el lenguaje visual; HEAVY/SOFT/MODERN modifican composición y jerarquía sin borrar ese estilo. No mezcles instrucciones incompatibles.\n';
+    o += 'A/B/C: misma identidad semántica, soluciones distintas en composición, silueta, tipografía y relación texto-imagen; no basta recolorear o cambiar textura.\n';
+  }
+  if (isVar) o += 'VARIACIÓN: usa la referencia solo para concepto y datos visibles; no copies su composición, silueta, encuadre ni jerarquía. No añadas objetos ni datos. A/HEAVY: masas compactas, contorno grueso, contraste alto. B/SOFT: formas abiertas, aire y transiciones suaves. C/MODERN: geometría limpia, retícula y asimetría controlada. Cambia layout, silueta y arquitectura tipográfica en cada dirección; el estilo elegido se conserva sin anular el perfil. El copy solo sigue el selector de texto. Si dos diseños parecen la misma imagen recoloreada, replantea su estructura.\n';
+  if (isVar && MOTOR_STATE.imageReference) {
+    const symbolMode = String(MOTOR_STATE.variationOptions.simbolo || 'sustituir');
+    const textMode = String(MOTOR_STATE.variationOptions.textos || 'conservar_palabras');
+    const paletteMode = String(MOTOR_STATE.variationOptions.paleta || 'renovar');
+    o += 'SELECTORES DE VARIACIÓN — OBLIGATORIOS, NO INFERIDOS: ';
+    o += 'SÍMBOLO=' + symbolMode + '; ';
+    if (symbolMode === 'conservar' || symbolMode === 'mantener') {
+      o += 'conserva el símbolo principal reconocible de la referencia; no lo sustituyas. ';
+    } else if (symbolMode === 'reinterpretar') {
+      o += 'conserva el mismo símbolo/objeto, pero redibújalo con una forma y construcción visual distintas; no copies sus contornos exactos. ';
+    } else {
+      o += 'sustituye únicamente el símbolo principal por uno nuevo directamente derivado del concepto autorizado; no agregues objetos secundarios ni cambies el mensaje. ';
+    }
+    o += 'TEXTO=' + textMode + '; ';
+    if (textMode === 'conservar_palabras') {
+      o += 'transcribe y conserva exactamente las palabras legibles de la imagen; no reescribas, traduzcas ni inventes texto. Si una palabra no puede leerse con seguridad, omítela. ';
+    } else if (textMode === 'mismo_mensaje') {
+      o += 'conserva el significado del mensaje, pero redacta una frase nueva y exacta en el idioma del mercado; no añadas datos ni afirmaciones. ';
+    } else if (textMode === 'nuevo') {
+      o += 'crea un copy nuevo, breve y pertinente al concepto y mercado; no inventes datos, nombres, fechas ni citas. ';
+    } else if (textMode === 'sin_texto') {
+      o += 'elimina el texto del arte; no generes letras, números ni microtexto. ';
+    } else {
+      o += 'respeta literalmente la configuración de texto elegida y no inventes palabras. ';
+    }
+    o += 'PALETA=' + paletteMode + '; ';
+    if (paletteMode === 'conservar') {
+      o += 'mantén los colores dominantes de la referencia, ajustando solo contraste necesario para legibilidad. ';
+    } else {
+      o += 'cambia de forma visible la paleta respecto a la referencia; usa la paleta indicada en cada ficha y no recuperes automáticamente los colores originales. ';
+    }
+    o += 'VARIACIÓN VISUAL REAL: crea una nueva solución gráfica basada en la referencia, no una copia ni una limpieza de la misma. Cambia obligatoriamente composición, silueta global, encuadre, distribución de masas y jerarquía tipográfica. Conserva solo los elementos que exigen los selectores. No basta recolorear, cambiar textura, añadir borde ni aplicar filtro. No inventes objetos, texto, datos o símbolos fuera de las reglas anteriores.\n';
+  }
+  o += 'COPY: conserva literalmente el texto proporcionado. Si no hay texto fijado y se permite copy, escribe el texto final exacto en el idioma del mercado; sin placeholders ni microtexto.\n';
+  o += 'SALIDA: produce solo el arte solicitado y los mockups indicados. No añadas paneles explicativos, objetos decorativos, logotipos, firmas ni texto no solicitado. Los adornos no solicitados cuentan como objetos inventados, aunque sean habituales en el estilo.\n';
   o += 'REGLAS INQUEBRANTABLES:\n';
   if (langDir) o += 'IDIOMA: ' + langDir + '\n';
   if (cultDir) o += 'CULTURA: ' + cultDir + '\n';
@@ -1134,40 +1711,75 @@ function formatPrompt(result) {
   if (MOTOR_STATE.market === 'global_en' || MOTOR_STATE.market === 'global_es') {
     o += 'SANDBOX: solo bancos globales del idioma del mercado. Prohibidos regionalismos colombianos y simbolismo gospel doctrinal.\n';
   }
-  o += 'DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo y fondo NUNCA se repiten entre A/B/C.\n';
+  o += 'DIFERENCIA DURA: layout, tipografía, tratamiento, forma del símbolo, fondo y ARQUITECTURA TEXTUAL NUNCA se repiten entre A/B/C.\n';
+  o += 'JERARQUÍA: aplica exactamente la jerarquía indicada en cada ficha; estilo y layout no pueden alterarla.\n';
   if (isPatron) {
     o += 'PATRON: cada variante es un tile sin costura visible (bordes que empatan al repetirse); motivo y fondo definidos por ficha; repetición ' + (MOTOR_STATE.repeatType || 'medio salto') + ' en toda la superficie aplicable.\n';
     o += 'TEXTO EN TILE: mínimo o nulo; si hay texto debe funcionar repetido (sin lectura lineal, sin frase que se corte entre repeticiones).\n';
   } else if (contactDNA) {
-    o += 'TEXTOS: imprime literalmente solo el mensaje y el apoyo indicados arriba; si no hay mensaje, no añadas palabras. No inventes texto secundario/terciario, sellos, fechas ni números. Legibilidad primero: letras grandes, correctas y legibles a escala real de ' + MOTOR_STATE.product + '; no deformes, cortes ni tapes las palabras. Si falta espacio, elimina primero el apoyo y conserva íntegro el mensaje. PROHIBIDO microtexto y pseudo-letras.\n';
+    if (contactMainText) {
+      o += 'TEXTOS: conserva literalmente el mensaje principal «' + contactMainText + '». Si hay apoyo autorizado, consérvalo literalmente; si no lo hay, no inventes datos, fechas, cifras ni sellos. Legibilidad primero: letras grandes y correctas a escala real de ' + MOTOR_STATE.product + '.\n';
+    } else {
+      o += 'TEXTOS: no se proporcionó mensaje, pero NO se ha prohibido el copy. Propón para cada dirección una frase comercial original, concreta y nativa en el idioma del mercado; escribe el texto exacto final, no instrucciones ni placeholders. La jerarquía visual manda: TEXTO_DOMINANTE = frase protagonista; BALANCEADO = texto y símbolo equilibrados; OBJETO_DOMINANTE = símbolo protagonista y frase breve secundaria. No inventes fechas, cifras, nombres propios ni afirmaciones factuales. Omite texto de apoyo si no aporta valor.\n';
+    }
     o += 'COLOR: separa tinta, fondo del arte y color de la prenda; no uses el mismo color para fondo y tinta. Mantén contraste claro sobre el producto y no presentes el mockup como validación de producción.\n';
   } else {
-    o += 'TEXTOS: tres niveles con peso real, todos legibles; PROHIBIDO microtexto decorativo.\n';
+    o += 'TEXTOS: si existe mensaje proporcionado, conservarlo literalmente y usarlo como único copy principal; no exigir tres niveles ni inventar apoyos, sellos, citas, datos o microtexto. Si no existe mensaje, proponer una sola frase principal exacta y omitir texto secundario salvo que el usuario lo solicite.\n';
   }
-  o += 'AUDIENCIA: cada perfil gobierna decisiones visibles. Si al quitarla el diseño no cambia, RECHAZAR.\n\n';
+  o += 'AUDIENCIA: cada perfil debe modificar al menos dos decisiones visibles entre composición, escala/pose del personaje, tipografía, densidad, forma del símbolo y espacio negativo. Usa las preferencias estructurales de la ficha; no representes la audiencia con estereotipos ni añadiendo objetos. Si al quitar el perfil el diseño no cambia de forma verificable, RECHAZAR.\n\n';
 
   K.forEach(function (k, i) {
     const v = set[k];
     o += '### ' + N[i] + ' · ' + v.estilo + ' · ' + v.audiencia + '\n';
     o += 'JERARQUÍA: ' + v.jerarquiaVisual + '\n';
-    o += 'OBJETO: ' + v.objeto + '\n';
-    if (contactDNA) o += 'FUNCIÓN CONSTANTE: ' + v.funcionSimbolica + ' · intención ' + v.intencionEmocional + '\n';
-    const textLine = contactDNA
-      ? 'MENSAJE PRINCIPAL literal: «' + (contactMainText || 'ninguno indicado; no inventar') + '»' + (contactSupportText ? ' · APOYO literal: «' + contactSupportText + '»' : '') + ' · sin texto terciario · ' + v.tipografia
-      : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia;
+    o += 'PERFIL ESTRUCTURAL: ' + (v.perfilEstructural || _treatmentKey(v.tratamiento)) + ' · densidad ' + v.densidad + ' · espacio negativo ' + v.negativeSpace + '\n';
+    o += 'COMPATIBILIDAD ESTILO × TRATAMIENTO: ' + _styleTreatmentDirective(v.estilo, v.perfilEstructural || _treatmentKey(v.tratamiento)) + '\n';
     if (v.jerarquiaVisual === 'SOLO_TEXTO') {
-      o += contactDNA
-        ? 'DIRECCIÓN: representar el mismo símbolo mediante la forma de las letras; sin añadir otros objetos ni ilustraciones.\n'
-        : 'DIRECCIÓN: composición tipográfica pura en clave ' + v.estilo + '; sin objeto, figura ni ilustración.\n';
+      o += 'OBJETO: NINGUNO. El concepto solo inspira el copy; no se representa como escena.\n';
+      o += 'CONTROL ABSOLUTO: no dibujar personas, árboles, símbolos, iconos, siluetas, ilustraciones, fondos narrativos, marcos, cintas, flores, estrellas, rayos, texturas figurativas ni adornos. ÚNICOS elementos permitidos: letras del copy literal y recursos tipográficos integrados en las letras.\n';
+    } else {
+      o += 'OBJETO: ' + v.objeto + '\n';
+      o += 'CONTROL DE ELEMENTOS: no añadir elementos narrativos o decorativos fuera de este objeto/concepto; si un detalle no está nombrado ni es imprescindible para mostrar la acción, omitirlo.\n';
+    }
+    if (contactDNA && v.jerarquiaVisual !== 'SOLO_TEXTO') o += 'FUNCIÓN CONSTANTE: ' + v.funcionSimbolica + ' · intención ' + v.intencionEmocional + '\n';
+    const textLine = contactDNA
+      ? (contactMainText
+        ? 'MENSAJE PRINCIPAL literal: «' + contactMainText + '»' + (contactSupportText ? ' · APOYO literal: «' + contactSupportText + '»' : '') + ' · sin texto terciario · ' + v.tipografia
+        : 'COPY PROPUESTO: escribir frase final original exacta según jerarquía ' + v.jerarquiaVisual + '; apoyo opcional solo si aporta; no inventar datos ni usar microtexto · ' + v.tipografia)
+      : (isExplore
+        ? (String(MOTOR_STATE.message || '').trim()
+          ? 'COPY PRINCIPAL LITERAL: «' + String(MOTOR_STATE.message).trim() + '»; no modificar palabras. APOYO: ' + (String(MOTOR_STATE.support || '').trim() ? '«' + String(MOTOR_STATE.support).trim() + '»' : 'omitir si no aporta') + '; tercer nivel solo con dato real; tipografía ' + v.tipografia
+          : 'COPY COMPARTIDO A/B/C: define palabras exactas de una frase principal original; conserva el mismo texto en las tres direcciones. Apoyo literal solo si aporta y también compartido; tercer nivel solo con dato real o se omite. Prohibidos placeholders y microtexto. Tipografía: ' + v.tipografia)
+        : v.textoPrincipal + ' / ' + v.textoApoyo + ' / ' + v.textoTerciario + ' · ' + v.tipografia);
+    const hierarchyDirective = {
+      SOLO_TEXTO: 'SOLO_TEXTO: solo copy literal; 100% tipografía y cero imágenes, objetos o adornos independientes.',
+      TEXTO_DOMINANTE: 'TEXTO_DOMINANTE: el copy literal es la primera lectura y ocupa visualmente 70–80% del área imprimible; el objeto autorizado queda subordinado en 20–30%. Construye una sola composición integrada, no un bloque de texto junto a una ilustración independiente. El objeto descrito en esta ficha («' + v.objeto + '») debe interactuar físicamente con las letras de forma plausible: cruzar una palabra, quedar parcialmente detrás del lettering, encajar en una contraforma o compartir un contorno. Elige una integración coherente con el objeto real; no lo conviertas en letra si su forma no lo permite. Conserva todas las palabras exactas y legibles. La arquitectura asignada cambia la colocación y el recorrido de lectura, no la proporción ni la jerarquía: adapta sus módulos para mantener texto dominante e integración real, sin regresar al esquema automático ilustración arriba/texto abajo.',
+      OBJETO_DOMINANTE: 'OBJETO_DOMINANTE: el símbolo autorizado de esta ficha («' + v.objeto + '») ocupa 70–80% del arte; copy 20–30%. El objeto/concepto autorizado es el único motivo dominante; no lo sustituyas por árboles, personas u otros objetos no indicados ni añadas fondos narrativos, marcos o adornos. Respeta literalmente el estilo seleccionado; si es Pixel / 8-bit, usa formas pixeladas y bloques discretos, no pintura orgánica ni textura de pincel.',
+      BALANCEADO: 'BALANCEADO: texto y símbolo tienen igual importancia y ocupan cada uno 45–55% del peso/área visual. Ambos deben ser legibles y reconocibles a primera vista; ninguno puede quedar como adorno secundario. Construye una sola unidad compositiva mediante proximidad, intersección, encaje o alineación deliberada; evita dos bloques desconectados y evita que el layout convierta uno de los dos en protagonista. Mantén el copy exacto y el objeto autorizado; la arquitectura cambia su relación espacial, no sus proporciones.'
+    }[v.jerarquiaVisual] || '';
+    o += 'JERARQUÍA: ' + hierarchyDirective + ' La jerarquía fija tamaño, área y peso; el layout solo ubicación. Si hay conflicto, prevalece esta regla.\n';
+    if (v.jerarquiaVisual === 'BALANCEADO') {
+      o += 'COMPOSICIÓN BALANCEADA: ' + v.layout + ' · ' + v.distribucionTexto + '. Adapta la arquitectura para mantener texto y símbolo entre 45–55% cada uno; ambos deben leerse como partes co-protagonistas de una unidad, no como elemento principal más adorno. La arquitectura define colocación/relación, nunca cambia la proporción.\n';
+    }
+    else if (v.jerarquiaVisual === 'TEXTO_DOMINANTE' || v.jerarquiaVisual === 'OBJETO_DOMINANTE') {
+      o += _compatibleCompositionDirective(v.jerarquiaVisual, v.distribucionTexto) + '\n';
+    }
+    if (v.jerarquiaVisual === 'TEXTO_DOMINANTE') {
+      o += 'INTEGRACIÓN TEXTO-SÍMBOLO: integra el objeto descrito en el concepto ("' + v.objeto + '") en el lettering usando su forma física y acción reales; elige una unión visual clara y natural, sin imponer metáforas genéricas ni partes que el objeto no posee. El texto exacto ocupa 70–80% del área y es la primera lectura; el símbolo ocupa como máximo 20–30%, queda integrado y nunca aparece como ilustración separada. La arquitectura cambia ubicación, no proporción.\n';
+    }
+    if (v.jerarquiaVisual === 'SOLO_TEXTO') {
+      o += _soloTextCompositionDirective(v.distribucionTexto) + '\n';
+      o += 'DIRECCIÓN: diseño tipográfico puro en ' + v.estilo + '. SOLO_TEXTO NO SIGNIFICA SIMPLE: crea un arte tipográfico impactante y con identidad artística. Usa las letras como forma visual principal mediante escala, ritmo, composición, cortes, contraformas, densidad, espacio negativo y textura integrada; elige una estrategia coherente y mantén legible el copy literal. No añadas objetos, ilustraciones, iconos, marcos ni adornos independientes.\n';
       o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
-      o += 'ARTE: tipografía como único elemento visual; ' + v.tratamiento + '\n';
+      o += 'ARTE: solo letras del mensaje exacto; ' + v.tratamiento + '. Sin persona, árbol, objeto, icono, ilustración, marco, cinta, estrella, llama, floritura, textura figurativa ni fondo escénico.\n';
       o += 'TEXTO: ' + textLine + '\n';
     } else {
-      o += 'DIRECCIÓN: ' + v.arquitectura + '; ' + v.composicion + '; ' + v.layout + '\n';
+      o += 'DIRECCIÓN ARTÍSTICA: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '. Ejecuta el estilo dentro de la jerarquía indicada; no inventes una estructura textual distinta.\n';
       o += 'PRODUCTO / UBICACION / ESCALA: ' + MOTOR_STATE.product + '; ' + v.placement + '; ' + v.escalaProducto + '\n';
+      o += 'ESTILO PRINCIPAL (prioridad): ' + v.estilo + '. Gobierna el lenguaje visual; forma, técnica y tratamiento son secundarios y no pueden introducir estéticas incompatibles.\n';
       o += 'ARTE: ' + v.formaSimbolo + '; ' + v.tecnica + '; ' + v.tratamiento + '\n';
       o += 'TEXTO: ' + textLine + '\n';
-      o += 'TEXTO/IMAGEN: ' + v.distribucionTexto + '; ' + v.integracionTexto + '; ' + v.relacion + '\n';
+
     }
     o += 'PALETA: ' + v.paleta + '\n';
     o += 'COINCIDENCIA DE REGLAS DEL PROMPT (no evalua la imagen final): audiencia ' + (v.fitAudiencia || 0) + '/100; producto ' + (v.fitProducto || 0) + '/100\n';
@@ -1182,11 +1794,16 @@ function formatPrompt(result) {
 }
 
 /* --- Renderizado de fichas en el DOM --- */
-function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function safeCssColor(value) {
+  const color = String(value == null ? '' : value).trim();
+  return /^#[0-9a-f]{3}(?:[0-9a-f]{3})?(?:[0-9a-f]{2})?$/i.test(color) ? color : '#777777';
+}
 function renderCards(result) {
   const root = document.getElementById('cards');
   if (!root || !result || !result.set) return;
 
+  syncContext();
   root.innerHTML = '';
   const set = result.set;
   var audPool = [];
@@ -1211,12 +1828,12 @@ function renderCards(result) {
       + '</select></span></div>';
 
     html += '<div class="vrow"><span class="vk">Audiencia</span><span class="vv"><select data-card="' + k + '" data-lock="audiencia" onchange="setCardLock(this)">'
-      + '<option value="Auto">Auto (' + escHtml(v.audiencia) + ')</option>'
-      + audPool.map(function (a) { return '<option value="' + escHtml(a) + '"' + (a === v.audiencia ? ' selected' : '') + '>' + escHtml(a) + '</option>'; }).join('')
+      + '<option value="Auto"' + ((!_loadLocks(memLocksMarket(), MOTOR_STATE.product).audiencia[k] || _loadLocks(memLocksMarket(), MOTOR_STATE.product).audiencia[k] === 'Auto') ? ' selected' : '') + '>Auto (' + escHtml(v.audiencia) + ')</option>'
+      + audPool.map(function (a) { return '<option value="' + escHtml(a) + '"' + (_loadLocks(memLocksMarket(), MOTOR_STATE.product).audiencia[k] === a ? ' selected' : '') + '>' + escHtml(a) + '</option>'; }).join('')
       + '</select></span></div>';
     html += '<div class="vrow"><span class="vk">Jerarquia</span><span class="vv"><select data-card="' + k + '" data-lock="jerarquia" onchange="setCardLock(this)">'
-      + '<option value="Auto">Auto (' + escHtml(v.jerarquiaVisual) + ')</option>'
-      + modes.map(function (m) { return '<option value="' + m + '"' + (m === v.jerarquiaVisual ? ' selected' : '') + '>' + m + '</option>'; }).join('')
+      + '<option value="Auto"' + ((!_loadLocks(memLocksMarket(), MOTOR_STATE.product).jerarquia[k] || _loadLocks(memLocksMarket(), MOTOR_STATE.product).jerarquia[k] === 'Auto') ? ' selected' : '') + '>Auto (' + escHtml(v.jerarquiaVisual) + ')</option>'
+      + modes.map(function (m) { return '<option value="' + m + '"' + (_loadLocks(memLocksMarket(), MOTOR_STATE.product).jerarquia[k] === m ? ' selected' : '') + '>' + m + '</option>'; }).join('')
       + '</select></span></div>';
 
     const rows = [
@@ -1238,7 +1855,7 @@ function renderCards(result) {
     if (v._esquema) {
       html += '<div class="sws">';
       ['bg', 'dom', 'acc', 'ink'].forEach(function (c) {
-        html += '<span class="sw" style="background:' + v._esquema[c] + '"></span>';
+        html += '<span class="sw" style="background:' + safeCssColor(v._esquema[c]) + '"></span>';
       });
       html += '</div>';
     }
@@ -1253,59 +1870,154 @@ function renderCards(result) {
   });
 }
 
+/* --- Matriz comparativa: reconstruirla siempre a partir de las fichas visibles --- */
+function renderMatrix(result) {
+  const root = document.getElementById('matrix');
+  if (!root) return;
+  if (!result || !result.set) {
+    root.innerHTML = '<div class="empty-state">La matriz aparecerá después de crear los diseños.</div>';
+    return;
+  }
+
+  const set = result.set;
+  const columns = [
+    ['Dirección', function (v, k) { return N[K.indexOf(k)] + ' · ' + _treatmentKey(v.tratamiento); }],
+    ['Audiencia', function (v) { return v.audiencia; }],
+    ['Estilo', function (v) { return v.estilo; }],
+    ['Jerarquía', function (v) { return v.jerarquiaVisual; }],
+    ['Objeto / símbolo', function (v) { return v.objeto; }],
+    ['Layout', function (v) { return String(v.layout || '').split(':')[0]; }],
+    ['Tipografía', function (v) { return v.tipografia; }],
+    ['Tratamiento', function (v) { return v.tratamiento; }],
+    ['Forma del símbolo', function (v) { return v.formaSimbolo; }],
+    ['Integración texto-imagen', function (v) { return v.integracionTexto; }],
+    ['Color', function (v) { return v.familiaColor; }]
+  ];
+
+  let html = '<table class="comparison-matrix"><thead><tr><th scope="col">Atributo</th>';
+  K.forEach(function (k, i) { html += '<th scope="col">' + escHtml(N[i]) + '</th>'; });
+  html += '</tr></thead><tbody>';
+  columns.forEach(function (column) {
+    html += '<tr><th scope="row">' + escHtml(column[0]) + '</th>';
+    K.forEach(function (k) {
+      const value = column[1](set[k] || {}, k);
+      html += '<td>' + escHtml(value == null || value === '' ? '—' : String(value)) + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  root.innerHTML = html;
+}
+
 function setCardLock(sel) {
   try {
+    syncContext();
     var k = sel.getAttribute('data-card');
     var field = sel.getAttribute('data-lock');
-    _setLockValue(memLocksMarket(), MOTOR_STATE.product, field, k, sel.value);
+    var lockMarket = memLocksMarket();
+    _setLockValue(lockMarket, MOTOR_STATE.product, field, k, sel.value);
     if (typeof rerollSingle === 'function') rerollSingle(k);
   } catch (e) { console.warn(e); }
 }
 
 function rerollSingle(keyLetter) {
   try {
-    if (!LAST_RESULT || !LAST_RESULT.set) { crearLos3Disenos(); return; }
+    if (K.indexOf(keyLetter) === -1) return;
+    if (!LAST_RESULT || !LAST_RESULT.set || !LAST_RESULT.set[keyLetter]) {
+      crearLos3Disenos();
+      return;
+    }
+
     readStateFromDOM();
+    MOTOR_STATE._rerollNonce = (Number(MOTOR_STATE._rerollNonce) || 0) + 1;
     var auds = resolveAudiences();
     var others = K.filter(function (x) { return x !== keyLetter; });
-    var best = null, bestScore = -1e9;
+    var current = LAST_RESULT.set[keyLetter];
+    var locksNow = _loadLocks(memLocksMarket(), MOTOR_STATE.product) || {};
+    var chosenStyle = locksNow.estilo && locksNow.estilo[keyLetter] && locksNow.estilo[keyLetter] !== 'Auto'
+      ? locksNow.estilo[keyLetter] : null;
     var fixedIdentity = _isLockedContactSet() ? {
       symbol: LAST_RESULT.set.A.objeto,
       funcionSimbolica: LAST_RESULT.set.A.funcionSimbolica,
       intencionEmocional: LAST_RESULT.set.A.intencionEmocional
     } : null;
+    var best = null, bestScore = -1e9;
+
+    var rerollNonceBase = Number(MOTOR_STATE._rerollNonce) || 0;
     for (var i = 0; i < 600; i++) {
-      var cand = buildCandidate(auds, fixedIdentity);
-      var v = cand[keyLetter];
-      var clash = others.some(function (o) {
+      var cand;
+      if (MOTOR_STATE.market === 'global_en' && keyLetter === 'A') {
+        // En Global EN, A necesita variar la semilla de selección entre intentos;
+        // restaurar el nonce evita afectar el estado de la siguiente generación.
+        var nonceBeforeAttempt = MOTOR_STATE._rerollNonce;
+        MOTOR_STATE._rerollNonce = rerollNonceBase + i;
+        try { cand = buildCandidate(auds, fixedIdentity); }
+        finally { MOTOR_STATE._rerollNonce = nonceBeforeAttempt; }
+      } else {
+        cand = buildCandidate(auds, fixedIdentity);
+      }
+      var v = cand && cand[keyLetter];
+      if (!v || (chosenStyle && v.estilo !== chosenStyle)) continue;
+
+      // Puntuar conflictos en vez de descartar todos los candidatos:
+      // el dado debe seguir funcionando aunque los pools sean restrictivos.
+      var score = Math.random() * 2;
+      if (v.estilo !== current.estilo) score += 18;
+      if (v.layout !== current.layout) score += 14;
+      if (v.tipografia !== current.tipografia) score += 12;
+      if (v.formaSimbolo !== current.formaSimbolo) score += 10;
+      if (v.integracionTexto !== current.integracionTexto) score += 8;
+      if (v.familiaColor !== current.familiaColor) score += 5;
+      if (v.objeto !== current.objeto && !_isLockedContactSet()) score += 10;
+      if (v.tratamiento !== current.tratamiento) score += 4;
+
+      others.forEach(function (o) {
         var w = LAST_RESULT.set[o];
-        return w.estilo === v.estilo || (!_isLockedContactSet() && w.objeto === v.objeto) || w.layout === v.layout || w.tipografia === v.tipografia || w.integracionTexto === v.integracionTexto || _treatmentKey(w.tratamiento) === _treatmentKey(v.tratamiento);
+        if (w.estilo === v.estilo) score -= 18;
+        if (w.layout === v.layout) score -= 12;
+        if (w.tipografia === v.tipografia) score -= 10;
+        if (w.formaSimbolo === v.formaSimbolo) score -= 8;
+        if (w.integracionTexto === v.integracionTexto) score -= 6;
+        if (w.familiaColor === v.familiaColor) score -= 3;
+        if (_treatmentKey(w.tratamiento) === _treatmentKey(v.tratamiento)) score -= 25;
       });
-      if (clash) continue;
+
       var pat = { estilo: _getStyleBase(v.estilo), formaSimbolo: v.formaSimbolo, tratamiento: String(v.tratamiento).split(':')[0].trim(), layout: String(v.layout).split(':')[0].trim(), familiaColor: v.familiaColor };
       var cf = _findPatternConflicts(pat, memPatternMarket(), MOTOR_STATE.product);
-      var score = (cf.ok ? 100 : 0) - cf.maxMatches * 20 + Math.random() * 5;
-      if (score > bestScore) { bestScore = score; best = v; if (cf.ok) break; }
+      score += (cf.ok ? 8 : 0) - cf.maxMatches * 2;
+
+      var differs = ['estilo','layout','tipografia','formaSimbolo','integracionTexto','familiaColor','objeto'].some(function (field) {
+        return v[field] !== current[field];
+      });
+      if (!differs && !chosenStyle) continue;
+      if (score > bestScore) { bestScore = score; best = v; }
+      if (best && bestScore >= 55) break;
     }
+
     if (!best) {
       var noFitStatus = document.getElementById('status');
-      if (noFitStatus) noFitStatus.innerHTML = '<span class="warn">No encontré otra ficha que respete las diferencias con los selectores actuales. Cambia un bloqueo y vuelve a intentarlo.</span>';
+      if (noFitStatus) noFitStatus.textContent = chosenStyle
+        ? 'El estilo fijado no permite otra ficha distinta con los selectores actuales. Cambia el bloqueo de estilo o ajusta otro selector.'
+        : 'No se encontró una alternativa distinta. Cambia un selector y vuelve a tirar el dado.';
       return;
     }
+
+    // Sustituir únicamente la tarjeta elegida; A/B permanecen intactas al tirar C, etc.
     LAST_RESULT.set[keyLetter] = best;
     try { window.LAST_RESULT = LAST_RESULT; } catch (e) {}
     try { window.V = LAST_RESULT.set; } catch (e) {}
     _recordPattern(best, memPatternMarket(), MOTOR_STATE.product, { serie: MOTOR_STATE.serie, reroll: keyLetter });
     renderCards(LAST_RESULT);
     renderGates({ score: scoreSet(LAST_RESULT.set) });
+    renderMatrix(LAST_RESULT);
     var outEl = document.getElementById('out');
     if (outEl) outEl.value = formatPrompt(LAST_RESULT);
     var rerollStatus = document.getElementById('status');
-    if (rerollStatus) rerollStatus.innerHTML = '<span class="good">' + N[K.indexOf(keyLetter)] + ' regenerada. Símbolo, mensaje y función conservados.</span>';
+    if (rerollStatus) rerollStatus.textContent = N[K.indexOf(keyLetter)] + ' regenerada. Las otras dos tarjetas se conservaron.';
   } catch (e) {
     console.warn(e);
     var errorStatus = document.getElementById('status');
-    if (errorStatus) errorStatus.innerHTML = '<span class="bad">No se pudo regenerar la ficha: ' + escHtml(e && e.message ? e.message : 'error inesperado') + '</span>';
+    if (errorStatus) { errorStatus.textContent = 'No se pudo regenerar la ficha: ' + String(e && e.message ? e.message : 'error inesperado'); errorStatus.className = 'bad'; }
   }
 }
 
@@ -1323,6 +2035,7 @@ function renderGates(result) {
   html += '<span class="badge ' + (m.symbolStable ? 'good' : 'bad') + '" title="Comprueba que A/B/C conservan el mismo símbolo indicado en el prompt.">Símbolo constante</span>';
   html += '<span class="badge ' + (m.treatmentsComplete ? 'good' : 'bad') + '" title="Comprueba que el prompt asigna HEAVY, SOFT y MODERN una vez cada uno; no inspecciona la imagen generada.">HEAVY · SOFT · MODERN</span>';
   html += '<span class="badge ' + (m.familias.length >= 3 ? 'good' : 'warn') + '">Colores distintos</span>';
+  html += '<span class="badge warn" title="Estos indicadores validan fichas y prompt; no inspeccionan el archivo de imagen generado.">QA visual pendiente</span>';
 
   gateEl.innerHTML = html;
 }
@@ -1340,6 +2053,7 @@ function crearLos3Disenos() {
 
     renderCards(result);
     renderGates(result);
+    renderMatrix(result);
 
     const prompt = formatPrompt(result);
     if (outEl) outEl.value = prompt;
@@ -1353,7 +2067,7 @@ function crearLos3Disenos() {
     }
   } catch (e) {
     console.error('[Motor] Error:', e);
-    if (statusEl) statusEl.innerHTML = '<span class="bad">Error al generar: ' + e.message + '</span>';
+    if (statusEl) statusEl.textContent = 'Error al generar: ' + String(e && e.message ? e.message : 'error inesperado');
   }
 }
 
@@ -1382,12 +2096,14 @@ function limpiarFichas() {
   const status = document.getElementById('status');
   if (cards) cards.innerHTML = '<div class="empty-state">Genera los 3 diseños para ver las fichas aquí.</div>';
   if (gate) gate.innerHTML = '<span class="badge">Aún no hay diseños</span>';
+  renderMatrix(null);
   if (out) out.value = '';
   if (status) status.textContent = 'Fichas limpias. La memoria de patrones sigue activa.';
 }
 
 /* --- Borrar memoria (con doble confirmación) --- */
 function borrarMemoria() {
+  syncContext();
   if (!_confirmDestructive('¿Borrar toda la memoria de patrones, locks e historial de este mercado/producto?', 'BORRAR')) return;
   if (typeof clearPatternMemory === 'function') clearPatternMemory(memPatternMarket(), MOTOR_STATE.product);
   if (typeof clearLocks === 'function') clearLocks(memLocksMarket(), MOTOR_STATE.product);
@@ -1408,3 +2124,123 @@ window.memPatternMarket = memPatternMarket;
 window.memLocksMarket = memLocksMarket;
 window.MOTOR_STATE = MOTOR_STATE;
 window.readStateFromDOM = readStateFromDOM;
+
+/* --- Enlace explícito de controles de la vista Taller --- */
+(function bindTallerControls() {
+  function keepOrDefault(select, preferred, fallback) {
+    if (!select) return fallback;
+    const values = Array.from(select.options).map(function (option) { return option.value; });
+    select.value = values.indexOf(preferred) !== -1 ? preferred : fallback;
+    return select.value;
+  }
+
+  function refreshSubnicheSelector(preserveCurrent) {
+    const marketEl = document.getElementById('market');
+    const regionEl = document.getElementById('region');
+    const subnicheEl = document.getElementById('subniche');
+    if (!marketEl || !regionEl || !subnicheEl) return;
+    if (typeof getSubnicheOptionsHTML !== 'function') return;
+    const market = marketEl.value;
+    const region = regionEl.value;
+    const previous = preserveCurrent ? subnicheEl.value : 'auto';
+    subnicheEl.innerHTML = getSubnicheOptionsHTML(market, 'all', region, previous);
+    keepOrDefault(subnicheEl, previous, 'auto');
+  }
+
+  function refreshContextSelectors(marketChanged) {
+    const marketEl = document.getElementById('market');
+    const regionEl = document.getElementById('region');
+    if (!marketEl || !regionEl) return;
+    const market = marketEl.value;
+
+    if (marketChanged && typeof getRegionOptionsHTML === 'function') {
+      const previousRegion = regionEl.value;
+      regionEl.innerHTML = getRegionOptionsHTML(market, previousRegion);
+      const fallbackRegion = typeof getDefaultRegionForMarket === 'function'
+        ? getDefaultRegionForMarket(market) : 'global';
+      keepOrDefault(regionEl, previousRegion, fallbackRegion);
+    }
+
+    refreshSubnicheSelector(!marketChanged);
+    refreshAudienceSelector();
+  }
+
+  function refreshAudienceSelector() {
+    const select = document.getElementById('audienceSet');
+    if (!select || typeof getAudienceSelectOptions !== 'function') return;
+    const market = document.getElementById('market');
+    const region = document.getElementById('region');
+    const subniche = document.getElementById('subniche');
+    const previous = select.value || 'Auto';
+    select.innerHTML = getAudienceSelectOptions(
+      region ? region.value : 'global',
+      market ? market.value : 'global_en',
+      subniche ? subniche.value : 'auto'
+    );
+    const allowed = Array.from(select.options).some(function (option) { return option.value === previous; });
+    select.value = allowed ? previous : 'Auto';
+    if (typeof MOTOR_STATE !== 'undefined') MOTOR_STATE.audienceSet = select.value;
+  }
+
+  function refreshPrintMethodSelector() {
+    const productEl = document.getElementById('product');
+    const methodEl = document.getElementById('printMethod');
+    const capField = document.getElementById('capApplicationField');
+    if (!productEl) return;
+
+    const product = productEl.value;
+    if (capField) capField.style.display = product === 'GORRA' ? '' : 'none';
+    if (!methodEl || typeof getPrintMethods !== 'function') return;
+
+    const labels = typeof PRINT_METHOD_LABELS !== 'undefined' ? PRINT_METHOD_LABELS : {};
+    const methods = getPrintMethods(product);
+    const allowed = methods.length ? methods : ['auto'];
+    const previous = methodEl.value || 'auto';
+    methodEl.innerHTML = allowed.map(function (id) {
+      const label = labels[id] || id;
+      return '<option value="' + id + '">' + label + '</option>';
+    }).join('');
+    const valid = allowed.indexOf(previous) !== -1;
+    methodEl.value = valid ? previous : 'auto';
+    if (methodEl.value !== 'auto' && allowed.indexOf(methodEl.value) === -1) methodEl.value = allowed[0] || 'auto';
+  }
+
+  function bind() {
+    const market = document.getElementById('market');
+    const region = document.getElementById('region');
+    const subniche = document.getElementById('subniche');
+    const product = document.getElementById('product');
+
+    if (product && !product.__podPrintMethodBound) {
+      product.addEventListener('change', function () {
+        syncContext();
+        refreshPrintMethodSelector();
+      });
+      product.__podPrintMethodBound = true;
+    }
+    refreshPrintMethodSelector();
+
+    if (market && !market.__podAudienceRefreshBound) {
+      market.addEventListener('change', function () {
+        syncContext();
+        refreshContextSelectors(true);
+      });
+      market.__podAudienceRefreshBound = true;
+    }
+    if (region && !region.__podAudienceRefreshBound) {
+      region.addEventListener('change', function () {
+        syncContext();
+        refreshContextSelectors(false);
+      });
+      region.__podAudienceRefreshBound = true;
+    }
+    if (subniche && !subniche.__podAudienceRefreshBound) {
+      subniche.addEventListener('change', refreshAudienceSelector);
+      subniche.__podAudienceRefreshBound = true;
+    }
+
+    refreshContextSelectors(true);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
+  else bind();
+})();

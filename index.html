@@ -152,7 +152,8 @@
           <div class="field">
             <label for="workflowMode">Modo</label>
             <select id="workflowMode">
-              <option value="new" selected>Nuevo trabajo</option>
+              <option value="explore" selected>Explorar ideas — no tengo concepto</option>
+              <option value="new">Desarrollar un concepto</option>
               <option value="variation">Variación desde imagen</option>
             </select>
           </div>
@@ -197,8 +198,9 @@
           </div>
 
           <div class="field">
-            <label for="concept">Concepto central</label>
-            <input id="concept" type="text" placeholder="Ej: El calor que une al barrio" />
+            <label for="concept">Concepto central (opcional en Explorar ideas)</label>
+            <input id="concept" type="text" placeholder="Déjalo vacío para descubrir ideas; o escribe una idea concreta" />
+            <div class="hint" id="conceptModeHelp">Explorar ideas propone un concepto coherente con el mercado, nicho y producto. Desarrollar un concepto conserva la idea que escribas.</div>
           </div>
 
           <div class="field">
@@ -281,8 +283,8 @@
               <div class="field">
                 <label for="simboloVar">Símbolo</label>
                 <select id="simboloVar">
-                  <option value="conservar">Conservarlo, redibujado</option>
-                  <option value="sustituir" selected>Sustituirlo por 3 objetos nuevos</option>
+                  <option value="conservar" selected>Redibujar el mismo símbolo en A/B/C</option>
+                  <option value="sustituir">Sustituirlo por símbolos alternativos relacionados</option>
                 </select>
               </div>
 
@@ -299,7 +301,7 @@
               <label for="textosVar">Textos</label>
               <select id="textosVar">
                 <option value="conservar_palabras" selected>Conservar mismas palabras</option>
-                <option value="mismo_mensaje">Mismo mensaje, nueva redacción</option>
+                <option value="mismo_mensaje">Mismo mensaje, reescribirlo con palabras distintas</option>
                 <option value="nuevo_texto">Nuevo texto desde concepto</option>
               </select>
             </div>
@@ -399,7 +401,7 @@
       <div class="right-col">
 
         <div id="status" class="status info">
-          Listo. Define mercado, subnicho y concepto, luego pulsa Crear los 3 diseños.
+          Listo. Elige Explorar ideas para descubrir conceptos, o Desarrollar un concepto si ya tienes una idea.
         </div>
 
         <section class="panel">

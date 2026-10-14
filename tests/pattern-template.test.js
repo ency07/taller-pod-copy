@@ -156,7 +156,8 @@ setActiveTemplate('TOTE BAG', null);
 const pout2 = formatPrompt({ set: { A: ficha('Folk Popular'), B: ficha('Bohemian'), C: ficha('Retro 70s') } });
 ok(pout2.indexOf('/PATRON REPETIDO') !== -1, 'patrón sin template perdió cabecera');
 ok(pout2.indexOf('sin template') !== -1, 'patrón sin template no avisa');
-// Modo contacto intacto
+// Modo contacto intacto: declarar el modo explícitamente porque la app abre en exploración.
+MOTOR_STATE.workflowMode = 'new';
 MOTOR_STATE.designMode = 'contacto';
 const cout = formatPrompt({ set: { A: ficha('Folk Popular'), B: ficha('Bohemian'), C: ficha('Retro 70s') } });
 ok(cout.indexOf('/PATRON REPETIDO') === -1, 'modo contacto contaminado con patrón');
