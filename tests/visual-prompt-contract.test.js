@@ -70,8 +70,8 @@ ok(/diseño tipográfico puro en /.test(motor) && /jamás autoriza ilustraciones
 // OBJETO_DOMINANTE, BALANCEADO o SOLO_TEXTO.
 ok(/const hierarchyRule = v\.jerarquiaVisual === 'TEXTO_DOMINANTE'[\s\S]{0,900}JERARQUÍA OBLIGATORIA/.test(motor), 'el prompt debe resolver explícitamente la jerarquía visual antes de pedir la composición textual');
 ok(/La jerarquía controla tamaño, área y peso; el layout solo controla ubicación/.test(motor), 'la jerarquía manual debe prevalecer en tamaño, área y dominancia');
-ok(/PRUEBA DE DOMINANCIA TEXTUAL: el copy debe formar la silueta principal/.test(motor), 'TEXTO_DOMINANTE debe impedir que una ilustración grande se imponga al titular');
-ok(/PRUEBA DE DOMINANCIA DEL OBJETO: el objeto autorizado debe ocupar/.test(motor), 'OBJETO_DOMINANTE debe priorizar el objeto y limitar adornos no autorizados');
+ok(/PRUEBA DE DOMINANCIA TEXTUAL — RESTRICCIÓN DE COMPOSICIÓN: el bloque tipográfico completo es la silueta principal/.test(motor), 'TEXTO_DOMINANTE debe impedir que una ilustración grande se imponga al titular');
+ok(/PRUEBA DE DOMINANCIA DEL OBJETO — LISTA CERRADA DE ELEMENTOS: el árbol de almendro y la persona descansando son los únicos elementos ilustrados autorizados/.test(motor), 'OBJETO_DOMINANTE debe priorizar el objeto y limitar adornos no autorizados');
 ok(/No añadir sol, flores, círculos, marcos, manchas decorativas/.test(motor), 'OBJETO_DOMINANTE debe bloquear adornos que no pertenezcan al concepto');
 ok(/RESTRICCIÓN DE COMPOSICIÓN: el bloque tipográfico completo es la silueta principal/.test(motor), 'TEXTO_DOMINANTE debe exigir que el bloque tipográfico sea la silueta principal');
 ok(/PROHIBIDO dibujar el árbol\/persona como ilustración grande/.test(motor), 'TEXTO_DOMINANTE debe prohibir una escena grande encima o debajo del texto');
